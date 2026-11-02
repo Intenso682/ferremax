@@ -1,0 +1,80 @@
+# ==============================================================================
+# Docker Compose - FerreMax Producción VPS
+# Funciona en cualquier proveedor: Vultr, Hetzner, DigitalOcean, AWS, o Servidor Local
+# ==============================================================================
+
+version: '3.8'
+
+services:
+  # Servidor Backend Express + Prisma + Frontend SPA
+  ferremax:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ferremax_app
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - PORT=4000
+      - PROJECT_ROOT=/app
+      - DATABASE_URL=file:/app/data/dev.db
+      - BACKUPS_DIR=/app/backups
+      - JWT_SECRET=${JWT_SECRET:-ferremax-prod-secret-2026-secure}
+      - STORE_NAME=${STORE_NAME:-FerreMax Venezuela}
+      - STORE_RIF=${STORE_RIF:-J-50123456-7}
+      - STORE_ADDRESS=${STORE_ADDRESS:-Av. Principal, Caracas}
+      - STORE_PHONE=${STORE_PHONE:-0212-0000000}
+      - BCV_DEFAULT_RATE=${BCV_DEFAULT_RATE:-50.0}
+      - IVA_PERCENT=${IVA_PERCENT:-16}
+      - IGTF_PERCENT=${IGTF_PERCENT:-3}
+      - CORS_ORIGIN=*
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - GEMINI_MODEL=${GEMINI_MODEL:-gemini-3.8-flash}
+    volumes:
+      # Volúmenes persistentes en el disco del host VPS:
+      # NUNCA se borran al actualizar la aplicación
+      - ./data:/app/data
+      - ./uploads:/app/uploads
+      - ./backups:/app/backups
+    expose:
+      - "4000"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:4000/health > /dev/null || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    networks:
+      - ferremax_network
+
+  # Servidor Web Caddy con HTTPS / SSL Automático Let's Encrypt
+  caddy:
+    image: caddy:2-alpine
+    container_name: ferremax_proxy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      - DOMAIN_NAME=${DOMAIN_NAME:-:80}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      ferremax:
+        condition: service_healthy
+    networks:
+      - ferremax_network
+
+volumes:
+  caddy_data:
+    name: ferremax_caddy_data
+  caddy_config:
+    name: ferremax_caddy_config
+
+networks:
+  ferremax_network:
+    name: ferremax_network
+    driver: bridge

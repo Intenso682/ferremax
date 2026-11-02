@@ -1,0 +1,20 @@
+# Archivos y carpetas ignorados por Docker para construcción rápida y limpia
+node_modules/
+backend/node_modules/
+dist/
+backend/dist/
+.git/
+.gitignore
+backups/
+data/
+uploads/
+*.log
+.env
+backend/.env
+.env.production
+.system_generated/
+.gemini/
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store

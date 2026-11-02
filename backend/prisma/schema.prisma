@@ -1,0 +1,692 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         String   @default("CASHIER") // ADMIN, CASHIER, WAREHOUSE, CUSTOMER, etc.
+  phone        String?
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Role {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  displayName String
+  description String?
+  permissions String   @default("[]") // JSON string con array de permisos
+  isSystem    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Category {
+  id          String    @id @default(uuid())
+  name        String    @unique
+  slug        String    @unique
+  description String?
+  icon        String?
+  products    Product[]
+  createdAt   DateTime  @default(now())
+}
+
+model Product {
+  id              String           @id @default(uuid())
+  sku             String           @unique
+  barcode         String?          @unique
+  name            String
+  slug            String           @unique
+  description     String?
+  priceUsd        Float
+  costUsd         Float            @default(0.0)
+  stock           Float            @default(0.0)
+  minStock        Float            @default(5.0)
+  unit            String           @default("UND") // Unidad base de venta: UND, METRO, LITRO, KG, PZA
+  purchaseUnit    String           @default("UND") // Unidad de compra mayorista: ROLLO, CAJA, CUÑETE, BULTO, TUBO, etc.
+  unitRatio       Float            @default(1.0)   // Factor: 1 PurchaseUnit = unitRatio BaseUnits (ej. 1 Rollo = 100 Metros)
+  hasSerial       Boolean          @default(false) // Requiere captura de serial para garantía
+  warrantyMonths  Int              @default(0)     // Meses de garantía
+  leadTimeDays    Int              @default(7)     // Demora del proveedor en días (Alertas Min/Max Inteligentes)
+  location        String?                          // Ubicación física (Pasillo / Estante)
+  imageUrl        String?
+  images          String?          // JSON array de hasta 3 URLs de imágenes
+  featured        Boolean          @default(false)
+  active          Boolean          @default(true)
+  categoryId      String?
+  category        Category?        @relation(fields: [categoryId], references: [id])
+  orderItems      OrderItem[]
+  warehouseStocks WarehouseStock[]
+  serials         ProductSerial[]
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+}
+
+model ExchangeRate {
+  id        String   @id @default(uuid())
+  currency  String   @default("USD")
+  rateBcv   Float
+  source    String   @default("OFICIAL_BCV")
+  createdAt DateTime @default(now())
+}
+
+model Customer {
+  id             String          @id @default(uuid())
+  docType        String          @default("V") // V, J, E, G
+  docNumber      String          @unique
+  name           String
+  email          String?
+  phone          String?
+  address        String?
+  notes          String?
+  creditLimitUsd Float           @default(0.0)
+  currentDebtUsd Float           @default(0.0)
+  creditDays     Int             @default(15)
+  creditStatus   String          @default("ACTIVE") // ACTIVE, BLOCKED
+  orders         Order[]
+  invoices       Invoice[]
+  creditPayments CreditPayment[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+}
+
+model CreditPayment {
+  id               String   @id @default(uuid())
+  receiptNumber    String   @unique // e.g. ABO-1001
+  customerId       String
+  customer         Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  customerName     String
+  customerDoc      String
+  amountUsd        Float
+  amountBs         Float
+  bcvRate          Float
+  paymentMethod    String   // EFECTIVO_USD, PAGO_MOVIL, PUNTO_DEBITO, TRANSFERENCIA, ZELLE, EFECTIVO_BS
+  paymentReference String?
+  cashierName      String   @default("Cajero Mostrador")
+  previousDebtUsd  Float
+  remainingDebtUsd Float
+  notes            String?
+  createdAt        DateTime @default(now())
+}
+
+model Order {
+  id               String      @id @default(uuid())
+  orderNumber      String      @unique // e.g. FM-1001, POS-1001, NE-1001
+  customerId       String?
+  customer         Customer?   @relation(fields: [customerId], references: [id])
+  customerName     String
+  customerDoc      String
+  customerPhone    String?
+  customerEmail    String?
+  status           String      @default("PENDING_PAYMENT") // PENDING_PAYMENT, PAID, PREPARING, READY_FOR_PICKUP, DISPATCHED, DELIVERED, CANCELLED
+  channel          String      @default("STOREFRONT") // STOREFRONT, POS, DELIVERY_NOTE
+  isDeliveryNote   Boolean     @default(false)
+  fiscalStatus     String      @default("PENDING") // PENDING, INVOICED, EXEMPT
+  invoiceId        String?
+  invoice          Invoice?    @relation(fields: [invoiceId], references: [id])
+  subtotalUsd      Float
+  taxUsd           Float       @default(0.0) // IVA 16%
+  igtfUsd          Float       @default(0.0) // IGTF 3% if foreign currency
+  totalUsd         Float
+  bcvRate          Float
+  totalBs          Float
+  paymentMethod    String      @default("PAGO_MOVIL") // PAGO_MOVIL, TRANSFERENCIA_BS, EFECTIVO_USD, EFECTIVO_BS, ZELLE, PUNTO_DEBITO
+  paymentReference String?
+  paymentProofUrl  String?
+  deliveryType     String      @default("PICKUP") // PICKUP, DELIVERY
+  deliveryAddress  String?
+  notes            String?
+  items            OrderItem[]
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+}
+
+model OrderItem {
+  id           String   @id @default(uuid())
+  orderId      String
+  order        Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId    String
+  product      Product  @relation(fields: [productId], references: [id])
+  productName  String
+  quantity     Float    @default(1.0)
+  priceUsd     Float
+  priceBs      Float
+  subtotalUsd  Float
+  unitSold     String   @default("UND")
+  serialNumber String?
+}
+
+model StoreSetting {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  value       String
+  description String?
+  updatedAt   DateTime @updatedAt
+}
+
+model CashClose {
+  id                  String   @id @default(uuid())
+  closeNumber         String   @unique // e.g. Z-1001 or X-1001
+  type                String   @default("Z") // "X" (Parcial / Auditoría) o "Z" (Cierre Definitivo de Turno)
+  cashierName         String   @default("Cajero Mostrador")
+  openingDate         DateTime @default(now())
+  closingDate         DateTime @default(now())
+  
+  // Fondo de caja inicial
+  initialCashUsd      Float    @default(0.0)
+  initialCashBs       Float    @default(0.0)
+
+  // Totales de ventas registradas por el sistema
+  totalSalesUsd       Float    @default(0.0)
+  totalSalesBs        Float    @default(0.0)
+  salesCount          Int      @default(0)
+  
+  // Desglose del sistema por método de cobro
+  systemEfectivoUsd   Float    @default(0.0)
+  systemEfectivoBs    Float    @default(0.0)
+  systemPagoMovilBs   Float    @default(0.0)
+  systemPuntoBs       Float    @default(0.0)
+  systemTransfBs      Float    @default(0.0)
+  systemZelleUsd      Float    @default(0.0)
+  
+  // Impuestos
+  totalIvaUsd         Float    @default(0.0)
+  totalIgtfUsd        Float    @default(0.0)
+
+  // Arqueo físico declarado por el cajero
+  declaredEfectivoUsd Float    @default(0.0)
+  declaredEfectivoBs  Float    @default(0.0)
+  declaredPagoMovilBs Float    @default(0.0)
+  declaredPuntoBs     Float    @default(0.0)
+
+  // Diferencias (Declarado vs Sistema + Fondo)
+  diffUsd             Float    @default(0.0) // Positivo: Sobrante | Negativo: Faltante
+  diffBs              Float    @default(0.0)
+
+  // Tasa BCV aplicada
+  bcvRate             Float
+
+  notes               String?
+  createdAt           DateTime @default(now())
+}
+
+model Warehouse {
+  id            String           @id @default(uuid())
+  code          String           @unique // TIENDA, CENTRAL, PATIO, etc.
+  name          String           // "Tienda & Mostrador", "Almacén Central", "Patio de Materiales"
+  location      String?          // e.g. "Chacao - Local Principal"
+  isDefault     Boolean          @default(false)
+  active        Boolean          @default(true)
+  stocks        WarehouseStock[]
+  transfersFrom StockTransfer[]  @relation("FromWarehouse")
+  transfersTo   StockTransfer[]  @relation("ToWarehouse")
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+}
+
+model WarehouseStock {
+  id          String    @id @default(uuid())
+  warehouseId String
+  warehouse   Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+  productId   String
+  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  stock       Float     @default(0.0)
+  minStock    Float     @default(5.0)
+
+  @@unique([warehouseId, productId])
+}
+
+model StockTransfer {
+  id              String              @id @default(uuid())
+  transferNumber  String              @unique // TR-1001
+  fromWarehouseId String
+  fromWarehouse   Warehouse           @relation("FromWarehouse", fields: [fromWarehouseId], references: [id])
+  toWarehouseId   String
+  toWarehouse     Warehouse           @relation("ToWarehouse", fields: [toWarehouseId], references: [id])
+  status          String              @default("COMPLETED") // PENDING, COMPLETED, CANCELLED
+  notes           String?
+  userCreated     String              @default("Administrador")
+  items           StockTransferItem[]
+  createdAt       DateTime            @default(now())
+}
+
+model StockTransferItem {
+  id          String        @id @default(uuid())
+  transferId  String
+  transfer    StockTransfer @relation(fields: [transferId], references: [id], onDelete: Cascade)
+  productId   String
+  productName String
+  quantity    Float
+  unit        String        @default("UND")
+}
+
+model Invoice {
+  id                    String        @id @default(uuid())
+  invoiceNumber         String        @unique // e.g. FAC-00001001
+  controlNumber         String        @unique // e.g. 00-0001001
+  invoiceType           String        @default("FACTURA") // FACTURA, NOTA_CREDITO, NOTA_DEBITO
+  affectedInvoiceNumber String?
+  customerId            String?
+  customer              Customer?     @relation(fields: [customerId], references: [id])
+  customerName          String
+  customerDoc           String        // RIF o Cédula (V, J, G, E)
+  customerAddress       String?
+  customerPhone         String?
+
+  // Importes USD
+  subtotalUsd           Float
+  exemptUsd             Float         @default(0.0) // Ventas exentas
+  taxableUsd            Float         @default(0.0) // Base imponible 16%
+  taxUsd                Float         @default(0.0) // IVA 16%
+  igtfUsd               Float         @default(0.0) // IGTF 3%
+  totalUsd              Float
+
+  // Importes Bolívares (Obligatorio en Libro de Ventas SENIAT)
+  bcvRate               Float
+  subtotalBs            Float
+  exemptBs              Float         @default(0.0)
+  taxableBs             Float         @default(0.0)
+  taxBs                 Float         @default(0.0)
+  igtfBs                Float         @default(0.0)
+  totalBs               Float
+
+  // Retenciones SENIAT (Contribuyentes Especiales)
+  withholdingPercent    Float         @default(0.0) // 75% o 100%
+  withholdingTaxBs      Float         @default(0.0) // Monto retenido
+  withholdingReceiptNo  String?       // N° Comprobante
+
+  paymentMethod         String        @default("PAGO_MOVIL")
+  paymentReference      String?
+  status                String        @default("ISSUED") // ISSUED, CANCELLED
+  sourceDeliveryNotes   String?       // e.g. "POS-1001, POS-1002"
+  createdBy             String        @default("Facturación")
+  notes                 String?
+  items                 InvoiceItem[]
+  orders                Order[]
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+}
+
+model InvoiceItem {
+  id           String   @id @default(uuid())
+  invoiceId    String
+  invoice      Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  productId    String?
+  productName  String
+  quantity     Float    @default(1.0)
+  unit         String   @default("UND")
+  priceUsd     Float
+  priceBs      Float
+  taxable      Boolean  @default(true)
+  subtotalUsd  Float
+  subtotalBs   Float
+  serialNumber String?
+}
+
+model Supplier {
+  id             String            @id @default(uuid())
+  rif            String            @unique // J-..., G-..., V-...
+  name           String
+  email          String?
+  phone          String?
+  address        String?
+  contactPerson  String?
+  creditDays     Int               @default(30)
+  currentDebtUsd Float             @default(0.0)
+  bankAccounts   String?
+  bills          PurchaseBill[]
+  payments       SupplierPayment[]
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+}
+
+model PurchaseBill {
+  id                     String             @id @default(uuid())
+  billNumber             String             // N° Factura proveedor
+  controlNumber          String?            // N° Control del proveedor
+  supplierId             String
+  supplier               Supplier           @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  supplierName           String
+  supplierRif            String
+  targetWarehouseId      String?
+
+  invoiceDate            DateTime           @default(now())
+  dueDate                DateTime?
+
+  subtotalUsd            Float
+  exemptUsd              Float              @default(0.0)
+  taxableUsd             Float              @default(0.0)
+  taxUsd                 Float              @default(0.0)
+  totalUsd               Float
+
+  bcvRate                Float
+  subtotalBs             Float
+  exemptBs               Float              @default(0.0)
+  taxableBs              Float              @default(0.0)
+  taxBs                  Float              @default(0.0)
+  totalBs                Float
+
+  ivaWithholdingPercent  Float              @default(75.0)
+  ivaWithholdingBs       Float              @default(0.0)
+  withholdingReceiptNo   String?
+  islrWithholdingPercent Float              @default(0.0)
+  islrWithholdingBs      Float              @default(0.0)
+
+  freightCostUsd         Float              @default(0.0)
+  customsCostUsd         Float              @default(0.0)
+  otherCostsUsd          Float              @default(0.0)
+
+  status                 String             @default("PENDING") // PENDING, PAID, PARTIAL
+  paidAmountUsd          Float              @default(0.0)
+  notes                  String?
+  items                  PurchaseBillItem[]
+  payments               SupplierPayment[]
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
+}
+
+model PurchaseBillItem {
+  id           String       @id @default(uuid())
+  billId       String
+  bill         PurchaseBill @relation(fields: [billId], references: [id], onDelete: Cascade)
+  productId    String?
+  productName  String
+  purchaseUnit String       @default("UND")
+  quantity     Float
+  unitCostUsd  Float
+  unitCostBs   Float
+  subtotalUsd  Float
+  subtotalBs   Float
+  unitRatio    Float        @default(1.0)
+  baseQtyAdded Float
+}
+
+model SupplierPayment {
+  id               String        @id @default(uuid())
+  paymentNumber    String        @unique // PAG-1001
+  supplierId       String
+  supplier         Supplier      @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  billId           String?
+  bill             PurchaseBill? @relation(fields: [billId], references: [id])
+  amountUsd        Float
+  amountBs         Float
+  bcvRate          Float
+  paymentMethod    String        // TRANSFERENCIA, PAGO_MOVIL, EFECTIVO_USD, ZELLE
+  paymentReference String?
+  bankName         String?
+  notes            String?
+  createdAt        DateTime      @default(now())
+}
+
+model BankStatementImport {
+  id                 String            @id @default(uuid())
+  importNumber       String            @unique // CONC-1001
+  bankName           String            // Banesco, Mercantil, Provincial, BNC, etc.
+  fileName           String
+  accountNumber      String?
+  totalTransactions  Int               @default(0)
+  matchedCount       Int               @default(0)
+  unmatchedCount     Int               @default(0)
+  totalCreditBs      Float             @default(0.0)
+  totalDebitBs       Float             @default(0.0)
+  reconciledAmountBs Float             @default(0.0)
+  status             String            @default("COMPLETED") // COMPLETED, PARTIAL
+  transactions       BankTransaction[]
+  createdAt          DateTime          @default(now())
+}
+
+model BankTransaction {
+  id                 String              @id @default(uuid())
+  importId           String
+  import             BankStatementImport @relation(fields: [importId], references: [id], onDelete: Cascade)
+  date               DateTime
+  reference          String
+  description        String
+  amountBs           Float
+  type               String              // CREDIT, DEBIT
+  status             String              @default("UNMATCHED") // RECONCILED, UNMATCHED, MANUAL
+  matchedOrderId     String?
+  matchedOrderNumber String?
+  notes              String?
+  createdAt          DateTime            @default(now())
+}
+
+// =========================================================================
+// MÓDULO DE NÓMINA, PASIVOS LABORALES (LOTTT) Y OBLIGACIONES PATRONALES
+// =========================================================================
+
+model Employee {
+  id                 String              @id @default(uuid())
+  docType            String              @default("V") // V, E, P
+  docNumber          String              @unique // e.g. V-18765432
+  firstName          String
+  lastName           String
+  email              String?
+  phone              String?
+  position           String              // Cargo: Cajera, Almacenista, Vendedor Mostrador, Administrador
+  department         String              // Ventas, Almacén, Administración, Gerencia
+  hireDate           DateTime            @default(now()) // Antigüedad para LOTTT
+  terminationDate    DateTime?
+  contractType       String              @default("INDEFINIDO") // INDEFINIDO, DETERMINADO
+  baseSalaryUsd      Float               // Sueldo mensual de referencia en USD
+  cestaTicketUsd     Float               @default(40.0) // Bono de Alimentación mensual en USD
+  commissionPercent  Float               @default(0.0) // % sobre ventas en POS (ej. 1.5%)
+  bankName           String?             // Banesco, Mercantil, Provincial, etc.
+  accountNumber      String?             // 20 dígitos
+  pagoMovilPhone     String?
+  active             Boolean             @default(true)
+  
+  // Relaciones
+  receipts           PayrollReceipt[]
+  attendances        AttendanceRecord[]
+  passiveAudits      LaborPassiveAudit[]
+
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+}
+
+model PayrollPeriod {
+  id                 String              @id @default(uuid())
+  periodNumber       String              @unique // NOM-2026-10-Q1 o NOM-1001
+  title              String              // "1ra Quincena Octubre 2026"
+  periodType         String              @default("QUINCENAL") // QUINCENAL, MENSUAL, ESPECIAL
+  startDate          DateTime
+  endDate            DateTime
+  bcvRate            Float
+  status             String              @default("DRAFT") // DRAFT, CONFIRMED, PAID
+  totalGrossUsd      Float               @default(0.0)
+  totalGrossBs       Float               @default(0.0)
+  totalDeductionsUsd Float               @default(0.0)
+  totalDeductionsBs  Float               @default(0.0)
+  totalNetUsd        Float               @default(0.0)
+  totalNetBs         Float               @default(0.0)
+  receiptsCount      Int                 @default(0)
+  notes              String?
+
+  receipts           PayrollReceipt[]
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+}
+
+model PayrollReceipt {
+  id                  String             @id @default(uuid())
+  receiptNumber       String             @unique // REC-1001
+  periodId            String
+  period              PayrollPeriod      @relation(fields: [periodId], references: [id], onDelete: Cascade)
+  employeeId          String
+  employee            Employee           @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  
+  // Asignaciones
+  daysWorked          Int                @default(15)
+  baseSalaryUsd       Float
+  baseSalaryBs        Float
+  cestaTicketUsd      Float              @default(0.0)
+  cestaTicketBs       Float              @default(0.0)
+  commissionsUsd      Float              @default(0.0)
+  commissionsBs       Float              @default(0.0)
+  overtimeUsd         Float              @default(0.0)
+  overtimeBs          Float              @default(0.0)
+  totalGrossUsd       Float
+  totalGrossBs        Float
+
+  // Deducciones de Ley Venezolana
+  ivssDeductionBs     Float              @default(0.0) // 4% SSO
+  faovDeductionBs     Float              @default(0.0) // 1% Banavih
+  incesDeductionBs    Float              @default(0.0) // 0.5% Inces utilidades
+  absencesDeductionBs Float              @default(0.0)
+  otherDeductionsBs   Float              @default(0.0)
+  totalDeductionsBs   Float              @default(0.0)
+  totalDeductionsUsd  Float              @default(0.0)
+
+  // Neto a Cobrar
+  totalNetUsd         Float
+  totalNetBs          Float
+  bcvRate             Float
+  paymentStatus       String             @default("PENDING") // PENDING, PAID
+  paymentMethod       String             @default("TRANSFERENCIA") // TRANSFERENCIA, PAGO_MOVIL, EFECTIVO_USD
+  paymentReference    String?
+
+  createdAt           DateTime           @default(now())
+}
+
+model AttendanceRecord {
+  id                  String             @id @default(uuid())
+  employeeId          String
+  employee            Employee           @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  date                DateTime
+  status              String             @default("PRESENT") // PRESENT, ABSENT_UNJUSTIFIED, JUSTIFIED_LEAVE, MEDICAL_REST, HOLIDAY
+  hoursWorked         Float              @default(8.0)
+  notes               String?
+  createdAt           DateTime           @default(now())
+
+  @@unique([employeeId, date])
+}
+
+model LaborPassiveAudit {
+  id                       String        @id @default(uuid())
+  auditNumber              String        @unique // PAS-1001
+  employeeId               String
+  employee                 Employee      @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  calculationDate          DateTime      @default(now())
+  yearsOfService           Float
+  monthsOfService          Int
+  lastBaseSalaryUsd        Float
+  lastBaseSalaryBs         Float
+  
+  // Salario Integral Diario (Base + Alícuota Utilidades + Alícuota Bono Vacacional)
+  integralSalaryDailyUsd   Float
+  integralSalaryDailyBs    Float
+  
+  // Garantía Trimestral (Art. 142 literal a y b: 15 días/trimestre + 2 días adicionales/año)
+  guaranteeDays            Int
+  guaranteeAmountUsd       Float
+  guaranteeAmountBs        Float
+
+  // Cálculo Retroactivo (Art. 142 literal c: 30 días/año al último salario)
+  retroactiveDays          Int
+  retroactiveAmountUsd     Float
+  retroactiveAmountBs      Float
+
+  // Liquidación Legal (El mayor entre Garantía y Retroactivo según LOTTT)
+  chosenMethod             String        // "GARANTIA" o "RETROACTIVO"
+  settlementBaseUsd        Float
+  settlementBaseBs         Float
+
+  // Pasivos complementarios acumulados
+  vacationDaysDue          Int           @default(0)
+  vacationAmountUsd        Float         @default(0.0)
+  profitSharingDaysDue     Int           @default(0)
+  profitSharingAmountUsd   Float         @default(0.0)
+
+  // Total Pasivo Laboral Acumulado
+  totalPassivesUsd         Float
+  totalPassivesBs          Float
+  bcvRate                  Float
+  notes                    String?
+  createdAt                DateTime      @default(now())
+}
+
+// =========================================================================
+// MÓDULO DE TRAZABILIDAD AVANZADA (SERIALES, LOTES Y GARANTÍAS RMA)
+// =========================================================================
+
+model ProductSerial {
+  id                 String       @id @default(uuid())
+  serialNumber       String       @unique
+  productId          String
+  product            Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  lotNumber          String?      // Lote o batch
+  status             String       @default("IN_STOCK") // IN_STOCK, SOLD, RETURNED_WARRANTY, DEFECTIVE, REPLACED
+  warehouseId        String?
+  
+  // Datos de adquisición mayorista
+  supplierId         String?
+  supplierName       String?
+  purchaseBillId     String?
+  purchaseBillNumber String?
+  receivedAt         DateTime     @default(now())
+  unitCostUsd        Float        @default(0.0)
+
+  // Datos de venta y cliente
+  orderId            String?
+  orderNumber        String?
+  invoiceId          String?
+  invoiceNumber      String?
+  customerName       String?
+  customerDoc        String?
+  soldAt             DateTime?
+  salePriceUsd       Float?
+
+  // Términos de Garantía y Vencimiento
+  warrantyMonths     Int          @default(0)
+  warrantyExpiresAt  DateTime?
+
+  // Tramitación de Garantía (RMA)
+  rmaNumber          String?      // e.g. RMA-1001
+  rmaStatus          String?      // PENDING, REPLACED, REPAIRED, REFUNDED, REJECTED
+  rmaDate            DateTime?
+  rmaResolution      String?
+  rmaNotes           String?
+
+  notes              String?
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+}
+
+// =========================================================================
+// MÓDULO DE PUBLICIDAD DINÁMICA, BANNERS COMERCIALES Y MARCAS ALIADAS
+// =========================================================================
+
+model AdBanner {
+  id          String    @id @default(uuid())
+  slot        String    // "top_bar", "home_hero", "catalog_middle", "brands_carousel"
+  title       String    // e.g. "Mes DeWalt en FerreMax"
+  subtitle    String?   // e.g. "Hasta 20% de descuento en rotomartillos y taladros"
+  brandName   String?   // e.g. "DeWalt", "Stanley", "Tubrica"
+  badgeText   String?   // e.g. "PATROCINADO", "OFERTA OFICIAL", "MARCA DEL MES"
+  imageUrl    String?   // URL o ruta de imagen
+  linkUrl     String?   // Destino (catálogo, WhatsApp o web)
+  buttonText  String?   @default("Ver Catálogo Oficial")
+  bgGradient  String?   // Degradado o color CSS
+  active      Boolean   @default(true)
+  order       Int       @default(0)
+  startDate   DateTime?
+  endDate     DateTime?
+  viewsCount  Int       @default(0)
+  clicksCount Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+
+
+

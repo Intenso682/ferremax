@@ -1,0 +1,37 @@
+# ==============================================================================
+# Caddyfile - Servidor Web y Proxy Inverso con SSL Automático (Let's Encrypt)
+# FerreMax SaaS / White-Label
+# ==============================================================================
+
+{
+    # Desactivar la API interna de Caddy por seguridad
+    admin off
+}
+
+# Si la variable DOMAIN_NAME está configurada en .env (ej: ferreteria.com o pos.miempresa.com),
+# Caddy solicitará y renovará automáticamente un certificado SSL gratuito de Let's Encrypt.
+# Si no hay dominio configurado o vale :80, responderá en HTTP estándar (ideal para pruebas con IP directa).
+{$DOMAIN_NAME::80} {
+    # Compresión de alto rendimiento para navegación rápida en Venezuela
+    encode gzip zstd
+
+    # Cabeceras de seguridad web
+    header {
+        # Evitar ataques de clickjacking
+        X-Frame-Options "SAMEORIGIN"
+        # Prevenir MIME-sniffing
+        X-Content-Type-Options "nosniff"
+        # Política de privacidad en referencias
+        Referrer-Policy "strict-origin-when-cross-origin"
+        # Ocultar la firma del servidor web
+        -Server
+    }
+
+    # Redirigir el tráfico hacia el contenedor backend de FerreMax
+    reverse_proxy ferremax:4000 {
+        header_up Host {upstream_hostport}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+    }
+}
