@@ -15,6 +15,10 @@ COPY backend/package*.json ./backend/
 COPY backend/prisma ./backend/prisma/
 
 WORKDIR /build/backend
+
+# Variable de entorno para Prisma ORM durante la compilación
+ENV DATABASE_URL="file:./dev.db"
+
 RUN npm ci
 
 # Generar cliente de Prisma ORM
@@ -38,6 +42,7 @@ RUN apk add --no-cache openssl ca-certificates tzdata
 ENV NODE_ENV=production
 ENV PORT=4000
 ENV PROJECT_ROOT=/app
+ENV DATABASE_URL="file:./dev.db"
 
 # Copiar dependencias de producción compiladas
 COPY --from=builder /build/backend/node_modules ./backend/node_modules
@@ -54,6 +59,6 @@ RUN mkdir -p /app/data /app/uploads /app/backups
 # Exponer el puerto del servidor
 EXPOSE 4000
 
-# Script de arranque: ejecuta migraciones y luego arranca el servidor
+# Script de arranque: ejecuta migraciones, siembra inicial si aplica y arranca el servidor
 WORKDIR /app/backend
-CMD ["sh", "-c", "npx prisma db push && node dist/server.js"]
+CMD ["sh", "-c", "npx prisma db push --accept-data-loss && (node dist/prisma/seed.js || true) && node dist/server.js"]
