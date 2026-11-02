@@ -935,7 +935,7 @@ function $$(s, r){ return Array.prototype.slice.call((r||document).querySelector
 var API_URL = (window.location && (window.location.protocol === 'http:' || window.location.protocol === 'https:'))
   ? (window.location.origin + '/api')
   : 'http://localhost:4000/api';
-var BCV_RATE = 876.80;
+var BCV_RATE = 889.58;
 var API_ONLINE = false;
 var AUTH_TOKEN = localStorage.getItem('ferremax_token') || null;
 
@@ -1773,10 +1773,11 @@ function storeHeader(){
   return renderTopBarBanner() + '<header class="store-head" id="store-head">'+
     '<div class="store-topbar">'+
       '<div class="store-topbar-in">'+
-        '<div class="topbar-rate">'+
+        '<div class="topbar-rate" data-action="refresh-bcv" style="cursor:pointer" data-tip="Haz clic para sincronizar tasa oficial con el BCV" data-tip-force title="Sincronizar tasa BCV">'+
           '<span>🇻🇪</span>'+
           '<span>Tasa Oficial BCV:</span>'+
           '<b class="rate-val mono">Bs. '+BCV_RATE.toFixed(2)+' / USD</b>'+
+          '<span class="xs muted" style="margin-left:4px;display:inline-flex;align-items:center">'+I.refresh+'</span>'+
         '</div>'+
         '<button class="topbar-theme-btn" data-action="toggle-theme" type="button" aria-label="Cambiar tema" data-tip="Modo claro / oscuro" data-tip-force title="Modo claro / oscuro">'+
           (State.theme==='light'?I.moon:I.sun)+
@@ -2327,6 +2328,12 @@ function adminShell(inner,mid){
     '<button class="btn btn-ghost btn-sm top-search-btn hide-md" type="button" data-action="cmdk">'+I.search+
       '<span style="flex:1;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Buscar módulos, productos…</span><span class="mono xs" style="border:1px solid var(--border);padding:1px 6px;border-radius:6px">Ctrl K</span></button>'+
     '<div style="flex:1"></div>'+
+    '<div class="row hide-md" data-action="refresh-bcv" style="gap:6px;padding:4px 10px;background:var(--surface);border:1px solid var(--border);border-radius:20px;font-size:12px;cursor:pointer" data-tip="Haz clic para sincronizar tasa oficial con el BCV" data-tip-force title="Sincronizar tasa BCV">'+
+      '<span>🇻🇪</span>'+
+      '<span class="muted xs">BCV:</span>'+
+      '<b class="mono" style="color:var(--accent)">Bs. '+BCV_RATE.toFixed(2)+'</b>'+
+      '<span class="xs muted" style="display:inline-flex;align-items:center">'+I.refresh+'</span>'+
+    '</div>'+
     '<button class="btn btn-ghost btn-sm" type="button" data-action="go" data-to="/">'+I.store+' <span class="top-store-label hide-md" style="display:inline">Ver tienda</span></button>'+
     '<button class="icon-btn" type="button" data-action="toggle-theme" aria-label="Tema" data-tip="Modo claro/oscuro" data-tip-force>'+(State.theme==='light'?I.moon:I.sun)+'</button>'+
     '<button class="icon-btn" type="button" data-action="open-notifs" aria-label="Notificaciones">'+I.bell+'<span class="bdg"></span></button>'+
@@ -7413,6 +7420,27 @@ function handleAction(a,el,e){
       if(('/admin/'+D.m)===State.path) render(); else go('/admin/'+D.m); break;
     case 'scroll-to': var tgt=document.getElementById(D.to); if(tgt) tgt.scrollIntoView({behavior:'smooth',block:'start'}); break;
     case 'render': render(); break;
+    case 'refresh-bcv':
+      showToast('Sincronizando tasa oficial con el BCV...', 'info', 'Banco Central de Venezuela');
+      var reqH = AUTH_TOKEN ? { 'Authorization': 'Bearer ' + AUTH_TOKEN } : {};
+      fetch(API_URL + '/rates/bcv/sync', { method: 'POST', headers: reqH })
+        .then(function(res){
+          if(res.ok) return res.json();
+          return fetch(API_URL + '/rates/bcv').then(function(r2){ return r2.json(); });
+        })
+        .then(function(data){
+          if(data && data.rate && data.rate >= 100){
+            BCV_RATE = data.rate;
+            render();
+            showToast('Tasa Oficial BCV actualizada: Bs. ' + BCV_RATE.toFixed(2) + ' / USD', 'ok', 'BCV en Línea');
+          } else {
+            showToast('Tasa activa: Bs. ' + BCV_RATE.toFixed(2) + ' / USD', 'info', 'Tasa BCV');
+          }
+        })
+        .catch(function(){
+          showToast('Tasa activa: Bs. ' + BCV_RATE.toFixed(2) + ' / USD', 'info', 'Tasa BCV');
+        });
+      break;
     /* tema / ui */
     case 'toggle-theme': State.theme=State.theme==='light'?'dark':'light'; LS.set('cb-theme',State.theme); applyThemeTokens(); closeAllOverlays(); hideTooltip(); render(); break;
     case 'set-accent': State.accent=D.c; LS.set('cb-accent',D.c); applyThemeTokens();

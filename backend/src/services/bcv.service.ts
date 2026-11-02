@@ -7,14 +7,18 @@ export class BcvService {
    * Si no hay tasa registrada para hoy, intenta sincronizar con la fuente oficial.
    */
   static async getCurrentRate(): Promise<{ rate: number; updatedAt: Date; source: string }> {
+    // Buscar la última tasa que sea válida en Venezuela (tasa realista >= 100 Bs por USD)
     const latest = await prisma.exchangeRate.findFirst({
+      where: {
+        rateBcv: { gte: 100 },
+      },
       orderBy: { createdAt: 'desc' },
     });
 
-    if (latest) {
-      // Si la tasa tiene menos de 12 horas, la consideramos fresca
-      const twelveHoursAgo = new Date(Date.now() - 12 * 60 * 60 * 1000);
-      if (latest.createdAt > twelveHoursAgo) {
+    if (latest && latest.source !== 'CONFIG_DEFAULT') {
+      // Si la tasa tiene menos de 6 horas, la consideramos fresca
+      const sixHoursAgo = new Date(Date.now() - 6 * 60 * 60 * 1000);
+      if (latest.createdAt > sixHoursAgo) {
         return {
           rate: latest.rateBcv,
           updatedAt: latest.createdAt,
@@ -23,12 +27,12 @@ export class BcvService {
       }
     }
 
-    // Intentamos sincronizar con API de respaldo del BCV
+    // Intentamos sincronizar con API oficial del BCV
     try {
       const fetched = await this.syncWithBcv();
       return fetched;
     } catch {
-      // Si falla la red, devolvemos la última guardada o la por defecto
+      // Si falla la red, devolvemos la última guardada válida
       if (latest) {
         return {
           rate: latest.rateBcv,
@@ -37,10 +41,11 @@ export class BcvService {
         };
       }
 
-      // Si la BD está vacía, guardamos la tasa por defecto
+      // Si la BD no tiene tasa válida, guardamos la tasa por defecto actual
+      const defaultRate = config.bcvDefaultRate >= 100 ? config.bcvDefaultRate : 889.50;
       const created = await prisma.exchangeRate.create({
         data: {
-          rateBcv: config.bcvDefaultRate,
+          rateBcv: defaultRate,
           source: 'CONFIG_DEFAULT',
         },
       });

@@ -4,7 +4,7 @@ dotenv.config();
 export const config = {
   port: Number(process.env.PORT || 4000),
   jwtSecret: process.env.JWT_SECRET || 'ferremax-super-secret-key-2026',
-  bcvDefaultRate: Number(process.env.BCV_DEFAULT_RATE || 50.0),
+  bcvDefaultRate: Number(process.env.BCV_DEFAULT_RATE || 889.50),
   storeName: process.env.STORE_NAME || 'FerreMax Venezuela',
   storeRif: process.env.STORE_RIF || 'J-50123456-7',
   storeAddress: process.env.STORE_ADDRESS || 'Av. Francisco de Miranda, Caracas',

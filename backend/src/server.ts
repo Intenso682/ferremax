@@ -146,9 +146,11 @@ app.listen(config.port, '0.0.0.0', async () => {
   await PurchasesService.ensureSampleData();
   await PayrollService.ensureDefaultEmployees();
   await MarketingService.ensureDefaultBanners();
+  const activeBcv = await BcvService.getCurrentRate();
 
   console.log(`=========================================`);
   console.log(`🚀 FerreMax Backend API está en línea`);
+  console.log(`💵 Tasa Oficial BCV: Bs. ${activeBcv.rate} / USD (${activeBcv.source})`);
   console.log(`📡 Puerto: http://localhost:${config.port}`);
   console.log(`🩺 Health: http://localhost:${config.port}/health`);
   console.log(`🛒 Tienda: http://localhost:${config.port}/api/storefront/catalog`);

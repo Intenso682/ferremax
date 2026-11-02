@@ -1,5 +1,6 @@
 import { prisma } from '../prisma';
 import { AuthService } from '../services/auth.service';
+import { BcvService } from '../services/bcv.service';
 
 async function main() {
   console.log('🌱 Iniciando carga de datos iniciales (Seed)...');
@@ -44,15 +45,29 @@ async function main() {
 
   console.log(`✅ Usuarios creados: Admin (${admin.email}), Caja, Almacén`);
 
-  // 2. Tasa inicial BCV
-  await prisma.exchangeRate.create({
-    data: {
-      currency: 'USD',
-      rateBcv: 52.50,
-      source: 'SEED_INICIAL_BCV',
-    },
+  // 2. Sincronización inicial de tasa oficial BCV (solo si no hay una tasa válida en la base de datos)
+  const existingRate = await prisma.exchangeRate.findFirst({
+    where: { rateBcv: { gte: 100 } },
+    orderBy: { createdAt: 'desc' },
   });
-  console.log('✅ Tasa oficial BCV inicial registrada (52.50 Bs/USD)');
+
+  if (!existingRate) {
+    try {
+      const fetched = await BcvService.syncWithBcv();
+      console.log(`✅ Tasa oficial BCV inicial sincronizada (${fetched.rate} Bs/USD)`);
+    } catch {
+      await prisma.exchangeRate.create({
+        data: {
+          currency: 'USD',
+          rateBcv: 889.50,
+          source: 'SEED_FALLBACK_BCV',
+        },
+      });
+      console.log('✅ Tasa oficial BCV inicial registrada con fallback (889.50 Bs/USD)');
+    }
+  } else {
+    console.log(`✅ Tasa oficial BCV ya registrada y vigente (${existingRate.rateBcv} Bs/USD)`);
+  }
 
   // 3. Categorías
   const categoriesData = [
