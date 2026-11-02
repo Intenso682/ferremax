@@ -46,8 +46,7 @@ COPY --from=builder /build/backend/package*.json ./backend/
 COPY --from=builder /build/backend/prisma ./backend/prisma
 
 # Copiar la aplicación web estática frontend
-COPY "Prototipo Sistema Integrado empresa.html" ./
-COPY "Centro de ayuda interactiva sistema integrado de ventas.html" ./
+COPY *.html ./
 
 # Crear directorios para datos persistentes (volúmenes de Docker)
 RUN mkdir -p /app/data /app/uploads /app/backups
