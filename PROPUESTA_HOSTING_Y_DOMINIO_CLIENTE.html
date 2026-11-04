@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Propuesta de Servidor VPS y Dominio · FerreMax</title>
+  <style>
+    :root {
+      --primary: #0f766e;
+      --primary-dark: #115e59;
+      --primary-light: #ccfbf1;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --accent-badge: #0284c7;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); line-height: 1.6; padding: 30px 15px; }
+    .container { max-width: 860px; margin: 0 auto; background: var(--card-bg); border-radius: 14px; border: 1px solid var(--border); box-shadow: 0 4px 20px rgba(0,0,0,0.06); padding: 40px; }
+    .header { border-bottom: 2px solid var(--primary-light); padding-bottom: 24px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 15px; }
+    .title { font-size: 24px; font-weight: 800; color: var(--primary); letter-spacing: -0.02em; }
+    .subtitle { font-size: 14px; color: var(--text-muted); margin-top: 4px; }
+    .badge-date { background: var(--primary-light); color: var(--primary-dark); padding: 5px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; }
+    .print-btn { background: var(--primary); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-size: 13px; }
+    .print-btn:hover { background: var(--primary-dark); }
+    
+    .intro-box { background: #f0fdfa; border-left: 4px solid var(--primary); padding: 16px 20px; border-radius: 6px; margin-bottom: 30px; }
+    .intro-box p { font-size: 15px; color: #134e4a; }
+
+    .summary-card { background: #f8fafc; border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin-bottom: 35px; }
+    .summary-card h3 { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 12px; }
+    .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+    .summary-item { background: white; padding: 12px 16px; border-radius: 8px; border: 1px solid var(--border); }
+    .summary-item .label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; font-weight: 600; letter-spacing: 0.03em; }
+    .summary-item .price { font-size: 20px; font-weight: 800; color: var(--primary); margin-top: 4px; }
+    .summary-item .desc { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+    h2 { font-size: 18px; font-weight: 700; color: var(--text); margin: 30px 0 16px 0; display: flex; align-items: center; gap: 8px; }
+    
+    .provider-card { border: 1px solid var(--border); border-radius: 10px; padding: 22px; margin-bottom: 20px; transition: transform 0.2s; position: relative; }
+    .provider-card.featured { border-color: var(--primary); box-shadow: 0 0 0 1px var(--primary); background: #fdfefe; }
+    .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; flex-wrap: wrap; gap: 10px; }
+    .provider-name { font-size: 17px; font-weight: 700; color: var(--text); }
+    .provider-tag { font-size: 11px; font-weight: 700; text-transform: uppercase; padding: 3px 8px; border-radius: 6px; background: #e0f2fe; color: #0369a1; }
+    .provider-tag.green { background: #dcfce7; color: #15803d; }
+    .provider-price { font-size: 22px; font-weight: 800; color: var(--primary); }
+    .provider-price span { font-size: 13px; font-weight: 500; color: var(--text-muted); }
+    
+    .specs-list { list-style: none; margin: 12px 0 16px 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px; }
+    .specs-list li { font-size: 13.5px; color: #334155; display: flex; align-items: center; gap: 8px; }
+    .specs-list li::before { content: "✓"; color: var(--primary); font-weight: bold; }
+
+    .btn-link { display: inline-block; background: var(--primary); color: white; text-decoration: none; padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; }
+    .btn-link:hover { background: var(--primary-dark); }
+    .direct-link { font-size: 12px; color: var(--text-muted); margin-top: 6px; word-break: break-all; }
+
+    .checklist-box { background: #fffbeb; border: 1px solid #fef3c7; border-left: 4px solid #f59e0b; padding: 18px 22px; border-radius: 8px; margin-top: 35px; }
+    .checklist-box h3 { font-size: 15px; font-weight: 700; color: #92400e; margin-bottom: 10px; }
+    .checklist-box ul { margin-left: 20px; font-size: 14px; color: #78350f; }
+    .checklist-box li { margin-bottom: 6px; }
+
+    .footer { text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border); font-size: 13px; color: var(--text-muted); }
+
+    @media print {
+      body { background: white; padding: 0; }
+      .container { border: none; box-shadow: none; padding: 0; }
+      .print-btn { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <div>
+      <div class="title">Guía de Adquisición de Servidor (VPS) y Dominio</div>
+      <div class="subtitle">Infraestructura en la Nube · Sistema Integrado FerreMax</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <span class="badge-date">Noviembre 2026</span>
+      <button class="print-btn" onclick="window.print()">🖨️ Imprimir / Guardar PDF</button>
+    </div>
+  </div>
+
+  <div class="intro-box">
+    <p><strong>Estimado cliente:</strong> Para que su sistema opere de forma ininterrumpida las 24 horas y sea accesible desde cualquier computadora, teléfono o sucursal, se requiere contratar dos (2) servicios en la nube. <strong>Ambos servicios son adquiridos directamente por usted</strong>, garantizando que su información, datos de clientes y base de datos sean 100% de su propiedad.</p>
+  </div>
+
+  <div class="summary-card">
+    <h3>📊 Resumen de la Inversión Inicial</h3>
+    <div class="summary-grid">
+      <div class="summary-item">
+        <div class="label">Servidor en la Nube (VPS)</div>
+        <div class="price">$4.50 – $6.00 <span style="font-size:13px;font-weight:400">/ mes</span></div>
+        <div class="desc">Pago mensual sin permanencia fija</div>
+      </div>
+      <div class="summary-item">
+        <div class="label">Dominio Propio (.com)</div>
+        <div class="price">~$10.37 <span style="font-size:13px;font-weight:400">/ año</span></div>
+        <div class="desc">Se paga una sola vez al año</div>
+      </div>
+      <div class="summary-item">
+        <div class="label">Certificado de Seguridad SSL</div>
+        <div class="price">$0.00 <span style="font-size:13px;font-weight:400">/ gratis</span></div>
+        <div class="desc">Candado HTTPS incluido de por vida</div>
+      </div>
+    </div>
+  </div>
+
+  <h2>1. Elección del Servidor en la Nube (VPS)</h2>
+  <p style="font-size:14px;color:var(--text-muted);margin-bottom:16px">Seleccione una de las dos opciones recomendadas según su preferencia:</p>
+
+  <!-- OPCION 1 -->
+  <div class="provider-card featured">
+    <div class="card-top">
+      <div>
+        <div class="provider-name">Opción 1: Hetzner Cloud (Plan CX22)</div>
+        <span class="provider-tag green">⭐ Mejor Relación Rendimiento / Precio</span>
+      </div>
+      <div class="provider-price">~€4.49 <span>($4.80 USD) / mes</span></div>
+    </div>
+    <p style="font-size:14px;color:#475569">Líder europeo con centros de datos de última generación. Excelente potencia por un costo mínimo.</p>
+    <ul class="specs-list">
+      <li><strong>CPU:</strong> 2 vCPU Intel x86</li>
+      <li><strong>Memoria RAM:</strong> 4 GB</li>
+      <li><strong>Almacenamiento:</strong> 40 GB SSD NVMe de alta velocidad</li>
+      <li><strong>Tráfico:</strong> 20.000 GB (20 TB) mensuales</li>
+      <li><strong>Ubicación recomendada:</strong> Ashburn (USA) o Alemania</li>
+      <li><strong>Sistema Operativo:</strong> Ubuntu 24.04 LTS</li>
+    </ul>
+    <a href="https://www.hetzner.com/cloud/" target="_blank" class="btn-link">Ir a la web de Hetzner Cloud ➔</a>
+    <div class="direct-link">Enlace directo: https://www.hetzner.com/cloud/</div>
+  </div>
+
+  <!-- OPCION 2 -->
+  <div class="provider-card">
+    <div class="card-top">
+      <div>
+        <div class="provider-name">Opción 2: Vultr Cloud Compute (Miami, FL)</div>
+        <span class="provider-tag">⚡ Menor Latencia para Venezuela</span>
+      </div>
+      <div class="provider-price">$5.00 a $6.00 <span>USD / mes</span></div>
+    </div>
+    <p style="font-size:14px;color:#475569">Servidor ubicado en Miami, Florida. Es la ubicación con cable submarino directo a Venezuela (CANTV, Inter, NetUno, telefonía móvil).</p>
+    <ul class="specs-list">
+      <li><strong>CPU:</strong> 1 vCPU</li>
+      <li><strong>Memoria RAM:</strong> 1 GB a 2 GB</li>
+      <li><strong>Almacenamiento:</strong> 25 GB a 50 GB SSD NVMe</li>
+      <li><strong>Tráfico:</strong> 1.000 GB a 2.000 GB mensuales</li>
+      <li><strong>Ubicación a elegir:</strong> Miami, FL (USA)</li>
+      <li><strong>Sistema Operativo:</strong> Ubuntu 24.04 LTS</li>
+    </ul>
+    <a href="https://www.vultr.com/products/cloud-compute/" target="_blank" class="btn-link">Ir a la web de Vultr ➔</a>
+    <div class="direct-link">Enlace directo: https://www.vultr.com/products/cloud-compute/</div>
+  </div>
+
+  <h2>2. Adquisición del Dominio Web Propio</h2>
+  <p style="font-size:14px;color:var(--text-muted);margin-bottom:16px">Es el nombre que sus clientes y empleados escribirán en el navegador (ejemplo: <em>tutiendaferretera.com</em>):</p>
+
+  <div class="provider-card featured">
+    <div class="card-top">
+      <div>
+        <div class="provider-name">Registrador Recomendado: Porkbun.com</div>
+        <span class="provider-tag green">🔒 Tarifa Fija y Sin Cargos Ocultos</span>
+      </div>
+      <div class="provider-price">~$10.37 <span>USD / año</span></div>
+    </div>
+    <p style="font-size:14px;color:#475569">Es el registrador más transparente del mercado. La renovación en los años siguientes cuesta exactamente lo mismo (sin sorpresas de aumento).</p>
+    <ul class="specs-list">
+      <li><strong>Costo de renovación:</strong> ~$10.37 USD/año (garantizado)</li>
+      <li><strong>Privacidad WHOIS:</strong> Gratuita de por vida (protege sus datos personales)</li>
+      <li><strong>Métodos de pago:</strong> Tarjeta internacional o PayPal</li>
+    </ul>
+    <a href="https://porkbun.com/" target="_blank" class="btn-link">Buscar mi dominio en Porkbun ➔</a>
+    <div class="direct-link">Enlace directo: https://porkbun.com/</div>
+  </div>
+
+  <div style="background:#f8fafc;padding:14px 18px;border-radius:8px;border:1px solid var(--border);font-size:13px;color:#475569;margin-bottom:25px">
+    <strong>Alternativas:</strong> Si prefiere dominio nacional venezolano (<em>.com.ve</em>), se puede adquirir directamente ante CONATEL en <a href="https://nic.ve/" target="_blank" style="color:var(--primary);font-weight:600">nic.ve</a> con pago en Bolívares a tasa oficial. También puede usar <a href="https://www.cloudflare.com/products/registrar/" target="_blank" style="color:var(--primary);font-weight:600">Cloudflare Registrar</a> ($9.95/año a precio de coste).
+  </div>
+
+  <div class="checklist-box">
+    <h3>📋 Datos a Facilitar al Equipo Técnico tras la Compra</h3>
+    <p style="font-size:13.5px;margin-bottom:8px">Una vez completada la compra, solo envíenos los siguientes datos para realizar la instalación y puesta a punto:</p>
+    <ul>
+      <li><strong>Dirección IP del servidor VPS</strong> (ejemplo: <code>149.28.120.45</code>).</li>
+      <li><strong>Usuario y contraseña temporal</strong> asignados por el proveedor del servidor (habitualmente usuario <code>root</code>).</li>
+      <li><strong>Nombre de dominio exacto registrado</strong> (ejemplo: <code>ferreteriaelvalle.com</code>).</li>
+    </ul>
+    <p style="font-size:13px;margin-top:10px;color:#78350f"><em>Nosotros nos encargamos de todo el proceso de despliegue, configuración de base de datos, cifrado HTTPS y optimización de velocidad.</em></p>
+  </div>
+
+  <div class="footer">
+    Sistema Integrado FerreMax · Soporte y Despliegue Técnico · Noviembre 2026
+  </div>
+</div>
+
+</body>
+</html>

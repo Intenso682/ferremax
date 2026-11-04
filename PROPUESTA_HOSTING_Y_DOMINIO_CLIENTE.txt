@@ -1,0 +1,135 @@
+================================================================================
+GUÍA DE ADQUISICIÓN DE SERVIDOR (VPS) Y DOMINIO WEB
+SISTEMA INTEGRADO FERREMAX · DOCUMENTO PARA EL CLIENTE
+================================================================================
+Fecha de emisión: Noviembre 2026
+Destinatario: Gerencia / Dirección de la Empresa
+
+Estimado(a) cliente:
+
+Para poner en marcha su sistema de gestión, punto de venta y tienda en línea 
+en internet, se requiere la contratación de dos (2) servicios básicos en la 
+nube. Estos servicios quedarán 100% bajo su titularidad, facturados a su nombre 
+y bajo su control directo.
+
+--------------------------------------------------------------------------------
+RESUMEN DE INVERSIÓN ESTIMADA
+--------------------------------------------------------------------------------
+1. Servidor Privado en la Nube (VPS):  $4.50 a $6.00 USD al mes
+2. Nombre de Dominio Propio (.com):    $10.37 USD al AÑO (pago único anual)
+3. Certificado de Seguridad SSL:       GRATUITO e ILIMITADO (incluido)
+
+Total para iniciar operaciones: Menos de $16.00 USD para el primer mes.
+
+================================================================================
+PASO 1: CONTRATACIÓN DEL SERVIDOR EN LA NUBE (VPS)
+================================================================================
+El servidor es una computadora de alta potencia en la nube que operará 
+ininterrumpidamente 24/7/365, con conexión de alta velocidad y respaldos 
+continuos.
+
+Le presentamos dos opciones líderes en el mercado mundial:
+
+--------------------------------------------------------------------------------
+OPCIÓN 1 (RECOMENDADA POR PRECIO Y POTENCIA): HETZNER CLOUD
+--------------------------------------------------------------------------------
+Es el proveedor con mejor relación potencia/precio del mundo. Ofrece servidores 
+muy rápidos y estables.
+
+* Enlace directo: https://www.hetzner.com/cloud/
+* Plan a elegir: CX22 (o CPX11)
+* Especificaciones de hardware:
+  - 2 Procesadores (vCPU x86 Intel)
+  - 4 GB de Memoria RAM
+  - 40 GB de disco ultrarrápido SSD NVMe
+  - 20.000 GB (20 TB) de transferencia mensual
+* Costo mensual: Aprox. €3.79 a €4.49 / mes (aprox. $4.10 a $4.80 USD al mes)
+* Ubicación recomendada: Ashburn, Virginia (USA) o Alemania.
+
+Instrucciones de compra:
+1. Ingrese a https://www.hetzner.com/cloud/ y haga clic en "Sign up" (Registrarse).
+2. Valide su cuenta y método de pago (Tarjeta internacional o PayPal).
+3. Cree un proyecto y agregue un servidor con el plan "CX22" seleccionando 
+   el sistema operativo "Ubuntu 24.04 LTS".
+
+--------------------------------------------------------------------------------
+OPCIÓN 2 (RECOMENDADA POR VELOCIDAD EN VENEZUELA): VULTR CLOUD
+--------------------------------------------------------------------------------
+Vultr cuenta con un centro de datos en Miami, Florida (USA), el cual cuenta con 
+conexión de fibra óptica directa a Venezuela (CANTV, Inter, NetUno, Digitel, 
+Movistar), garantizando la respuesta más rápida para cajeros y clientes.
+
+* Enlace directo: https://www.vultr.com/products/cloud-compute/
+* Plan a elegir: Cloud Compute - Shared CPU
+* Especificaciones de hardware:
+  - 1 vCPU
+  - 1 GB o 2 GB de Memoria RAM
+  - 25 GB a 50 GB de disco SSD NVMe
+  - 1.000 GB (1 TB) de ancho de banda
+* Costo mensual: $5.00 a $6.00 USD al mes (1 GB RAM) o $10.00 USD al mes (2 GB RAM)
+* Ubicación a seleccionar: Miami, Florida (USA)
+* Sistema Operativo: Ubuntu 24.04 LTS x64
+
+Instrucciones de compra:
+1. Ingrese a https://www.vultr.com/ y cree su cuenta con su correo electrónico.
+2. Haga clic en el botón azul "Deploy Server" (Desplegar Servidor).
+3. Seleccione tipo "Cloud Compute - Shared CPU", ubicación "Miami", 
+   sistema "Ubuntu 24.04 LTS" y el plan de $5 o $6/mes.
+4. Haga clic en "Deploy Now".
+
+================================================================================
+PASO 2: CONTRATACIÓN DEL DOMINIO PROPIO
+================================================================================
+El dominio es la dirección web que sus clientes y empleados escribirán en su 
+navegador (por ejemplo: www.ferreteriatutienda.com o sistema.tutienda.com).
+
+--------------------------------------------------------------------------------
+REGISTRADOR RECOMENDADO: PORKBUN (MÁXIMA TRANSPARENCIA Y MEJOR PRECIO)
+--------------------------------------------------------------------------------
+A diferencia de otros registradores que cobran barato el primer año y luego 
+duplican el precio, Porkbun mantiene la tarifa justa y fija siempre.
+
+* Enlace directo: https://porkbun.com/
+* Costo primer año (.com): Aprox. $10.37 USD al año
+* Costo de renovación anual: Aprox. $10.37 USD al año (sin recargos ocultos)
+* Beneficios incluidos gratis:
+  - Privacidad de datos WHOIS gratuita de por vida (oculta sus datos personales 
+    para evitar spam o llamadas publicitarias).
+  - Gestión de DNS de alta velocidad.
+
+Instrucciones de compra en Porkbun:
+1. Ingrese a https://porkbun.com/
+2. Escriba en la barra de búsqueda el nombre deseado para su negocio.
+3. Si está disponible en ".com", agréguelo al carrito.
+4. Proceda al pago con tarjeta internacional o PayPal.
+
+--------------------------------------------------------------------------------
+OPCIONES ALTERNATIVAS PARA EL DOMINIO:
+--------------------------------------------------------------------------------
+* Cloudflare Registrar: https://www.cloudflare.com/products/registrar/
+  (Costo de $9.95 USD/año tanto en el primer año como en renovación).
+* Dominio nacional venezolano (.com.ve o .ve): https://nic.ve/
+  (Gestionado directamente ante CONATEL, pagadero en Bolívares a tasa oficial).
+
+================================================================================
+DATOS QUE DEBE ENTREGARLE AL EQUIPO DE DESARROLLO TRAS LA COMPRA
+================================================================================
+Una vez contratados ambos servicios, únicamente debe facilitarnos los siguientes 
+datos para que nos encarguemos de la instalación, configuración del certificado 
+de seguridad SSL y puesta en marcha de FerreMax:
+
+1. Del Servidor VPS:
+   * Dirección IP asignada (ejemplo: 149.28.120.45)
+   * Usuario de acceso (habitualmente "root")
+   * Contraseña temporal proporcionada por el proveedor
+
+2. Del Dominio:
+   * Nombre de dominio exacto adquirido (ejemplo: miempresa.com)
+   * Acceso al panel del registrador (Porkbun / Cloudflare) para apuntar los 
+     registros DNS hacia la IP del servidor (o bien coordinamos para que 
+     nosotros le indiquemos qué dos datos agregar).
+
+--------------------------------------------------------------------------------
+Cualquier duda o asesoría durante el proceso de pago, nuestro equipo técnico le 
+brindará acompañamiento asistido en tiempo real.
+================================================================================

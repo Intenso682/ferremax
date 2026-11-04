@@ -1,8 +1,9 @@
-# 🗺️ Hoja de Ruta Maestra · Proyecto FerreMax
+# 🗺️ Hoja de Ruta Maestra · Proyecto FerreMax / FerreJade
 
-**Fecha de actualización:** 2 de Noviembre de 2026 (Corte Nocturno)  
+**Fecha de actualización:** 4 de Noviembre de 2026 (Corte Mediodía)  
 **Estado general:** 🟢 **En Producción / Nube (Render.com) + Repositorio GitHub con CI/CD activo**  
 **Versión del núcleo:** Core-Business Suite v1.19  
+**Cuenta Corporativa en Preparación:** Gmail oficial de **FerreJade** (Google AI Studio, Drive y Sheets)
 
 ---
 
@@ -22,19 +23,29 @@
 - **Acceso Multidispositivo:** Funciona en PC, laptops, tablets y teléfonos móviles conectados a la red local o desde Internet mediante la URL de Render.
 - **Estabilidad Probada:** Suite de 102 pruebas automatizadas pasando al 100% (`tests/test_full_workflow_suite.js`).
 
+### 🧹 Limpieza y Documentación Comercial (4 de Noviembre)
+- **Panel Administrativo Pulido para Producción:** Módulos de maqueta (`plugins`, `devops`, `seguridad`, `roadmap`) aislados bajo "Modo Desarrollador" (desactivado por defecto). El panel muestra únicamente herramientas 100% funcionales (Operaciones, Ventas & Clientes, Administración) con salud real del sistema (SQLite, BCV, SENIAT).
+- **Propuesta Comercial de Infraestructura para el Cliente:** Generados documentos ejecutivos listos para enviar:
+  - `PROPUESTA_HOSTING_Y_DOMINIO_CLIENTE.txt` (texto plano para WhatsApp / Correo).
+  - `PROPUESTA_HOSTING_Y_DOMINIO_CLIENTE.html` (formato corporativo visual con opción de impresión directa a PDF).
+  - Incluye opciones detalladas de VPS (Hetzner CX22 por ~$4.50/mes y Vultr Miami por $5-$6/mes) y dominios (.com en Porkbun a $10.37/año sin subidas de renovación y .com.ve en CONATEL).
+- **Diseño del Escáner Inteligente con IA (Gemini Vision + Google Drive):**
+  - Definida la plantilla oficial de 15 columnas maestras para catalogación masiva (SKU, Código de Barras, Nombre, Marca, Categoría, Precio USD, Costo USD, Stock, Min, Unidad, Ubicación, Garantía, Especificaciones, Descripción, Foto URL).
+  - Diseñado el flujo móvil: Foto de la caja ➔ Extracción con Gemini Vision en 2 seg ➔ El usuario solo ingresa costo y precio ➔ Guardado automático por Webhook en Google Sheets y en FerreMax.
+
 ---
 
-## 2. Hoja de Ruta para Mañana (Tareas Prioritarias)
+## 2. Hoja de Ruta para la Próxima Sesión (Prioridades)
 
-Las siguientes tareas quedaron listas y planificadas para iniciar en la próxima sesión:
+Al retomar la sesión con la nueva cuenta de correo de **FerreJade** lista, ejecutaremos:
 
-| Prioridad | Módulo / Tarea | Descripción y Objetivo |
-| :---: | :--- | :--- |
-| **Alta** 🔥 | **Carga Masiva de Inventario (Excel / CSV)** | Implementar importador de catálogo para cargar listas completas de productos ferreteros con SKU, descripción, precio USD, costo, stock y categoría en 1 clic. |
-| **Alta** 🔥 | **Flujo Interdepartamental de Despacho** | Afinar el circuito operativo: Venta en Mostrador ➔ Cobro en Caja ➔ Validación en Almacén / Entrega física con comprobante. |
-| **Media** ⚡ | **Limpieza del Ecosistema de Plugins** | Ocultar o reorganizar los módulos que eran maquetas del prototipo original para que el panel administrativo solo muestre herramientas 100% productivas. |
-| **Media** ⚡ | **Carga de Datos Reales de la Ferretería** | Configurar nombre real del negocio, RIF, dirección física, logotipo de la empresa y cuentas bancarias para Pago Móvil / Transferencias. |
-| **Baja** 💡 | **Dominio Personalizado (Opcional)** | Si el cliente dispone de un dominio propio (ej. `sistema.ferremax.com`), vincularlo con certificado SSL gratuito en Render. |
+| Prioridad | Módulo / Tarea | Estado | Descripción y Objetivo |
+| :---: | :--- | :---: | :--- |
+| **Paso 1** 🔥 | **Vincular Credenciales FerreJade** | ⏳ Listo para iniciar | Configurar la API Key gratuita de Google AI Studio (Gemini) y la hoja de Google Sheets en Drive asociada a la nueva cuenta. |
+| **Paso 2** 🔥 | **Implementar Escáner Móvil Gemini** | ⏳ Diseñado | Crear la pantalla móvil PWA con cámara para capturar la caja del producto, extraer el JSON estructurado y enviar la fila a Google Sheets y base de datos. |
+| **Paso 3** ⚡ | **Carga Masiva de Inventario (Excel / CSV)** | ⏳ Pendiente | Habilitar el botón de importación masiva de catálogo en 1 clic dentro del módulo de Inventario de FerreMax. |
+| **Paso 4** ⚡ | **Flujo Interdepartamental de Despacho** | ⏳ Pendiente | Afinar el circuito operativo: Venta en Mostrador ➔ Cobro en Caja ➔ Validación en Almacén / Entrega física con comprobante. |
+| **Paso 5** 🎨 | **Carga de Identidad de Marca FerreJade** | ⏳ Pendiente | Cargar logotipo corporativo desde la carpeta `FerreJade`, configurar RIF, dirección fiscal y cuentas bancarias (Pago Móvil / Transferencias). |
 
 ---
 

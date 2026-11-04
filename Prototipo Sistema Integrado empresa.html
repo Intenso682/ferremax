@@ -1260,7 +1260,7 @@ var State={
   module:'dashboard', cart:[], coupon:null, checkout:{step:1,data:{},pay:'card',lastItems:[]},
   session: savedSession, theme:LS.get('cb-theme','light'), accent:LS.get('cb-accent','#0f766e'),
   loginRole: savedSession ? (savedSession.roleDisplayName || savedSession.role) : 'Administrador', bus:[],
-  ui:{sidebar:LS.get('cb-mini',false),help:LS.get('cb-help',true),salesRange:'30d',catFilter:[],priceMax:3500,
+  ui:{sidebar:LS.get('cb-mini',false),help:LS.get('cb-help',true),showDevModules:LS.get('cb-show-dev',false),salesRange:'30d',catFilter:[],priceMax:3500,
       inStock:false,onlyOffers:false,sort:'rel',q:'',posQ:'',posCat:'todos',invQ:'',invCat:'todos',invState:'todos',salesStatus:'todas',
       billingTab:'cortes',cashHistoryType:'ALL',cashHistoryQ:'',cashHistoryDiffOnly:false,
       customersTab:'deudores',customerSearchQ:'',customerFilterType:'ALL',purchasesTab:'proveedores',pendingNotesClient:'TODOS'}
@@ -2262,20 +2262,26 @@ var MODULES = [
     g: 'Ventas & Clientes',
     items: [
       { id: 'ventas', label: 'Ventas & Pedidos', icon: 'cart', tip: 'Historial de compras y pedidos omnicanal' },
-      { id: 'facturacion', label: 'Facturación & Caja', icon: 'receipt', tip: 'Comprobantes y recibos de entrega' },
-      { id: 'clientes', label: 'Clientes & CRM', icon: 'users', tip: 'Expediente, crédito y cartera de clientes' },
-      { id: 'marketing', label: 'Marketing & Cupones', icon: 'mega', tip: 'Campañas, promociones y códigos de descuento' },
-      { id: 'reportes', label: 'Reportes & Métricas', icon: 'chart', tip: 'Estadísticas de ventas y arqueo contable' }
+      { id: 'facturacion', label: 'Facturación & Caja', icon: 'receipt', tip: 'Comprobantes fiscales SENIAT, notas de entrega y cortes de caja' },
+      { id: 'clientes', label: 'Clientes & CRM', icon: 'users', tip: 'Expediente, crédito, cobranza y abonos' },
+      { id: 'marketing', label: 'Publicidad & Banners', icon: 'mega', tip: 'Publicidad en tienda, marcas aliadas y cupones' },
+      { id: 'reportes', label: 'Reportes & BI', icon: 'chart', tip: 'Analítica Pareto, alertas predictivas min/max y garantías RMA' }
     ]
   },
   {
-    g: 'Sistema & Plataforma',
+    g: 'Administración & Sistema',
     items: [
-      { id: 'plugins', label: 'Ecosistema Plugins', icon: 'plug', tip: 'Módulos conectables e integraciones', badge: 'new' },
-      { id: 'devops', label: 'Infraestructura DevOps', icon: 'server', tip: 'Docker, microservicios y estado del clúster' },
-      { id: 'seguridad', label: 'Seguridad & RBAC', icon: 'shield', tip: 'Matriz de roles, permisos y tokens JWT' },
-      { id: 'roadmap', label: 'Roadmap & Fases', icon: 'map', tip: 'Progreso y entregables del sistema' },
-      { id: 'ajustes', label: 'Ajustes de Tienda', icon: 'cog', tip: 'Identidad corporativa, IVA, IGTF y cuentas bancarias' }
+      { id: 'ajustes', label: 'Ajustes & Respaldos', icon: 'cog', tip: 'Identidad corporativa, IVA, cuentas bancarias, usuarios y respaldos SQLite' }
+    ]
+  },
+  {
+    g: '🛠️ Herramientas de Desarrollo (Mockups)',
+    isDevOnly: true,
+    items: [
+      { id: 'plugins', label: 'Ecosistema Plugins (Mock)', icon: 'plug', tip: 'Maqueta de plugins conectables' },
+      { id: 'devops', label: 'Infraestructura DevOps (Mock)', icon: 'server', tip: 'Maqueta de microservicios y clúster' },
+      { id: 'seguridad', label: 'Seguridad & RBAC (Mock)', icon: 'shield', tip: 'Maqueta de controles y matriz' },
+      { id: 'roadmap', label: 'Roadmap & Fases (Mock)', icon: 'map', tip: 'Maqueta de fases del prototipo' }
     ]
   }
 ];
@@ -2305,23 +2311,25 @@ function canAccess(mid){
 
 function adminShell(inner,mid){
   var s=State.session;
+  var visibleGroups = MODULES.filter(function(g){ return !g.isDevOnly || State.ui.showDevModules; });
   return '<div class="admin '+(State.ui.sidebar?'mini':'')+'" id="admin-root">'+
   '<aside class="side" id="side"><div class="side-head">'+
     (STORE_CONFIG.logoUrl ? '<img src="'+esc(STORE_CONFIG.logoUrl)+'" alt="Logo" style="height:32px;max-width:110px;object-fit:contain;margin-right:8px;border-radius:4px">' : '<span class="brand-mark">'+I.bolt+'</span>')+
     '<div style="min-width:0;line-height:1.2"><b style="font-family:var(--font-display);font-size:14px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(STORE_CONFIG.storeName)+'</b>'+
     '<span class="xs muted" style="white-space:nowrap">'+esc(s?(s.roleDisplayName||ROLE_MAP[s.role]||s.role):'Admin')+'</span></div>'+
     '<button class="icon-btn mob-only" style="margin-left:auto" type="button" data-action="close-mob-side" aria-label="Cerrar menú">'+I.x+'</button></div>'+
-    '<nav class="side-nav" aria-label="Módulos">'+MODULES.map(function(g){
+    '<nav class="side-nav" aria-label="Módulos">'+visibleGroups.map(function(g){
       return '<div class="side-group">'+g.g+'</div>'+g.items.map(function(m){
         var ok=canAccess(m.id);
         return '<a class="nlink '+(mid===m.id?'on':'')+' '+(ok?'':'locked')+'" href="#/admin/'+m.id+'" data-action="admin-nav" data-m="'+m.id+'" '+(m.tip?'data-tip="'+m.tip+'" data-tip-force':'')+'>'+
           I[m.icon]+'<span class="txt">'+m.label+'</span>'+
           (!ok?'<span class="nb">'+I.lock+'</span>':(m.badge?'<span class="nb '+(m.badge==='new'?'hot':'')+'">'+(m.badge==='new'?'NEW':m.badge)+'</span>':''))+'</a>';
       }).join(''); }).join('')+'</nav>'+
-    '<div class="side-foot"><div class="mod-health"><div class="spread" style="margin-bottom:8px"><b class="xs">Salud de módulos</b><span class="badge b-ok"><i class="dot pulse"></i> 9/9</span></div>'+
-      [['Ventas','online'],['Inventario','online'],['Facturación','online'],['Cola Redis','online']].map(function(x){
+    '<div class="side-foot"><div class="mod-health"><div class="spread" style="margin-bottom:8px"><b class="xs">Estado del Sistema</b><span class="badge b-ok"><i class="dot pulse"></i> Producción</span></div>'+
+      [['Base de Datos','SQLite Activo'],['Tasa BCV','Sincronizada'],['Facturación','SENIAT OK'],['Respaldos','1-Clic']].map(function(x){
         return '<div class="mh-row"><span>'+x[0]+'</span><span style="color:var(--ok)">● '+x[1]+'</span></div>'; }).join('')+
-      '<button class="btn btn-sm btn-ghost" style="width:100%;margin-top:10px" type="button" data-action="admin-nav" data-m="devops">'+I.server+' Ver infraestructura</button></div></div></aside>'+
+      '<button class="btn btn-sm btn-ghost" style="width:100%;margin-top:10px" type="button" data-action="admin-nav" data-m="ajustes">'+I.cog+' Centro de Respaldos</button>'+
+      (State.ui.showDevModules ? '<button class="btn btn-sm btn-ghost" style="width:100%;margin-top:6px;font-size:11px" type="button" data-action="admin-nav" data-m="devops">'+I.server+' Ver DevOps (Mock)</button>' : '')+'</div></div></aside>'+
   '<div class="main"><header class="top">'+
     '<button class="icon-btn mob-only" type="button" data-action="open-mob-side" aria-label="Abrir menú">'+I.menu+'</button>'+
     '<button class="icon-btn hide-md" type="button" data-action="toggle-mini" aria-label="Colapsar menú" data-tip="Colapsar menú lateral" data-tip-force>'+I.grid+'</button>'+
@@ -6712,7 +6720,7 @@ Views.reportes=function(){
 
 /* ---- Plugins ---- */
 Views.plugins=function(){
-  return '<div class="page-head"><div><h1>Plugins y marketplace</h1><p>Cada módulo es independiente: se instala, actualiza y despliega sin detener la tienda.</p></div>'+
+  return '<div class="page-head"><div><h1>Plugins y marketplace <span class="badge b-warn xs" style="vertical-align:middle;margin-left:8px">Maqueta Conceptual</span></h1><p>Vista conceptual del ecosistema de plugins · Modo Desarrollador</p></div>'+
     '<div class="wrap-row"><button class="btn btn-ghost btn-sm" type="button" data-action="admin-nav" data-m="devops">'+I.server+' Ver arquitectura</button>'+
     '<button class="btn btn-primary btn-sm" type="button" data-action="upload-plugin">'+I.plus+' Subir plugin propio</button></div></div>'+
   '<div class="kpi-grid" style="margin-bottom:18px">'+
@@ -6767,7 +6775,7 @@ function archDiagram(){
     box(196,220,150,46,'Docker Compose','VPS / Railway','#64748b')+line(346,243,396,243,'#64748b')+'</svg>';
 }
 Views.devops=function(){
-  return '<div class="page-head"><div><h1>API &amp; DevOps</h1><p>Arquitectura modular · Docker Compose · CI/CD por módulo</p></div>'+
+  return '<div class="page-head"><div><h1>API &amp; DevOps <span class="badge b-warn xs" style="vertical-align:middle;margin-left:8px">Maqueta de Arquitectura</span></h1><p>Topología y telemetría simulada · Modo Desarrollador</p></div>'+
     '<div class="wrap-row"><button class="btn btn-ghost btn-sm" type="button" data-action="run-tests">'+I.check+' Correr pruebas E2E</button>'+
     '<button class="btn btn-primary btn-sm" type="button" data-action="deploy">'+I.rocket+' Desplegar módulo</button></div></div>'+
   '<div class="card card-pad" style="margin-bottom:18px"><h3 style="font-size:16px;margin-bottom:4px">Topología del sistema</h3>'+
@@ -6800,7 +6808,7 @@ Views.seguridad=function(){
     ['Consultas parametrizadas · 0 SQL injection','ok'],['Sanitización de salida · XSS','ok'],['Datos sensibles cifrados (AES-256)','ok'],
     ['Backups cifrados con prueba de restore','ok'],['npm audit · 2 dependencias moderadas','warn'],['MFA obligatorio para Administrador','warn'],['Registro de auditoría inmutable','ok']];
   var ok=checks.filter(function(c){return c[1]==='ok';}).length;
-  return '<div class="page-head"><div><h1>Seguridad</h1><p>Postura evaluada hace 6 horas · 41 controles verificados</p></div>'+
+  return '<div class="page-head"><div><h1>Seguridad &amp; RBAC <span class="badge b-warn xs" style="vertical-align:middle;margin-left:8px">Maqueta de Auditoría</span></h1><p>Auditoría técnica simulada (la administración real de usuarios y permisos opera en Ajustes) · Modo Desarrollador</p></div>'+
     '<div class="wrap-row"><button class="btn btn-ghost btn-sm" type="button" data-action="rescan">'+I.refresh+' Re-escanear</button>'+
     '<button class="btn btn-primary btn-sm" type="button" data-action="pentest">'+I.shield+' Solicitar pentest</button></div></div>'+
   '<div class="grid grid-split-admin" style="grid-template-columns:320px 1fr;align-items:start">'+
@@ -6838,7 +6846,7 @@ Views.seguridad=function(){
 
 /* ---- Roadmap ---- */
 Views.roadmap=function(){
-  return '<div class="page-head"><div><h1>Hoja de ruta del producto</h1><p>Cuatro fases: del MVP vendible al ecosistema de plugins. Marca tareas para actualizar el avance.</p></div>'+
+  return '<div class="page-head"><div><h1>Hoja de ruta del producto <span class="badge b-warn xs" style="vertical-align:middle;margin-left:8px">Maqueta de Fases</span></h1><p>Histórico de fases y planificación inicial · Modo Desarrollador</p></div>'+
     '<div class="wrap-row"><span class="badge b-info">Sprint 14 · termina en 6 días</span><button class="btn btn-ghost btn-sm" type="button" data-action="export-csv" data-what="roadmap">'+I.dl+' Exportar plan</button></div></div>'+
   '<div class="tl" style="margin-top:8px">'+DB.roadmap.map(function(ph,i){
       var done=ph.tasks.filter(function(t){return t[1];}).length, pr=Math.round(done/ph.tasks.length*100);
@@ -7164,14 +7172,15 @@ Views.ajustes=function(){
         }).join('') : '<p class="sm muted">Cargando roles...</p>')+
       '</div></div>'+
 
-    // SISTEMA DE DISEÑO
-    '<div class="card"><div class="card-head"><div><h3>Sistema de diseño</h3><p class="card-sub">Tokens aplicados en vivo a tienda y panel</p></div></div><div class="card-pad">'+
+    // SISTEMA DE DISEÑO Y ENTORNO
+    '<div class="card"><div class="card-head"><div><h3>Sistema de diseño y Entorno</h3><p class="card-sub">Tokens visuales y preferencias de interfaz de usuario</p></div></div><div class="card-pad">'+
       '<label class="lbl">Color de marca</label><div class="wrap-row" style="margin-bottom:16px">'+
       [['#0f766e','Verde ferretero'],['#2563eb','Azul corporativo'],['#7c3aed','Violeta premium'],['#ea580c','Naranja obra'],['#dc2626','Rojo industrial']]
         .map(function(c){ return '<button type="button" data-action="set-accent" data-c="'+c[0]+'" data-tip="'+c[1]+'" data-tip-force aria-label="'+c[1]+'" style="width:40px;height:40px;border-radius:12px;background:'+c[0]+';border:3px solid '+(State.accent===c[0]?'var(--text)':'transparent')+'"></button>'; }).join('')+'</div>'+
       [['Tema oscuro','Reduce fatiga visual en turnos nocturnos','toggle-theme',State.theme==='dark'],
        ['Tooltips y guías contextuales','Explican cada función sin manual externo','toggle-help',State.ui.help],
-       ['Animaciones y microinteracciones','Respetan prefers-reduced-motion','toggle-generic',true]]
+       ['Animaciones y microinteracciones','Respetan prefers-reduced-motion','toggle-generic',true],
+       ['Modo Desarrollador & Maquetas','Muestra vistas prototipo (DevOps, Plugins Mock, Seguridad Mock, Roadmap) en el menú lateral','toggle-dev-modules',State.ui.showDevModules]]
       .map(function(x){ return '<div class="spread" style="padding:9px 0;border-top:1px dashed var(--border)"><div><b class="sm">'+x[0]+'</b><br><span class="xs muted">'+x[1]+'</span></div>'+
         '<button class="switch '+(x[3]?'on':'')+'" type="button" data-action="'+x[2]+'" role="switch" aria-label="'+x[0]+'"></button></div>'; }).join('')+'</div></div>'+
 
@@ -7448,6 +7457,8 @@ function handleAction(a,el,e){
       showToast('Token de color actualizado en tienda y panel.','ok','Design system'); render(); break;
     case 'toggle-help': State.ui.help=!State.ui.help; LS.set('cb-help',State.ui.help);
       showToast(State.ui.help?'Tooltips activados: pasa el cursor sobre los elementos con línea punteada.':'Tooltips desactivados.','info','Guías'); render(); break;
+    case 'toggle-dev-modules': State.ui.showDevModules = !State.ui.showDevModules; LS.set('cb-show-dev', State.ui.showDevModules);
+      showToast(State.ui.showDevModules ? 'Modo Desarrollador activado: maquetas técnicas visibles en el menú lateral.' : 'Modo Producción activo: menú limpio con herramientas operativas.', 'info', 'Entorno'); render(); break;
     case 'toggle-generic': el.classList.toggle('on'); el.setAttribute('aria-checked',el.classList.contains('on'));
       showToast('Preferencia guardada.','ok','Ajustes'); break;
     case 'toggle-dense': el.classList.toggle('on');
@@ -13334,12 +13345,13 @@ function openRoleModal(role){
 }
 function openNotifs(){
   var m=metrics();
+  var debtorsCount = DB.customers.filter(function(c){return (c.balance||0)>0;}).length;
   var items=[
     {t:'Stock crítico',d:m.out.length+' producto(s) agotados y '+m.low.length+' por debajo del mínimo.',b:'b-bad',ic:'box',m:'inventario'},
-    {t:'Facturas por timbrar',d:m.pend.length+' comprobantes en espera en la cola del PAC.',b:'b-warn',ic:'receipt',m:'facturacion'},
-    {t:'Última venta',d:DB.orders[0].folio+' por '+money(DB.orders[0].total)+' · '+DB.orders[0].channel,b:'b-ok',ic:'cart',m:'ventas'},
-    {t:'Actualización de plugin',d:'Facturación Electrónica v2.5.0 disponible (parche de seguridad).',b:'b-info',ic:'plug',m:'plugins'},
-    {t:'Dependencias',d:'npm audit reporta 2 vulnerabilidades moderadas.',b:'b-warn',ic:'shield',m:'seguridad'}];
+    {t:'Facturas & Comprobantes',d:m.pend.length+' comprobante(s) en espera o emitidos.',b:'b-warn',ic:'receipt',m:'facturacion'},
+    {t:'Última venta',d:(DB.orders[0]?DB.orders[0].folio+' por '+money(DB.orders[0].total)+' · '+DB.orders[0].channel:'Sin ventas recientes'),b:'b-ok',ic:'cart',m:'ventas'},
+    {t:'Cartera de Cobranzas',d:debtorsCount+' cliente(s) con saldo o abonos pendientes.',b:'b-info',ic:'users',m:'clientes'},
+    {t:'Tasa BCV Oficial',d:'Tasa de cambio: Bs. '+BCV_RATE.toFixed(2)+'/USD sincronizada.',b:'b-ok',ic:'refresh',m:'pos'}];
   openDrawer('<div class="dr-head"><div><h3 style="font-size:17px">Notificaciones</h3><span class="xs muted">Centro de alertas por módulo</span></div>'+
     '<button class="icon-btn" type="button" data-action="close-overlay">'+I.x+'</button></div>'+
     '<div class="dr-body">'+items.map(function(i){
@@ -13578,11 +13590,16 @@ function openDocsModal(p){
    ══════════════════════════════════════════════════════════════════════════ */
 function openCmdk(){
   var cmds=[];
-  MODULES.forEach(function(g){ g.items.forEach(function(i){ cmds.push({t:'Ir a '+i.label,g:'Navegación',ic:i.icon,run:function(){ go('/admin/'+i.id); }}); }); });
+  MODULES.filter(function(g){ return !g.isDevOnly || State.ui.showDevModules; }).forEach(function(g){ g.items.forEach(function(i){ cmds.push({t:'Ir a '+i.label,g:'Navegación',ic:i.icon,run:function(){ go('/admin/'+i.id); }}); }); });
   cmds.push({t:'Abrir punto de venta (cobrar)',g:'Acciones',ic:'pos',run:function(){ go('/admin/pos'); }});
   cmds.push({t:'Crear producto nuevo',g:'Acciones',ic:'box',run:function(){ go('/admin/inventario'); setTimeout(function(){openProductModal(null);},350); }});
+  cmds.push({t:'Sincronizar tasa oficial BCV',g:'Finanzas',ic:'refresh',run:function(){ refreshBcvRateFromApi(); }});
+  cmds.push({t:'Descargar respaldo SQLite (.db)',g:'Respaldos',ic:'download',run:function(){ downloadDbBackup(); }});
   cmds.push({t:'Exportar ventas a CSV',g:'Acciones',ic:'dl',run:function(){ exportCSV('ventas'); }});
-  cmds.push({t:'Ejecutar pipeline CI/CD',g:'DevOps',ic:'rocket',run:function(){ go('/admin/devops'); setTimeout(runPipeline,500); }});
+  cmds.push({t:'Abrir Centro de Ayuda & Copiloto IA',g:'Ayuda',ic:'help',run:function(){ handleAction('open-ai-chat',null,null); }});
+  if(State.ui.showDevModules){
+    cmds.push({t:'Ejecutar pipeline CI/CD (Mock)',g:'DevOps',ic:'rocket',run:function(){ go('/admin/devops'); setTimeout(runPipeline,500); }});
+  }
   cmds.push({t:'Cambiar tema claro/oscuro',g:'Preferencias',ic:'moon',run:function(){ handleAction('toggle-theme',null,null); }});
   cmds.push({t:'Ver la tienda online',g:'Navegación',ic:'store',run:function(){ go('/'); }});
   cmds.push({t:'Cerrar sesión',g:'Cuenta',ic:'logout',run:function(){ handleAction('logout',null,null); }});
@@ -13623,11 +13640,12 @@ function openCmdk(){
    18. TOUR GUIADO (solo manual — FIX v1.1)
    ══════════════════════════════════════════════════════════════════════════ */
 var TOUR=[
- {s:'#side',t:'Navegación modular',d:'Cada módulo (Ventas, Inventario, Facturación…) es una app pequeña dentro del panel. Si uno se actualiza, los demás siguen funcionando.'},
- {s:'[data-m="pos"]',t:'Caja en 3 clics',d:'El POS está pensado para mostrador: buscas, tocas el producto y cobras. Funciona igual en celular.'},
- {s:'[data-m="devops"]',t:'El cuarto de máquinas',d:'Aquí ves la arquitectura real: API Gateway, módulos en Docker, bus de eventos Redis y el pipeline CI/CD blue-green.'},
- {s:'[data-m="seguridad"]',t:'Seguridad por diseño',d:'JWT de 15 min con refresh rotativo, RBAC validado en el gateway, datos cifrados y bitácora inmutable.'},
- {s:'.top',t:'Búsqueda global',d:'Ctrl K en cualquier momento: navega a módulos, productos o clientes sin soltar el teclado.'}
+ {s:'#side',t:'Navegación Departamental',d:'Operaciones, Ventas & Clientes y Administración. Módulos independientes y desacoplados.'},
+ {s:'[data-m="pos"]',t:'Punto de Venta Multimoneda',d:'El POS de mostrador: buscas productos, tocas para cobrar, cálculo automático a tasa BCV y recibos por WhatsApp.'},
+ {s:'[data-m="inventario"]',t:'Inventario & Multi-Almacén',d:'Control de stock, alertas predictivas min/max, depósitos múltiples y traslados entre sucursales.'},
+ {s:'[data-m="facturacion"]',t:'Facturación SENIAT & Cortes',d:'Generación de facturas oficiales, notas de entrega, libro de ventas e historial de cierres X y Z.'},
+ {s:'[data-m="ajustes"]',t:'Marca Blanca & Respaldos SQLite',d:'Personaliza el nombre de tu negocio, logotipo, cuentas bancarias y descarga respaldos de seguridad en 1 clic.'},
+ {s:'.top',t:'Búsqueda Global en Vivo',d:'Ctrl K en cualquier momento: navega a módulos, productos o clientes sin soltar el teclado.'}
 ];
 var tourStep=0;
 function startTour(){ tourStep=0; if(!$('#admin-root')){ go('/admin/dashboard'); setTimeout(drawTour,600); return; } drawTour(); }
