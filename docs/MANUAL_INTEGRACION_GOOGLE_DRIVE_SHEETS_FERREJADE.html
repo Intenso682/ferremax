@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Tutorial Oficial de Integración Google Drive & Google Sheets - FerreJade, C.A.</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 15mm 16mm 18mm 16mm;
+      @bottom-right {
+        content: "Página " counter(page) " de " counter(pages);
+        font-size: 9pt;
+        color: #64748b;
+        font-family: 'Segoe UI', Arial, sans-serif;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+      color: #1e293b;
+      line-height: 1.55;
+      font-size: 10.5pt;
+      background: #ffffff;
+    }
+
+    /* Portada / Header Ejecutivo */
+    .header-banner {
+      background: linear-gradient(135deg, #003333 0%, #064e3b 55%, #0f766e 100%);
+      color: #ffffff;
+      padding: 24px 28px;
+      border-radius: 12px;
+      margin-bottom: 24px;
+      border-bottom: 4px solid #CFB53B;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .header-titles h1 {
+      font-size: 21pt;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: #ffffff;
+      margin-bottom: 4px;
+    }
+
+    .header-titles h2 {
+      font-size: 12pt;
+      font-weight: 600;
+      color: #CFB53B;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+
+    .header-meta {
+      font-size: 9pt;
+      color: #e2e8f0;
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .header-meta span {
+      background: rgba(255,255,255,0.15);
+      padding: 3px 10px;
+      border-radius: 6px;
+    }
+
+    .brand-logo-badge {
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .brand-tag {
+      background: #CFB53B;
+      color: #003333;
+      font-weight: 800;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12pt;
+      display: inline-block;
+      letter-spacing: 0.5px;
+    }
+
+    /* Secciones */
+    h3.section-title {
+      font-size: 14pt;
+      font-weight: 700;
+      color: #003333;
+      border-bottom: 2px solid #e2e8f0;
+      padding-bottom: 6px;
+      margin: 22px 0 12px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    h4.step-title {
+      font-size: 11.5pt;
+      font-weight: 700;
+      color: #0f766e;
+      margin: 16px 0 6px 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    p {
+      margin-bottom: 10px;
+      color: #334155;
+    }
+
+    /* Cajas destacadas */
+    .callout {
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin: 14px 0;
+      font-size: 9.5pt;
+      line-height: 1.5;
+    }
+
+    .callout-info {
+      background: #f0fdf4;
+      border-left: 4px solid #0F9D58;
+      color: #14532d;
+    }
+
+    .callout-warning {
+      background: #fffbeb;
+      border-left: 4px solid #f59e0b;
+      color: #78350f;
+    }
+
+    .callout-gold {
+      background: #fefce8;
+      border-left: 4px solid #CFB53B;
+      color: #713f12;
+    }
+
+    .callout b {
+      color: #0f172a;
+    }
+
+    /* Pasos ordenados */
+    ol.steps-list {
+      margin: 10px 0 16px 22px;
+    }
+
+    ol.steps-list li {
+      margin-bottom: 8px;
+      padding-left: 6px;
+      color: #334155;
+    }
+
+    ul.check-list {
+      list-style: none;
+      margin: 10px 0 14px 0;
+    }
+
+    ul.check-list li {
+      margin-bottom: 6px;
+      padding-left: 24px;
+      position: relative;
+    }
+
+    ul.check-list li::before {
+      content: "✔";
+      color: #0F9D58;
+      font-weight: bold;
+      position: absolute;
+      left: 0;
+      top: 0;
+    }
+
+    /* Tabla de columnas */
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 14px 0;
+      font-size: 8.5pt;
+    }
+
+    table.data-table th, table.data-table td {
+      border: 1px solid #cbd5e1;
+      padding: 6px 10px;
+      text-align: left;
+    }
+
+    table.data-table th {
+      background: #003333;
+      color: #CFB53B;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    table.data-table tr:nth-child(even) {
+      background: #f8fafc;
+    }
+
+    /* Bloques de código */
+    pre.code-block {
+      background: #090d16;
+      color: #e2e8f0;
+      padding: 14px 16px;
+      border-radius: 8px;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 8pt;
+      line-height: 1.45;
+      overflow-x: hidden;
+      white-space: pre-wrap;
+      word-break: break-all;
+      border: 1px solid #1e293b;
+      margin: 12px 0;
+    }
+
+    .badge-pill {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 8pt;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .badge-pill-green { background: #dcfce7; color: #15803d; }
+    .badge-pill-gold { background: #fef08a; color: #854d0e; }
+
+    .page-break {
+      page-break-before: always;
+    }
+
+    .footer-note {
+      margin-top: 30px;
+      padding-top: 12px;
+      border-top: 1px solid #e2e8f0;
+      font-size: 8pt;
+      color: #64748b;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ==================== PÁGINA 1: INTRODUCCIÓN Y ARQUITECTURA ==================== -->
+  <div class="header-banner">
+    <div class="header-titles">
+      <h2>Guía Oficial de Implementación Cloud</h2>
+      <h1>Conector Google Drive & Sheets</h1>
+      <div class="header-meta">
+        <span><b>Empresa:</b> FerreJade, C.A.</span>
+        <span><b>Correo Oficial:</b> ferrejadepzo@gmail.com</span>
+        <span><b>Versión:</b> 2.0 Pro</span>
+      </div>
+    </div>
+    <div class="brand-logo-badge">
+      <div class="brand-tag">FerreJade</div>
+      <div style="font-size:7.5pt; color:#e2e8f0; margin-top:4px;">Todo a la mano</div>
+    </div>
+  </div>
+
+  <div class="callout callout-gold">
+    <b>💡 Resumen Ejecutivo:</b> Este microservicio gratuito convierte tu cuenta oficial de Gmail (<code>ferrejadepzo@gmail.com</code>) en un potente servidor en la nube sin pagar membresías ni bases de datos costosas. Cada vez que tomas una foto a un empaque con el <b>Escáner IA Móvil</b>, la fotografía se guarda automáticamente en una carpeta de tu <b>Google Drive</b> y los 15 datos maestros del producto se asientan en una fila de tu <b>Google Sheet</b> en tiempo real.
+  </div>
+
+  <h3 class="section-title">🏛️ 1. Arquitectura y Flujo de Datos en Tiempo Real</h3>
+  <p>El sistema opera bajo un flujo automatizado de 4 etapas que no requiere instalar ningún programa en tu computadora:</p>
+
+  <ul class="check-list">
+    <li><b>Paso A (Captura & Visión IA):</b> Apuntas la cámara del teléfono o PC a la caja física. El modelo Gemini Vision extrae el nombre, marca, medidas, categoría, código de barras y sugiere precio de venta con margen del 35%.</li>
+    <li><b>Paso B (Envío Cifrado):</b> La aplicación empaqueta la información y la fotografía comprimida en alta definición.</li>
+    <li><b>Paso C (Google Apps Script Microservice):</b> El script recibe la carga, decodifica la imagen en el Google Drive de FerreJade y genera un enlace web público permanente.</li>
+    <li><b>Paso D (Asiento Contable en Google Sheets):</b> Registra el producto con fecha, precio en USD, precio convertido a Bolívares con la tasa oficial BCV y el hipervínculo directo a la fotografía.</li>
+  </ul>
+
+  <h3 class="section-title">📋 2. Estructura de las 16 Columnas en Google Sheets</h3>
+  <p>La hoja de cálculo se creará automáticamente con los colores corporativos de FerreJade (Verde Jade y Dorado) con la siguiente estructura:</p>
+
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Col</th>
+        <th>Encabezado</th>
+        <th>Tipo de Dato</th>
+        <th>Ejemplo de Contenido</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>A</td><td>Fecha y Hora</td><td>Texto / Timestamp</td><td>2026-11-05 10:15:30</td></tr>
+      <tr><td>B</td><td>SKU</td><td>Código Único</td><td>HER-TRU-8821</td></tr>
+      <tr><td>C</td><td>Código de Barras</td><td>EAN-13 / UPC</td><td>7501234567890</td></tr>
+      <tr><td>D</td><td>Nombre del Producto</td><td>Texto Descriptivo</td><td>Taladro Percutor Inalámbrico 20V</td></tr>
+      <tr><td>E</td><td>Marca</td><td>Texto</td><td>Truper / DeWalt / Stanley</td></tr>
+      <tr><td>F</td><td>Categoría</td><td>Texto Maestro</td><td>Herramientas Eléctricas</td></tr>
+      <tr><td>G</td><td>Costo USD ($)</td><td>Numérico ($)</td><td>45.00</td></tr>
+      <tr><td>H</td><td>Margen %</td><td>Porcentaje</td><td>35%</td></tr>
+      <tr><td>I</td><td>Precio Venta USD ($)</td><td>Numérico ($)</td><td>60.75</td></tr>
+      <tr><td>J</td><td>Precio Venta BCV (Bs)</td><td>Numérico (Bs.)</td><td>Bs. 54,263.00 (Tasa BCV al día)</td></tr>
+      <tr><td>K</td><td>Stock Físico</td><td>Entero</td><td>12</td></tr>
+      <tr><td>L</td><td>Unidad</td><td>Texto</td><td>UND, METRO, ROLLO, JUEGO</td></tr>
+      <tr><td>M</td><td>Ubicación</td><td>Texto de Pasillo</td><td>Pasillo 3 - Estante B</td></tr>
+      <tr><td>N</td><td>Garantía</td><td>Texto / Tiempo</td><td>12 Meses Oficial</td></tr>
+      <tr><td>O</td><td>Especificaciones</td><td>Texto Detallado</td><td>Mandril 1/2 pulgada, 2 baterías litio</td></tr>
+      <tr><td>P</td><td>Foto en Google Drive</td><td>Enlace URL Activo</td><td>https://drive.google.com/open?id=...</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ==================== PÁGINA 2: PASO A PASO EN GOOGLE DRIVE ==================== -->
+  <div class="page-break"></div>
+
+  <h3 class="section-title">🚀 3. Tutorial Paso a Paso: Instalación en Google Drive (Solo 3 Minutos)</h3>
+
+  <h4 class="step-title">Paso 1: Abrir Google Drive y Crear la Hoja de Cálculo</h4>
+  <ol class="steps-list">
+    <li>Abre tu navegador de internet (Chrome o Edge) e ingresa a <b>https://drive.google.com</b>.</li>
+    <li>Asegúrate de haber iniciado sesión con el correo oficial: <b>ferrejadepzo@gmail.com</b>.</li>
+    <li>Haz clic en el botón superior izquierdo <b>"+ Nuevo"</b> y selecciona <b>"Hojas de cálculo de Google"</b> (Hoja en blanco).</li>
+    <li>En la esquina superior izquierda, haz clic en <i>"Hoja de cálculo sin título"</i> y cámbiale el nombre a:<br>
+      <code style="background:#f1f5f9; padding:2px 8px; border-radius:4px; font-weight:700; color:#003333;">FerreJade - Catálogo Maestro</code>
+    </li>
+  </ol>
+
+  <h4 class="step-title">Paso 2: Abrir el Editor de Apps Script</h4>
+  <ol class="steps-list">
+    <li>En el menú superior de la hoja de cálculo, haz clic en <b>Extensiones</b>.</li>
+    <li>En el menú desplegable, haz clic en <b>Apps Script</b>.</li>
+    <li>Se abrirá una nueva pestaña con el editor de código de Google. Verás unas líneas que dicen <code>function myFunction() { }</code>.</li>
+    <li><b>Borra todo ese texto</b> para que el editor quede completamente en blanco.</li>
+  </ol>
+
+  <h4 class="step-title">Paso 3: Pegar el Código del Conector y Guardar</h4>
+  <ol class="steps-list">
+    <li>Copia todo el código que se encuentra en la <b>Sección 5</b> de este manual (o del archivo <code>docs/GOOGLE_APPS_SCRIPT_DRIVE_CONNECTOR.js</code>).</li>
+    <li>Pégalo en el editor de Apps Script.</li>
+    <li>Haz clic en el icono del disquete <b>"Guardar proyecto"</b> (o presiona <kbd>Ctrl + S</kbd>).</li>
+    <li>Opcional: En la esquina superior izquierda, haz clic en <i>"Proyecto sin título"</i> y nómbralo <code>Conector FerreJade Cloud</code>.</li>
+  </ol>
+
+  <h4 class="step-title">Paso 4: Implementar como Aplicación Web (¡Punto Crítico!)</h4>
+  <ol class="steps-list">
+    <li>En la parte superior derecha de Apps Script, haz clic en el botón azul <b>"Implementar"</b> (Deploy).</li>
+    <li>Selecciona la opción <b>"Nueva implementación"</b>.</li>
+    <li>A la izquierda, haz clic en el icono de engranaje (⚙️) junto a <i>"Seleccionar tipo"</i> y elige <b>"Aplicación web"</b>.</li>
+    <li>Rellena los campos exactamente como sigue:
+      <ul style="margin:6px 0 6px 18px;">
+        <li><b>Descripción:</b> <code>Conector FerreJade v1.0</code></li>
+        <li><b>Ejecutar como:</b> <b>Yo (ferrejadepzo@gmail.com)</b></li>
+        <li><b>Quién tiene acceso:</b> <b>Cualquier persona</b> <i>(Anyone - Crucial para que el celular pueda enviar datos)</i></li>
+      </ul>
+    </li>
+    <li>Haz clic en el botón <b>"Implementar"</b>.</li>
+  </ol>
+
+  <div class="callout callout-warning">
+    <b>⚠️ Autorización de Permisos de Google (Solo la primera vez):</b><br>
+    Google te mostrará una ventana pidiendo autorización para que el script acceda a Google Drive y Sheets:
+    <ol style="margin-left: 18px; margin-top: 4px;">
+      <li>Haz clic en <b>"Revisar permisos"</b> (Review permissions) y selecciona tu cuenta <code>ferrejadepzo@gmail.com</code>.</li>
+      <li>Aparecerá un aviso que dice <i>"Google no ha verificado esta app"</i>. <b>No te preocupes</b>, esto ocurre porque es un script privado creado por ti mismo.</li>
+      <li>Haz clic en el texto pequeño abajo a la izquierda: <b>"Configuración avanzada"</b> (Advanced).</li>
+      <li>Haz clic en <b>"Ir a Conector FerreJade (no seguro)"</b>.</li>
+      <li>En la última pantalla, haz clic en <b>"Permitir"</b> (Allow).</li>
+    </ol>
+  </div>
+
+  <h4 class="step-title">Paso 5: Copiar la URL del Webhook</h4>
+  <ol class="steps-list">
+    <li>Google te mostrará una ventana con el mensaje <i>"Implementación actualizada"</i>.</li>
+    <li>Bajo el título <b>"URL de la aplicación web"</b> verás un enlace largo que termina en <code>/exec</code>:<br>
+      <code style="background:#f1f5f9; padding:4px 8px; border-radius:4px; font-size:8.5pt; color:#0f766e;">https://script.google.com/macros/s/AKfycb.../exec</code>
+    </li>
+    <li>Haz clic en el botón <b>"Copiar"</b> junto a la URL. ¡Ya tienes tu enlace listo!</li>
+  </ol>
+
+  <!-- ==================== PÁGINA 3: VINCULACIÓN EN FERREMAX Y PRUEBAS ==================== -->
+  <div class="page-break"></div>
+
+  <h3 class="section-title">📲 4. Vincular el Webhook en el Sistema FerreMax / FerreJade</h3>
+
+  <p>Una vez que copiaste la URL del Webhook, vincularla al sistema es automático y toma 30 segundos:</p>
+
+  <ol class="steps-list">
+    <li>Abre tu aplicación <b>FerreMax / FerreJade</b> en el navegador o en tu celular.</li>
+    <li>Ingresa al <b>Panel Administrativo</b> (o a la sección de <b>Inventario</b>).</li>
+    <li>Haz clic en el botón verde con icono de nube: <b>"☁️ Google Drive & Sheets"</b>.</li>
+    <li>Se abrirá el modal de sincronización oficial.</li>
+    <li>En el campo <b>"URL del Webhook de Google Apps Script"</b>, pega el enlace copiado (el que termina en <code>/exec</code>).</li>
+    <li>Asegúrate de que la casilla <b>"☑ Sincronizar automáticamente al escanear cada producto"</b> esté marcada.</li>
+    <li>Haz clic en <b>"💾 Guardar Configuración"</b>. Verás una notificación verde: <i>"Configuración guardada correctamente"</i>.</li>
+    <li>Haz clic en <b>"🧪 Probar Conexión"</b>. El sistema enviará una señal a tu script y mostrará:<br>
+      <span class="badge-pill badge-pill-green">🟢 Conexión exitosa con Google Cloud / ferrejadepzo@gmail.com</span>
+    </li>
+    <li><b>(Opcional):</b> Haz clic en el botón <b>"☁️ Enviar Todo el Catálogo a Google Sheets"</b>. El sistema enviará todos los productos existentes a la hoja de cálculo de inmediato.</li>
+  </ol>
+
+  <h3 class="section-title">🧪 5. Fase de Pruebas: Cómo Eliminar Productos de Prueba y Limpiar SKUs</h3>
+
+  <p>Cuando hagas tus primeros escaneos para probar la cámara y la inteligencia artificial, se crearán registros de prueba. Para dejarlos limpios antes de comenzar con el inventario real de la tienda física, sigue este procedimiento de 1 minuto:</p>
+
+  <h4 class="step-title">A. Limpiar Productos de Prueba en Google Sheets:</h4>
+  <ul class="check-list">
+    <li>Abre tu hoja de cálculo <b>"FerreJade - Catálogo Maestro"</b> en Google Drive.</li>
+    <li>Haz clic en los números de las filas que quieras borrar (por ejemplo, las filas 2, 3, 4...).</li>
+    <li>Haz clic derecho sobre los números seleccionados y elige <b>"Eliminar filas seleccionadas"</b>.</li>
+    <li>La fila de encabezados dorados (#1) se mantiene intacta y la hoja queda lista para los productos reales.</li>
+  </ul>
+
+  <h4 class="step-title">B. Limpiar Fotos de Prueba en Google Drive:</h4>
+  <ul class="check-list">
+    <li>En tu Google Drive, abre la carpeta creada automáticamente llamada <b>"FerreJade - Fotos de Productos"</b>.</li>
+    <li>Selecciona las fotos de prueba y arrástralas a la <b>Papelera</b> (o presiona la tecla Suprimir).</li>
+  </ul>
+
+  <h4 class="step-title">C. Limpiar o Modificar Productos y SKUs en FerreMax:</h4>
+  <ul class="check-list">
+    <li><b>Para borrar un producto individual:</b> En el módulo de <i>Inventario</i> de FerreMax, localiza el producto de prueba y haz clic en el icono rojo de papelera <b>🗑️</b>.</li>
+    <li><b>Para corregir un SKU o nombre:</b> Haz clic en <b>"Editar"</b> en cualquier producto. Puedes escribir el SKU oficial que use tu negocio (por ejemplo <code>HER-001</code>, <code>TUB-PVC-020</code>) o dejar que la IA lo genere.</li>
+    <li><b>Cero impacto en el historial:</b> Como el sistema utiliza SQLite local y Google Sheets como respaldo vivo, puedes borrar y rehacer productos cuantas veces desees durante tus pruebas sin temor a dañar el sistema.</li>
+  </ul>
+
+  <div class="callout callout-info">
+    <b>🔒 Respaldo Total en 1 Clic:</b> Antes de comenzar tu inventario definitivo, puedes entrar a <b>Ajustes &gt; Centro de Respaldos</b> en FerreMax y pulsar <i>"Descargar Copia de Seguridad JSON"</i> para tener un archivo seguro de tu base de datos en tu computadora.
+  </div>
+
+  <!-- ==================== PÁGINA 4: CÓDIGO FUENTE COMPLETO ==================== -->
+  <div class="page-break"></div>
+
+  <h3 class="section-title">📜 6. Código Fuente Completo del Conector Google Apps Script</h3>
+  <p>Copia exactamente este bloque de código y pégalo en el editor de Apps Script según las instrucciones del Paso 3:</p>
+
+  <pre class="code-block">/**
+ * ==============================================================================
+ * CONECTOR OFICIAL FERREJADE, C.A. PARA GOOGLE DRIVE & GOOGLE SHEETS
+ * Cuenta: ferrejadepzo@gmail.com
+ * ==============================================================================
+ * Este script convierte tu Google Sheet en un microservicio en la nube 100% gratuito.
+ * Recibe los productos escaneados con la IA de la aplicación móvil de FerreJade,
+ * guarda la información en la hoja de cálculo y almacena la foto física en una
+ * carpeta de tu Google Drive, insertando el enlace directo a la imagen.
+ *
+ * 📋 INSTRUCCIONES DE INSTALACIÓN (Solo toma 2 minutos):
+ * 1. Entra a tu Google Drive con tu correo (ferrejadepzo@gmail.com).
+ * 2. Crea una Hoja de Cálculo de Google en blanco y nómbrala "FerreJade - Catálogo Maestro".
+ * 3. En el menú superior de la hoja, haz clic en: Extensiones -&gt; Apps Script.
+ * 4. Borra todo el código que aparezca y pega este código completo.
+ * 5. Haz clic en el disquete "Guardar" (Ctrl + S).
+ * 6. Haz clic en el botón azul superior "Implementar" -&gt; "Nueva implementación".
+ * 7. En el icono de engranaje (⚙️), selecciona: "Aplicación web".
+ * 8. Configura los campos:
+ *    - Descripción: Conector FerreJade Catálogo IA
+ *    - Ejecutar como: "Yo (ferrejadepzo@gmail.com)"
+ *    - Quién tiene acceso: "Cualquier persona" (Anyone)
+ * 9. Haz clic en "Implementar" y autoriza los permisos de Google.
+ * 10. Copia la "URL de la aplicación web" generada (termina en /exec) y pégala
+ *     en el sistema FerreJade en: Ajustes -&gt; Conexión Google Drive / Sheets.
+ * ==============================================================================
+ */
+
+function doPost(e) {
+  try {
+    var lock = LockService.getScriptLock();
+    lock.waitLock(30000); // Evitar condiciones de carrera en escaneos simultáneos
+
+    var payload = {};
+    if (e.postData && e.postData.contents) {
+      payload = JSON.parse(e.postData.contents);
+    } else {
+      payload = e.parameter || {};
+    }
+
+    var sheet = getOrCreateCatalogSheet();
+    var folder = getOrCreateDriveFolder("FerreJade - Fotos de Productos");
+
+    // Si viene un solo producto o una lista de productos
+    var products = [];
+    if (payload.products && Array.isArray(payload.products)) {
+      products = payload.products;
+    } else if (payload.product) {
+      products = [payload.product];
+    } else {
+      products = [payload];
+    }
+
+    var savedCount = 0;
+    var lastFileUrl = "";
+
+    for (var i = 0; i &lt; products.length; i++) {
+      var p = products[i];
+      if (!p.name && !p.sku) continue;
+
+      var fileUrl = "";
+      // Si el producto incluye la imagen en Base64 tomada por el escáner
+      var rawImage = p.imageBase64 || p.imageUrl || "";
+      if (rawImage && rawImage.indexOf("base64,") !== -1) {
+        try {
+          var cleanBase64 = rawImage.split("base64,")[1];
+          var contentType = "image/jpeg";
+          if (rawImage.indexOf("image/png") !== -1) contentType = "image/png";
+          else if (rawImage.indexOf("image/webp") !== -1) contentType = "image/webp";
+
+          var fileName = (p.sku || "PRODUCTO") + "_" + Utilities.formatDate(new Date(), "GMT-4", "yyyyMMdd_HHmmss") + ".jpg";
+          var decoded = Utilities.base64Decode(cleanBase64);
+          var blob = Utilities.newBlob(decoded, contentType, fileName);
+          var file = folder.createFile(blob);
+          file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+          fileUrl = file.getUrl();
+          lastFileUrl = fileUrl;
+        } catch (imgErr) {
+          fileUrl = "Error al guardar imagen: " + imgErr.toString();
+        }
+      } else if (rawImage.indexOf("http") === 0) {
+        fileUrl = rawImage;
+      }
+
+      var nowStr = Utilities.formatDate(new Date(), "GMT-4", "yyyy-MM-dd HH:mm:ss");
+      var cost = parseFloat(p.cost || p.costUsd || 0);
+      var priceUsd = parseFloat(p.price || p.priceUsd || 0);
+      var margin = cost &gt; 0 ? Math.round(((priceUsd - cost) / cost) * 100) + "%" : "N/A";
+      var rateBcv = parseFloat(p.rateBcv || payload.rateBcv || 893.22);
+      var priceBs = (priceUsd * rateBcv).toFixed(2);
+
+      sheet.appendRow([
+        nowStr,
+        p.sku || "",
+        p.barcode || "",
+        p.name || "",
+        p.brand || "Genérico",
+        p.category || p.cat || "General",
+        cost &gt; 0 ? cost : "",
+        margin,
+        priceUsd &gt; 0 ? priceUsd : "",
+        priceBs,
+        p.stock !== undefined ? p.stock : 1,
+        p.unit || "UND",
+        p.location || "Pasillo General",
+        p.warranty || "N/A",
+        p.specs || p.description || p.desc || "",
+        fileUrl
+      ]);
+      savedCount++;
+    }
+
+    lock.releaseLock();
+
+    return ContentService.createTextOutput(JSON.stringify({
+      status: "success",
+      message: "Se guardaron " + savedCount + " producto(s) en Google Sheets y Drive correctamente.",
+      savedCount: savedCount,
+      driveFileUrl: lastFileUrl
+    })).setMimeType(ContentService.MimeType.JSON);
+
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({
+      status: "error",
+      message: err.toString()
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function doGet(e) {
+  return ContentService.createTextOutput(JSON.stringify({
+    status: "online",
+    system: "FerreJade Cloud Connector v1.0",
+    account: "ferrejadepzo@gmail.com",
+    timestamp: new Date().toISOString()
+  })).setMimeType(ContentService.MimeType.JSON);
+}
+
+/**
+ * Obtiene o inicializa la pestaña con encabezados corporativos FerreJade
+ */
+function getOrCreateCatalogSheet() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName("Catálogo FerreJade");
+  if (!sheet) {
+    sheet = ss.insertSheet("Catálogo FerreJade", 0);
+  }
+
+  // Si la hoja está vacía, colocar cabecera profesional con estilo FerreJade
+  if (sheet.getLastRow() === 0) {
+    var headers = [
+      "Fecha y Hora",
+      "SKU",
+      "Código de Barras",
+      "Nombre del Producto",
+      "Marca",
+      "Categoría",
+      "Costo USD ($)",
+      "Margen %",
+      "Precio Venta USD ($)",
+      "Precio Venta BCV (Bs)",
+      "Stock Físico",
+      "Unidad",
+      "Ubicación Pasillo/Estante",
+      "Garantía",
+      "Especificaciones Técnicas",
+      "Foto en Google Drive"
+    ];
+    sheet.appendRow(headers);
+
+    var headerRange = sheet.getRange(1, 1, 1, headers.length);
+    headerRange.setBackground("#003333"); // Verde Jade FerreJade
+    headerRange.setFontColor("#CFB53B");  // Dorado FerreJade
+    headerRange.setFontWeight("bold");
+    headerRange.setFontSize(11);
+    headerRange.setHorizontalAlignment("center");
+    sheet.setFrozenRows(1);
+
+    // Ajustar anchos iniciales
+    sheet.setColumnWidth(1, 150); // Fecha
+    sheet.setColumnWidth(2, 120); // SKU
+    sheet.setColumnWidth(3, 130); // Barras
+    sheet.setColumnWidth(4, 250); // Nombre
+    sheet.setColumnWidth(5, 120); // Marca
+    sheet.setColumnWidth(6, 150); // Categoría
+    sheet.setColumnWidth(7, 100); // Costo
+    sheet.setColumnWidth(8, 80);  // Margen
+    sheet.setColumnWidth(9, 110); // Precio USD
+    sheet.setColumnWidth(10, 120);// Precio Bs
+    sheet.setColumnWidth(11, 90); // Stock
+    sheet.setColumnWidth(12, 80); // Unidad
+    sheet.setColumnWidth(13, 150);// Ubicación
+    sheet.setColumnWidth(14, 100);// Garantía
+    sheet.setColumnWidth(15, 260);// Specs
+    sheet.setColumnWidth(16, 220);// Drive link
+  }
+
+  return sheet;
+}
+
+/**
+ * Busca o crea la carpeta de fotos en Google Drive
+ */
+function getOrCreateDriveFolder(folderName) {
+  var folders = DriveApp.getFoldersByName(folderName);
+  if (folders.hasNext()) {
+    return folders.next();
+  }
+  return DriveApp.createFolder(folderName);
+}
+</pre>
+
+  <div class="footer-note">
+    Documento emitido para FerreJade, C.A. · RIF J-50123456-7 · Puerto Ordaz, Venezuela.<br>
+    Soporte técnico y asistencia: ferrejadepzo@gmail.com · NovaStack Portal: https://novastack.odoo.com
+  </div>
+
+</body>
+</html>
