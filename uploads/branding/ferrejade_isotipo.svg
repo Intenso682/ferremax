@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="120 120 316 316" width="100%" height="100%">
+  <title>FerreJade - Isotipo Oficial</title>
+  <defs>
+    <style>
+      .fj-jade { fill: #003333; }
+      .fj-oro { fill: #CFB53B; }
+    </style>
+  </defs>
+  <g id="FJ_Isotipo_Standalone" transform="translate(130.00, 130.00) scale(1.4800)">
+    <polygon id="FJ_F_Cuerpo_Jade" points="0,41 56,0 84,0 84,41 29,81 29,111 84,72 107,89 29,143 29,181 0,159" class="fj-jade" />
+    <polygon id="FJ_F_Bisel_Sup_Jade" points="84,0 131,34 131,72 84,41" class="fj-jade" />
+    <polygon id="FJ_F_Brazo_Oro" points="29,81 84,41 84,72 29,111" class="fj-oro" />
+    <polygon id="FJ_F_Bisel_Oro" points="84,41 131,72 107,89 84,72" class="fj-oro" />
+    <polygon id="FJ_F_Pilar_Oro" points="29,143 58,123 58,201 52,201 29,181" class="fj-oro" />
+    <polygon id="FJ_J_Asta_Oro" points="143,0 150,0 171,16 171,120 115,160 115,127 143,107" class="fj-oro" />
+    <polygon id="FJ_J_Bisel_Oro" points="93,111 115,127 115,160 69,128" class="fj-oro" />
+    <polygon id="FJ_J_Base_Jade" points="69,128 115,160 115,201 69,167" class="fj-jade" />
+    <polygon id="FJ_J_Cuerpo_Ext_Jade" points="171,16 200,41 200,159 144,201 115,201 115,160 171,120" class="fj-jade" />
+  </g>
+</svg>

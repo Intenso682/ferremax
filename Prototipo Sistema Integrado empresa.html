@@ -129,6 +129,7 @@ svg{display:block;max-width:100%}
 .dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex:none}
 .pulse{position:relative}.pulse::after{content:'';position:absolute;inset:-4px;border-radius:50%;border:2px solid currentColor;opacity:.5;animation:pulse 1.8s infinite}
 @keyframes pulse{0%{transform:scale(.6);opacity:.7}100%{transform:scale(1.6);opacity:0}}
+@keyframes scanLaser{0%{top:20px;opacity:.7}50%{opacity:1}100%{top:250px;opacity:.7}}
 .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--sh-1)}
 .card-pad{padding:22px}
 .card-head{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:18px 22px;border-bottom:1px solid var(--border);flex-wrap:wrap}
@@ -940,15 +941,15 @@ var API_ONLINE = false;
 var AUTH_TOKEN = localStorage.getItem('ferremax_token') || null;
 
 var STORE_CONFIG = {
-  storeName: 'FerreMax Venezuela, C.A.',
-  storeSlogan: 'Ferretería Industrial, Construcción y Hogar',
-  logoUrl: '',
-  colorPrimary: '#0f766e',
-  colorSecondary: '#0284c7',
+  storeName: 'FerreJade, C.A.',
+  storeSlogan: 'Todo a la mano, como en casa',
+  logoUrl: '/uploads/branding/ferrejade_logo.svg',
+  colorPrimary: '#003333',
+  colorSecondary: '#CFB53B',
   storeRif: 'J-50123456-7',
-  address: 'Av. Francisco de Miranda, Edif. FerreMax, Chacao, Caracas',
+  address: 'Puerto Ordaz, Estado Bolívar, Venezuela',
   phone: '+58 414 1234567',
-  email: 'ventas@ferremax.ve',
+  email: 'ferrejadepzo@gmail.com',
   schedule: 'Lunes a Sábado: 8:00 AM - 5:00 PM',
   bannerText: '',
   ivaPercent: 16,
@@ -1746,15 +1747,15 @@ function setSEO(o){
    ══════════════════════════════════════════════════════════════════════════ */
 function renderBrandLogo(customStyle, isLight){
   if(STORE_CONFIG.logoUrl){
-    return '<img src="'+esc(STORE_CONFIG.logoUrl)+'" alt="'+esc(STORE_CONFIG.storeName)+'" style="'+(customStyle||'height:36px;max-width:180px;object-fit:contain;vertical-align:middle;display:inline-block;')+'" onerror="this.onerror=null;this.style.display=\'none\';">';
+    return '<img src="'+esc(STORE_CONFIG.logoUrl)+'" alt="'+esc(STORE_CONFIG.storeName)+'" style="'+(customStyle||'height:36px;max-width:200px;object-fit:contain;vertical-align:middle;display:inline-block;')+'" onerror="this.onerror=null;this.style.display=\'none\';">';
   }
   return '<span class="brand-mark" '+(isLight?'style="background:rgba(255,255,255,.2)"':'')+'>'+I.bolt+'</span>';
 }
 
 function renderBrandName(showSlogan){
-  var full = STORE_CONFIG.storeName || 'FerreMax';
+  var full = STORE_CONFIG.storeName || 'FerreJade';
   var parts = full.split(' ');
-  var first = parts[0] || 'Empresa';
+  var first = parts[0] || 'FerreJade';
   var rest = parts.slice(1).join(' ');
   var nameHtml = esc(first) + (rest ? ' <b style="color:var(--accent)">' + esc(rest) + '</b>' : '');
   if(showSlogan && STORE_CONFIG.storeSlogan){
@@ -1764,6 +1765,9 @@ function renderBrandName(showSlogan){
 }
 
 function renderBrandHeader(customStyle, showSlogan, isLight){
+  if(STORE_CONFIG.logoUrl){
+    return '<span class="brand-line"><img src="'+esc(STORE_CONFIG.logoUrl)+'" alt="'+esc(STORE_CONFIG.storeName)+'" style="'+(customStyle||'height:36px;max-width:200px;object-fit:contain;vertical-align:middle;display:inline-block;')+'" onerror="this.onerror=null;this.parentElement.innerHTML=renderBrandName('+showSlogan+');"></span>';
+  }
   var logo = renderBrandLogo(customStyle, isLight);
   var name = renderBrandName(showSlogan);
   return '<span class="brand-line">'+logo+'<span class="brand-title">'+name+'</span></span>';
@@ -2314,8 +2318,8 @@ function adminShell(inner,mid){
   var visibleGroups = MODULES.filter(function(g){ return !g.isDevOnly || State.ui.showDevModules; });
   return '<div class="admin '+(State.ui.sidebar?'mini':'')+'" id="admin-root">'+
   '<aside class="side" id="side"><div class="side-head">'+
-    (STORE_CONFIG.logoUrl ? '<img src="'+esc(STORE_CONFIG.logoUrl)+'" alt="Logo" style="height:32px;max-width:110px;object-fit:contain;margin-right:8px;border-radius:4px">' : '<span class="brand-mark">'+I.bolt+'</span>')+
-    '<div style="min-width:0;line-height:1.2"><b style="font-family:var(--font-display);font-size:14px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(STORE_CONFIG.storeName)+'</b>'+
+    (STORE_CONFIG.logoUrl ? '<img src="/uploads/branding/ferrejade_isotipo.svg" alt="FerreJade" style="height:34px;width:34px;object-fit:contain;margin-right:10px;border-radius:6px;flex-shrink:0" onerror="this.src=\''+esc(STORE_CONFIG.logoUrl)+'\'">' : '<span class="brand-mark">'+I.bolt+'</span>')+
+    '<div style="min-width:0;line-height:1.2"><b style="font-family:var(--font-display);font-size:14.5px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)">'+esc(STORE_CONFIG.storeName)+'</b>'+
     '<span class="xs muted" style="white-space:nowrap">'+esc(s?(s.roleDisplayName||ROLE_MAP[s.role]||s.role):'Admin')+'</span></div>'+
     '<button class="icon-btn mob-only" style="margin-left:auto" type="button" data-action="close-mob-side" aria-label="Cerrar menú">'+I.x+'</button></div>'+
     '<nav class="side-nav" aria-label="Módulos">'+visibleGroups.map(function(g){
@@ -2876,9 +2880,10 @@ Views.inventario=function(){
 
   return '<div class="page-head"><div><h1>Inventario Multi-Depósito</h1><p>'+DB.products.length+' SKU activos · '+whs.length+' depósitos · valor a costo '+money(m.stockValue)+'</p></div>'+
     '<div class="wrap-row">'+
+      '<button class="btn btn-primary btn-sm" type="button" data-action="open-ai-scanner" style="background:#003333;color:#fff;border:1px solid #CFB53B;gap:6px;font-weight:700"><span style="color:#CFB53B">📸</span> Escáner IA Móvil</button>'+
       '<button class="btn btn-ghost btn-sm" type="button" data-action="export-csv" data-what="inventario">'+I.dl+' Exportar CSV</button>'+
       '<button class="btn btn-ghost btn-sm" type="button" data-action="open-transfer-modal">'+I.refresh+' Traslado interno</button>'+
-      '<button class="btn btn-primary btn-sm" type="button" data-action="new-product">'+I.plus+' Nuevo producto</button>'+
+      '<button class="btn btn-soft btn-sm" type="button" data-action="new-product">'+I.plus+' Nuevo producto</button>'+
     '</div></div>'+
 
   /* Tabs de navegación */
@@ -7559,6 +7564,7 @@ function handleAction(a,el,e){
     case 'close-shift': closeOverlay(); Bus.emit('ventas.corte','Caja 02 · arqueo sin diferencias',{module:'ventas'});
       showToast('Turno cerrado. Corte impreso y enviado al contador.','ok','Caja'); break;
     /* inventario */
+    case 'open-ai-scanner': openAiScannerModal(); break;
     case 'inv-tab': State.ui.invTab = D.tab; render(); break;
     case 'open-warehouse-modal': openNewWarehouseModal(); break;
     case 'open-transfer-modal': openNewTransferModal(D.from); break;
@@ -10935,7 +10941,10 @@ function openProductModal(id){
   currentModalImages = (p && p.images && p.images.length) ? p.images.slice(0, 3) : (p && p.imageUrl ? [p.imageUrl] : []);
 
   openModal('<div class="card-head"><div><h3>'+(p?'Editar producto':'Nuevo producto')+'</h3><p class="card-sub">Módulo Inventario · los campos con * son obligatorios</p></div>'+
-    '<button class="icon-btn" type="button" data-action="close-overlay">'+I.x+'</button></div>'+
+    '<div class="row" style="gap:8px">'+
+      (!p ? '<button class="btn btn-sm btn-primary" type="button" data-action="open-ai-scanner" style="background:#003333;color:#fff;border:1px solid #CFB53B;font-size:12px;gap:6px">📸 Escanear Caja con IA</button>' : '')+
+      '<button class="icon-btn" type="button" data-action="close-overlay">'+I.x+'</button>'+
+    '</div></div>'+
     '<form data-form="product"><div style="padding:22px;overflow-y:auto;max-height:calc(85vh - 130px)">'+
       '<input type="hidden" name="id" value="'+(p?p.id:'')+'">'+
       '<input type="hidden" name="art" value="'+(p&&p.art?p.art:'drill')+'">'+
@@ -11171,6 +11180,369 @@ function downloadCatalogTemplate() {
     ['PNT-4001','Galón de Pintura Caucho Mate Blanco Puro VP','Pintura y Acabados','22.00','14.80','40','10','750102030406','Excelente cubrimiento y lavabilidad para interiores y exteriores','SI']
   ];
   downloadCSV('plantilla_catalogo_ferremax.csv', [headers].concat(samples));
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   ESCÁNER INTELIGENTE MÓVIL CON IA (GEMINI 3.8 FLASH VISION)
+   ══════════════════════════════════════════════════════════════════════════ */
+var aiScannerState = {
+  stream: null,
+  capturedBlob: null,
+  capturedBase64: null,
+  scannedCount: 0,
+  isScanning: false,
+};
+
+function stopAiCamera() {
+  if (aiScannerState.stream) {
+    try {
+      aiScannerState.stream.getTracks().forEach(function(t) { t.stop(); });
+    } catch (e) {}
+    aiScannerState.stream = null;
+  }
+}
+
+function openAiScannerModal() {
+  stopAiCamera();
+  aiScannerState.capturedBlob = null;
+  aiScannerState.capturedBase64 = null;
+  aiScannerState.isScanning = false;
+
+  var html = ''+
+    '<div class="card-head" style="background:#003333;color:#fff;border-radius:14px 14px 0 0;padding:16px 20px">'+
+      '<div style="display:flex;align-items:center;gap:12px">'+
+        '<span style="background:#CFB53B;color:#003333;width:38px;height:38px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;font-size:20px;font-weight:bold;flex-shrink:0">📸</span>'+
+        '<div>'+
+          '<h3 style="margin:0;font-size:16px;color:#fff;display:flex;align-items:center;gap:8px;flex-wrap:wrap">'+
+            'Escáner Inteligente con IA · FerreJade'+
+            '<span class="badge" style="background:#CFB53B;color:#003333;font-size:10px;font-weight:700">Gemini 3.8 Flash Vision</span>'+
+          '</h3>'+
+          '<p class="card-sub" style="margin:2px 0 0;color:rgba(255,255,255,0.8);font-size:12px">Enfoca la caja, marca o etiqueta del producto para catalogar en 2 segundos</p>'+
+        '</div>'+
+      '</div>'+
+      '<button class="icon-btn" type="button" data-action="close-overlay" style="color:#fff">'+I.x+'</button>'+
+    '</div>'+
+    '<div style="padding:18px;overflow-y:auto;max-height:calc(88vh - 110px)">'+
+      '<!-- VISOR DE CÁMARA & RETÍCULA -->'+
+      '<div id="ai-cam-container" style="position:relative;width:100%;max-width:500px;margin:0 auto;background:#051412;border-radius:16px;overflow:hidden;border:2px solid #CFB53B;box-shadow:0 10px 30px rgba(0,51,51,0.25)">'+
+        '<video id="ai-cam-video" autoplay playsinline muted style="width:100%;height:300px;object-fit:cover;display:block"></video>'+
+        '<canvas id="ai-cam-canvas" style="display:none"></canvas>'+
+        '<img id="ai-cam-preview" style="display:none;width:100%;height:300px;object-fit:contain;background:#000">'+
+        '<div id="ai-cam-reticle" style="position:absolute;inset:16px;pointer-events:none;border:1.5px dashed rgba(207,181,59,0.5);border-radius:12px;display:flex;flex-direction:column;justify-content:space-between;align-items:center;padding:10px">'+
+          '<div style="width:100%;display:flex;justify-content:space-between">'+
+            '<span style="width:22px;height:22px;border-top:3px solid #CFB53B;border-left:3px solid #CFB53B"></span>'+
+            '<span style="width:22px;height:22px;border-top:3px solid #CFB53B;border-right:3px solid #CFB53B"></span>'+
+          '</div>'+
+          '<div id="ai-scan-laser" style="width:92%;height:2px;background:linear-gradient(90deg,transparent,#CFB53B,#fff,#CFB53B,transparent);box-shadow:0 0 10px #CFB53B;position:absolute;animation:scanLaser 2s infinite alternate"></div>'+
+          '<div style="width:100%;display:flex;justify-content:space-between">'+
+            '<span style="width:22px;height:22px;border-bottom:3px solid #CFB53B;border-left:3px solid #CFB53B"></span>'+
+            '<span style="width:22px;height:22px;border-bottom:3px solid #CFB53B;border-right:3px solid #CFB53B"></span>'+
+          '</div>'+
+        '</div>'+
+        '<div id="ai-scan-loading" style="display:none;position:absolute;inset:0;background:rgba(0,51,51,0.92);backdrop-filter:blur(4px);flex-direction:column;align-items:center;justify-content:center;color:#fff;gap:12px;padding:20px;text-align:center">'+
+          '<div style="width:44px;height:44px;border:4px solid rgba(207,181,59,0.3);border-top-color:#CFB53B;border-radius:50%;animation:pulse 0.9s linear infinite"></div>'+
+          '<b style="font-size:15px;color:#fff">Gemini 3.8 Flash Vision analizando caja...</b>'+
+          '<span class="xs" style="color:#CFB53B">Extrayendo marca, especificaciones, código de barras y medidas</span>'+
+        '</div>'+
+      '</div>'+
+
+      '<!-- BOTONERA DE DISPARO Y SUBIDA -->'+
+      '<div style="display:flex;gap:10px;margin-top:14px;max-width:500px;margin-left:auto;margin-right:auto;flex-wrap:wrap">'+
+        '<button type="button" class="btn btn-primary" id="btn-snap-ai-trigger" style="flex:2;background:#003333;color:#fff;border:1px solid #CFB53B;padding:12px;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px">'+
+          '📸 <span>Capturar & Analizar Caja</span>'+
+        '</button>'+
+        '<button type="button" class="btn btn-soft" id="btn-upload-file-trigger" style="flex:1;padding:12px;font-size:13px;display:flex;align-items:center;justify-content:center;gap:6px">'+
+          '📁 Subir foto'+
+        '</button>'+
+        '<input type="file" id="ai-native-file-input" accept="image/*" capture="environment" style="display:none">'+
+        '<button type="button" class="btn btn-ghost" id="btn-restart-cam" style="display:none;padding:12px">'+
+          '🔄 Tomar otra'+
+        '</button>'+
+      '</div>'+
+
+      '<!-- FICHA EXTRAÍDA PARA CONFIRMACIÓN RÁPIDA -->'+
+      '<div id="ai-extracted-card" style="display:none;max-width:500px;margin:18px auto 0;background:var(--surface);border:1.5px solid #CFB53B;border-radius:14px;padding:18px;box-shadow:0 8px 24px rgba(0,0,0,0.1)">'+
+        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border)">'+
+          '<b style="color:#003333;font-size:14px;display:flex;align-items:center;gap:6px">'+
+            '✨ Producto Detectado'+
+            '<span class="badge b-ok" id="ai-res-badge" style="font-size:10px">Confianza 95%</span>'+
+          '</b>'+
+          '<span class="xs mono muted" id="ai-res-model">gemini-3.8-flash</span>'+
+        '</div>'+
+
+        '<form id="form-scanned-product">'+
+          '<div class="grid" style="grid-template-columns:1fr 1fr;gap:12px">'+
+            '<div style="grid-column:1/-1">'+
+              '<label class="lbl" style="font-weight:600">Nombre del Producto *</label>'+
+              '<input class="input" id="sc-name" required placeholder="Nombre comercial">'+
+            '</div>'+
+            '<div>'+
+              '<label class="lbl">Marca</label>'+
+              '<input class="input" id="sc-brand" placeholder="Ej: Truper, DeWalt">'+
+            '</div>'+
+            '<div>'+
+              '<label class="lbl">Categoría</label>'+
+              '<select class="input" id="sc-cat">'+
+                CATS.map(function(c){ return '<option value="'+c.id+'">'+c.name+'</option>'; }).join('')+
+              '</select>'+
+            '</div>'+
+            '<div>'+
+              '<label class="lbl">SKU Sugerido *</label>'+
+              '<input class="input mono" id="sc-sku" required placeholder="SKU-XXXX">'+
+            '</div>'+
+            '<div>'+
+              '<label class="lbl">Código de Barras</label>'+
+              '<input class="input mono" id="sc-barcode" placeholder="EAN/UPC">'+
+            '</div>'+
+            '<div style="background:var(--surface-2);padding:10px;border-radius:10px;border:1px solid var(--border)">'+
+              '<label class="lbl" style="color:var(--text);font-weight:700">Costo USD ($) *</label>'+
+              '<input class="input mono" id="sc-cost" type="number" step="0.01" placeholder="0.00" style="font-weight:700;font-size:15px">'+
+            '</div>'+
+            '<div style="background:var(--surface-2);padding:10px;border-radius:10px;border:1px solid #CFB53B">'+
+              '<label class="lbl" style="color:#003333;font-weight:700">Precio Venta USD ($) *</label>'+
+              '<input class="input mono" id="sc-price" type="number" step="0.01" placeholder="0.00" style="font-weight:700;font-size:15px;color:#003333">'+
+              '<span class="xs muted" id="sc-margin-lbl" style="display:block;margin-top:3px">+35% margen sugerido</span>'+
+            '</div>'+
+            '<div>'+
+              '<label class="lbl">Stock Inicial</label>'+
+              '<input class="input mono" id="sc-stock" type="number" value="1">'+
+            '</div>'+
+            '<div>'+
+              '<label class="lbl">Unidad</label>'+
+              '<select class="input" id="sc-unit">'+
+                ['UND','PZA','METRO','KG','LITRO','SACO','CAJA','JGO'].map(function(u){ return '<option value="'+u+'">'+u+'</option>'; }).join('')+
+              '</select>'+
+            '</div>'+
+            '<div style="grid-column:1/-1">'+
+              '<label class="lbl">Ubicación Almacén</label>'+
+              '<input class="input" id="sc-loc" value="Pasillo General">'+
+            '</div>'+
+            '<div style="grid-column:1/-1">'+
+              '<label class="lbl">Especificaciones Técnicas</label>'+
+              '<input class="input" id="sc-specs" placeholder="Medidas, voltaje, potencia">'+
+            '</div>'+
+            '<div style="grid-column:1/-1">'+
+              '<label class="lbl">Descripción Comercial</label>'+
+              '<textarea class="input" id="sc-desc" rows="2"></textarea>'+
+            '</div>'+
+          '</div>'+
+
+          '<div style="margin-top:16px;display:flex;gap:10px;flex-direction:column">'+
+            '<button type="submit" class="btn btn-primary btn-lg" id="btn-save-scanned" style="background:#003333;color:#fff;border-color:#CFB53B;font-weight:700;padding:12px;font-size:15px">'+
+              '✅ Guardar en Catálogo FerreJade'+
+            '</button>'+
+            '<button type="button" class="btn btn-ghost" id="btn-scan-next-box" style="padding:10px;font-size:13px">'+
+              '📸 Escanear Siguiente Producto'+
+            '</button>'+
+          '</div>'+
+        '</form>'+
+      '</div>'+
+    '</div>';
+
+  openModal(html, 'wide');
+  initAiScannerLogic();
+}
+
+function initAiScannerLogic() {
+  var video = document.getElementById('ai-cam-video');
+  var canvas = document.getElementById('ai-cam-canvas');
+  var preview = document.getElementById('ai-cam-preview');
+  var reticle = document.getElementById('ai-cam-reticle');
+  var loading = document.getElementById('ai-scan-loading');
+  var card = document.getElementById('ai-extracted-card');
+  var snapBtn = document.getElementById('btn-snap-ai-trigger');
+  var fileBtn = document.getElementById('btn-upload-file-trigger');
+  var fileInput = document.getElementById('ai-native-file-input');
+  var restartBtn = document.getElementById('btn-restart-cam');
+
+  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } },
+      audio: false
+    }).then(function(stream) {
+      aiScannerState.stream = stream;
+      if (video) {
+        video.srcObject = stream;
+        video.play().catch(function(e){ console.warn('Video error:', e); });
+      }
+    }).catch(function(err) {
+      console.warn('Cámara directa no activa:', err);
+    });
+  }
+
+  var costIn = document.getElementById('sc-cost');
+  var priceIn = document.getElementById('sc-price');
+  var marginLbl = document.getElementById('sc-margin-lbl');
+
+  if (costIn && priceIn) {
+    costIn.oninput = function() {
+      var c = parseFloat(costIn.value) || 0;
+      if (c > 0 && (!priceIn.value || parseFloat(priceIn.value) <= c)) {
+        var p = (c * 1.35).toFixed(2);
+        priceIn.value = p;
+        if (marginLbl) marginLbl.textContent = 'Margen +35%: $' + p + ' USD';
+      }
+    };
+    priceIn.oninput = function() {
+      var c = parseFloat(costIn.value) || 0;
+      var p = parseFloat(priceIn.value) || 0;
+      if (c > 0 && p > 0 && marginLbl) {
+        var pct = Math.round(((p - c) / c) * 100);
+        marginLbl.textContent = 'Margen: ' + (pct >= 0 ? '+' : '') + pct + '%';
+      }
+    };
+  }
+
+  function resetScanner() {
+    if (preview) preview.style.display = 'none';
+    if (video) video.style.display = 'block';
+    if (reticle) reticle.style.display = 'flex';
+    if (loading) loading.style.display = 'none';
+    if (card) card.style.display = 'none';
+    if (snapBtn) snapBtn.style.display = 'flex';
+    if (restartBtn) restartBtn.style.display = 'none';
+  }
+
+  if (restartBtn) restartBtn.onclick = resetScanner;
+  var nextBtn = document.getElementById('btn-scan-next-box');
+  if (nextBtn) nextBtn.onclick = resetScanner;
+
+  async function analyzeImage(base64Data, mime) {
+    aiScannerState.capturedBase64 = base64Data;
+    if (video) video.style.display = 'none';
+    if (preview) { preview.src = base64Data; preview.style.display = 'block'; }
+    if (reticle) reticle.style.display = 'none';
+    if (loading) loading.style.display = 'flex';
+    if (snapBtn) snapBtn.style.display = 'none';
+
+    try {
+      var resp = await fetch(API_URL + '/ai/scan-product', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + (AUTH_TOKEN || '')
+        },
+        body: JSON.stringify({ imageBase64: base64Data, mimeType: mime || 'image/jpeg' })
+      });
+
+      if (!resp.ok) {
+        var errBody = await resp.json().catch(function(){ return {}; });
+        if (resp.status === 422 || errBody.error === 'GEMINI_NOT_CONFIGURED') {
+          throw new Error('Debes configurar la API Key de Google Gemini (cuenta ferrejadepzo@gmail.com) en Ajustes -> Inteligencia Artificial.');
+        }
+        throw new Error(errBody.message || 'Error del servidor al escanear con Gemini (' + resp.status + ')');
+      }
+
+      var data = await resp.json();
+      if (!data.success || !data.product) {
+        throw new Error('No se detectaron datos válidos.');
+      }
+
+      var p = data.product;
+      var nameEl = document.getElementById('sc-name'); if (nameEl) nameEl.value = p.name || '';
+      var brandEl = document.getElementById('sc-brand'); if (brandEl) brandEl.value = p.brand || '';
+      var skuEl = document.getElementById('sc-sku'); if (skuEl) skuEl.value = p.sku || '';
+      var barEl = document.getElementById('sc-barcode'); if (barEl) barEl.value = p.barcode || '';
+      var costEl = document.getElementById('sc-cost'); if (costEl) costEl.value = p.costUsd > 0 ? p.costUsd : '';
+      var priceEl = document.getElementById('sc-price'); if (priceEl) priceEl.value = p.priceUsd > 0 ? p.priceUsd : '';
+      var unitEl = document.getElementById('sc-unit'); if (unitEl) unitEl.value = p.unit || 'UND';
+      var locEl = document.getElementById('sc-loc'); if (locEl) locEl.value = p.location || 'Pasillo General';
+      var specsEl = document.getElementById('sc-specs'); if (specsEl) specsEl.value = p.specs || '';
+      var descEl = document.getElementById('sc-desc'); if (descEl) descEl.value = p.description || '';
+      var modelEl = document.getElementById('ai-res-model'); if (modelEl) modelEl.textContent = p.modelUsed || 'gemini-3.8-flash';
+
+      var catEl = document.getElementById('sc-cat');
+      if (catEl && p.category) {
+        var foundCat = CATS.find(function(c){ return c.name.toLowerCase().includes(p.category.toLowerCase()) || p.category.toLowerCase().includes(c.name.toLowerCase()); });
+        if (foundCat) catEl.value = foundCat.id;
+      }
+
+      if (costEl && priceEl && costEl.value && !priceEl.value) {
+        priceEl.value = (parseFloat(costEl.value) * 1.35).toFixed(2);
+      }
+
+      if (card) {
+        card.style.display = 'block';
+        card.scrollIntoView({ behavior: 'smooth' });
+      }
+      showToast('¡Caja reconocida con éxito por Gemini!', 'ok', 'Escaneo IA');
+    } catch (err) {
+      console.error(err);
+      showToast(err.message, 'err', 'Escáner IA');
+      if (restartBtn) restartBtn.style.display = 'inline-flex';
+    } finally {
+      if (loading) loading.style.display = 'none';
+    }
+  }
+
+  if (snapBtn) {
+    snapBtn.onclick = function() {
+      if (!video || !video.videoWidth) {
+        if (fileInput) fileInput.click();
+        return;
+      }
+      canvas.width = Math.min(1280, video.videoWidth);
+      canvas.height = Math.round(canvas.width * (video.videoHeight / video.videoWidth));
+      var ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      var base64 = canvas.toDataURL('image/jpeg', 0.88);
+      analyzeImage(base64, 'image/jpeg');
+    };
+  }
+
+  if (fileBtn && fileInput) {
+    fileBtn.onclick = function() { fileInput.click(); };
+    fileInput.onchange = function(e) {
+      var file = e.target.files && e.target.files[0];
+      if (!file) return;
+      var reader = new FileReader();
+      reader.onload = function(evt) {
+        analyzeImage(evt.target.result, file.type || 'image/jpeg');
+      };
+      reader.readAsDataURL(file);
+    };
+  }
+
+  var form = document.getElementById('form-scanned-product');
+  if (form) {
+    form.onsubmit = async function(e) {
+      e.preventDefault();
+      var cost = parseFloat(document.getElementById('sc-cost').value) || 0;
+      var price = parseFloat(document.getElementById('sc-price').value) || 0;
+      if (price <= 0) {
+        showToast('Debes ingresar un precio de venta mayor a 0', 'err', 'Precio inválido');
+        return;
+      }
+
+      var newProd = {
+        name: document.getElementById('sc-name').value.trim(),
+        brand: document.getElementById('sc-brand').value.trim(),
+        cat: document.getElementById('sc-cat').value,
+        sku: document.getElementById('sc-sku').value.trim().toUpperCase(),
+        barcode: document.getElementById('sc-barcode').value.trim(),
+        cost: cost,
+        price: price,
+        stock: parseFloat(document.getElementById('sc-stock').value) || 1,
+        min: 3,
+        unit: document.getElementById('sc-unit').value,
+        location: document.getElementById('sc-loc').value.trim(),
+        desc: document.getElementById('sc-desc').value.trim(),
+        badge: 'Nuevo',
+        art: 'drill'
+      };
+
+      if (aiScannerState.capturedBase64) {
+        newProd.images = [aiScannerState.capturedBase64];
+        newProd.imageUrl = aiScannerState.capturedBase64;
+      }
+
+      showToast('Guardando producto en inventario...', 'info', 'Procesando');
+      await saveProduct(newProd);
+      aiScannerState.scannedCount++;
+      showToast('¡Producto "' + newProd.name + '" catalogado con éxito! (Total: ' + aiScannerState.scannedCount + ')', 'ok', 'FerreJade');
+      resetScanner();
+    };
+  }
 }
 
 function openCatalogImportModal() {

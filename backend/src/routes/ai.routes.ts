@@ -167,3 +167,41 @@ aiRouter.post('/help-copilot', requireAuth, async (req: AuthenticatedRequest, re
   }
 });
 
+/**
+ * POST /api/ai/scan-product
+ * Escáner inteligente con Gemini 3.8 Flash Vision para catalogación móvil.
+ * Acepta imagen en Base64 capturada con cámara y devuelve los 15 campos estructurados.
+ */
+aiRouter.post('/scan-product', requireAuth, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const { imageBase64, mimeType } = req.body;
+    if (!imageBase64 || typeof imageBase64 !== 'string' || imageBase64.length < 50) {
+      res.status(400).json({ error: 'Se requiere el campo "imageBase64" con la imagen capturada' });
+      return;
+    }
+
+    const key = await GeminiService.getApiKey();
+    if (!key) {
+      res.status(422).json({
+        error: 'GEMINI_NOT_CONFIGURED',
+        message: 'No se ha configurado la clave de Google Gemini API en el sistema. Puedes activarla en Ajustes -> Inteligencia Artificial.',
+      });
+      return;
+    }
+
+    const result = await GeminiService.scanProductWithVision({
+      imageBase64,
+      mimeType: mimeType || 'image/jpeg',
+    });
+
+    res.json(result);
+  } catch (error: any) {
+    console.error('[AI Scan Product Error]:', error);
+    res.status(500).json({
+      error: 'GEMINI_SCAN_FAILED',
+      message: error.message || 'Error al procesar la imagen con Gemini Vision',
+    });
+  }
+});
+
+

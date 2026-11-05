@@ -242,6 +242,244 @@ export class GeminiService {
   }
 
   /**
+   * Invoca a la API de Google Gemini Multimodal / Vision (v1beta).
+   * Acepta texto + imagen en Base64 para escaneo inteligente de cajas y etiquetas.
+   */
+  private static async callGeminiVisionApi(
+    prompt: string,
+    imageBase64: string,
+    mimeType: string = 'image/jpeg',
+    apiKeyOverride?: string,
+    systemInstruction?: string
+  ): Promise<{ text: string; modelUsed: string }> {
+    const apiKey = apiKeyOverride || (await this.getApiKey());
+    if (!apiKey) {
+      throw new Error('NO_API_KEY: No se ha configurado la clave de API de Google Gemini.');
+    }
+
+    // Limpiar header data:image/...;base64, si viene incluido
+    let cleanBase64 = imageBase64;
+    let detectedMime = mimeType;
+    if (cleanBase64.includes(';base64,')) {
+      const parts = cleanBase64.split(';base64,');
+      cleanBase64 = parts[1];
+      const mimeMatch = parts[0].match(/data:(image\/[a-zA-Z0-9.+-]+)/);
+      if (mimeMatch) {
+        detectedMime = mimeMatch[1];
+      }
+    }
+
+    const primaryModel = await this.getModel();
+    const candidateModels = Array.from(new Set([
+      primaryModel,
+      'gemini-3.8-flash',
+      'gemini-2.5-flash',
+      'gemini-2.0-flash',
+      'gemini-1.5-flash',
+    ]));
+
+    let lastError: any = null;
+
+    for (const model of candidateModels) {
+      try {
+        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+
+        const requestBody: any = {
+          contents: [
+            {
+              role: 'user',
+              parts: [
+                { text: prompt },
+                {
+                  inlineData: {
+                    mimeType: detectedMime,
+                    data: cleanBase64,
+                  },
+                },
+              ],
+            },
+          ],
+          generationConfig: {
+            temperature: 0.2,
+            topK: 40,
+            topP: 0.95,
+            maxOutputTokens: 2048,
+            responseMimeType: 'application/json',
+          },
+        };
+
+        if (systemInstruction) {
+          requestBody.systemInstruction = {
+            parts: [{ text: systemInstruction }],
+          };
+        }
+
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(requestBody),
+        });
+
+        if (response.status === 404) {
+          lastError = new Error(`El modelo "${model}" no fue encontrado (404) en la API de Google.`);
+          continue;
+        }
+
+        if (!response.ok) {
+          const errText = await response.text();
+          let errorMsg = `Error HTTP ${response.status}`;
+          try {
+            const errJson = JSON.parse(errText);
+            errorMsg = errJson.error?.message || errorMsg;
+          } catch {
+            errorMsg = errText || errorMsg;
+          }
+          throw new Error(`Gemini API Error (${response.status}): ${errorMsg}`);
+        }
+
+        const data = await response.json();
+        const candidate = data.candidates?.[0];
+        const textPart = candidate?.content?.parts?.[0]?.text;
+
+        if (!textPart) {
+          throw new Error('La respuesta de Gemini Vision no contiene texto válido.');
+        }
+
+        return {
+          text: textPart.trim(),
+          modelUsed: model,
+        };
+      } catch (err: any) {
+        lastError = err;
+        if (!err.message?.includes('404')) {
+          throw err;
+        }
+      }
+    }
+
+    throw lastError || new Error('No se pudo conectar con ningún modelo de Gemini Vision disponible.');
+  }
+
+  /**
+   * Escanea una foto de producto/caja con Gemini 3.8 Flash Vision y extrae
+   * los 15 campos estructurados para catalogación masiva en FerreJade.
+   */
+  public static async scanProductWithVision(input: {
+    imageBase64: string;
+    mimeType?: string;
+    apiKeyOverride?: string;
+  }): Promise<{
+    success: boolean;
+    product: {
+      sku: string;
+      barcode: string;
+      name: string;
+      brand: string;
+      category: string;
+      priceUsd: number;
+      costUsd: number;
+      stock: number;
+      minStock: number;
+      unit: string;
+      location: string;
+      warranty: string;
+      specs: string;
+      description: string;
+      confidence: number;
+      detectedText: string;
+      modelUsed: string;
+    };
+  }> {
+    if (!input.imageBase64) {
+      throw new Error('Se requiere la imagen en Base64 para el escáner.');
+    }
+
+    const systemInstruction = `Eres el escáner inteligente con visión computacional de FerreJade (ferretería industrial en Puerto Ordaz, Venezuela).
+Tu objetivo es analizar empaques de herramientas, cajas de productos, etiquetas adhesivas o códigos de barras y extraer todos los datos necesarios para catalogar el producto.
+Debes responder ÚNICAMENTE con un JSON válido estructurado con las siguientes claves:
+{
+  "name": "Nombre comercial descriptivo y preciso del producto",
+  "brand": "Marca visible en el empaque (ej: Truper, DeWalt, Stanley, Bosch, Bellota, Tubrica, o Genérico)",
+  "model": "Número de modelo o código de fabricante",
+  "category": "Una de: Herramientas Manuales, Herramientas Eléctricas, Plomería y Grifería, Electricidad e Iluminación, Pinturas y Adhesivos, Tornillería y Fijación, Construcción, Cerrajería, Seguridad Industrial",
+  "barcode": "Dígitos del código de barras si están visibles (ej: 7501234567890 o UPC/EAN), o vacío ''",
+  "suggestedSku": "Código SKU sugerido en mayúsculas (ej: TRU-MART-16, DW-TAL-20V, TUB-TUBO-1/2)",
+  "unit": "Unidad de medida (PZ, JGO, MT, KG, LT, CJ)",
+  "specs": "Especificaciones técnicas clave separadas por comas (medidas, voltaje, potencia, materiales)",
+  "description": "Descripción comercial atractiva de 2 a 3 oraciones para el catálogo en línea",
+  "warranty": "Garantía sugerida (ej: 12 meses, 6 meses, 30 días)",
+  "suggestedCostUsd": 0.00,
+  "suggestedPriceUsd": 0.00,
+  "detectedText": "Texto textual o palabras clave leídas en el empaque",
+  "confidence": 0.95
+}`;
+
+    const prompt = `Analiza esta fotografía de producto/caja para FerreJade.
+Identifica nombre comercial exacto, marca, modelo, código de barras numérico, especificaciones y categoría.
+Genera un SKU estructurado y una descripción comercial.
+Devuelve ÚNICAMENTE el objeto JSON.`;
+
+    const { text, modelUsed } = await this.callGeminiVisionApi(
+      prompt,
+      input.imageBase64,
+      input.mimeType || 'image/jpeg',
+      input.apiKeyOverride,
+      systemInstruction
+    );
+
+    let parsed: any;
+    try {
+      let cleanJson = text.trim();
+      if (cleanJson.startsWith('```json')) {
+        cleanJson = cleanJson.replace(/^```json\s*/i, '').replace(/\s*```$/, '').trim();
+      } else if (cleanJson.startsWith('```')) {
+        cleanJson = cleanJson.replace(/^```\s*/, '').replace(/\s*```$/, '').trim();
+      }
+      parsed = JSON.parse(cleanJson);
+    } catch (e: any) {
+      throw new Error(`La respuesta de Gemini no pudo procesarse como JSON: ${text.substring(0, 100)}...`);
+    }
+
+    const brand = (parsed.brand || 'Genérico').trim();
+    const name = (parsed.name || 'Producto sin nombre').trim();
+    const barcode = (parsed.barcode || '').trim().replace(/[^0-9A-Za-z]/g, '');
+    const model = (parsed.model || '').trim();
+
+    let sku = (parsed.suggestedSku || '').trim().toUpperCase();
+    if (!sku || sku.length < 3) {
+      const brandPart = brand.replace(/[^A-Za-z0-9]/g, '').substring(0, 3).toUpperCase() || 'GEN';
+      const namePart = name.split(' ').map((w: string) => w.substring(0, 3)).slice(0, 2).join('-').toUpperCase();
+      const rand = Math.floor(100 + Math.random() * 900);
+      sku = `${brandPart}-${namePart}-${rand}`;
+    }
+
+    return {
+      success: true,
+      product: {
+        sku,
+        barcode,
+        name,
+        brand,
+        category: parsed.category || 'Herramientas Manuales',
+        priceUsd: Number(parsed.suggestedPriceUsd) || 0,
+        costUsd: Number(parsed.suggestedCostUsd) || 0,
+        stock: 1,
+        minStock: 3,
+        unit: (parsed.unit || 'PZ').toUpperCase(),
+        location: 'Pasillo General',
+        warranty: parsed.warranty || 'Garantía 30 días',
+        specs: parsed.specs || model || '',
+        description: parsed.description || name,
+        confidence: typeof parsed.confidence === 'number' ? parsed.confidence : 0.9,
+        detectedText: parsed.detectedText || '',
+        modelUsed,
+      },
+    };
+  }
+
+  /**
    * Prueba la conectividad con Gemini con una solicitud ligera
    */
   public static async testConnection(candidateKey?: string): Promise<{ success: boolean; latencyMs: number; message: string; modelUsed?: string }> {
