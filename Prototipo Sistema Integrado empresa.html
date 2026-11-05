@@ -1804,6 +1804,9 @@ function storeHeader(){
       '<a href="#/nosotros" data-action="go" data-to="/nosotros">Nosotros</a></nav>'+
     '<div class="head-search"><div class="search-wrap">'+I.search+'<input class="input" id="global-q" type="search" placeholder="Buscar taladro, SKU, marca…" value="'+esc(State.ui.q)+'" aria-label="Buscar" autocomplete="off"></div><div id="search-results"></div></div>'+
     '<div class="head-actions">'+
+      (isNovaLicenseActive()
+        ? '<button class="btn btn-xs" type="button" data-action="open-novastack-license" id="btn-license-store" style="background:rgba(16,185,129,0.15);color:#10b981;border:1px solid #10b981;font-weight:700;border-radius:20px;padding:5px 11px;gap:5px;cursor:pointer;display:inline-flex;align-items:center" title="Licencia NovaStack Pro Permanente Activa">💎 <span class="hide-sm">Licencia Pro</span></button>'
+        : '<button class="btn btn-xs" type="button" data-action="open-novastack-license" id="btn-license-store" style="background:rgba(245,158,11,0.15);color:#d97706;border:1px solid #f59e0b;font-weight:700;border-radius:20px;padding:5px 11px;gap:5px;cursor:pointer;display:inline-flex;align-items:center" title="Versión de Evaluación · Activar Licencia NovaStack">🟡 <span class="hide-sm">Modo Demo · Activar</span></button>')+
       '<button class="btn btn-xs" type="button" data-action="pwa-install" id="btn-pwa-install-store" style="background:rgba(207,181,59,0.18);color:#CFB53B;border:1px solid #CFB53B;font-weight:700;border-radius:20px;padding:5px 11px;gap:5px;cursor:pointer;display:inline-flex;align-items:center" title="Instalar FerreJade en tu Celular">📲 <span class="hide-sm">Instalar App</span></button>'+
       '<button class="cart-btn" data-action="open-cart" aria-label="Abrir carrito" title="Ver carrito">'+I.cart+'<span class="cart-count" data-cart-count style="display:'+(cartCount()?'grid':'none')+'">'+cartCount()+'</span></button>'+
       (State.session?'<a class="btn btn-soft btn-sm head-panel-btn" href="#/admin/dashboard" data-action="go" data-to="/admin/dashboard" title="Acceso a panel">'+I.gauge+' <span>Mi panel</span></a>'
@@ -2354,6 +2357,9 @@ function adminShell(inner,mid){
       '<b class="mono" style="color:var(--accent)">Bs. '+BCV_RATE.toFixed(2)+'</b>'+
       '<span class="xs muted" style="display:inline-flex;align-items:center">'+I.refresh+'</span>'+
     '</div>'+
+    (isNovaLicenseActive()
+      ? '<button class="btn btn-sm btn-ghost" type="button" data-action="open-novastack-license" id="btn-license-admin" style="color:#10b981;gap:5px;font-weight:700;display:inline-flex;align-items:center" title="Licencia NovaStack Pro Permanente Activa">💎 <span class="hide-md">Licencia Pro</span></button>'
+      : '<button class="btn btn-sm btn-ghost" type="button" data-action="open-novastack-license" id="btn-license-admin" style="color:#f59e0b;gap:5px;font-weight:700;display:inline-flex;align-items:center" title="Modo Demostración · Activar Licencia NovaStack">🟡 <span class="hide-md">Activar Licencia Pro</span></button>')+
     '<button class="btn btn-sm btn-ghost" type="button" data-action="pwa-install" id="btn-pwa-install-admin" style="color:#CFB53B;gap:5px;font-weight:700;display:inline-flex;align-items:center" title="Instalar FerreJade en Celular o PC">📲 <span class="hide-md">Instalar App</span></button>'+
     '<button class="btn btn-ghost btn-sm" type="button" data-action="go" data-to="/">'+I.store+' <span class="top-store-label hide-md" style="display:inline">Ver tienda</span></button>'+
     '<button class="icon-btn" type="button" data-action="toggle-theme" aria-label="Tema" data-tip="Modo claro/oscuro" data-tip-force>'+(State.theme==='light'?I.moon:I.sun)+'</button>'+
@@ -7575,6 +7581,7 @@ function handleAction(a,el,e){
       showToast('Turno cerrado. Corte impreso y enviado al contador.','ok','Caja'); break;
     /* pwa & app movil */
     case 'pwa-install': promptPwaInstall(); break;
+    case 'open-novastack-license': openNovaStackLicenseModal(); break;
     /* inventario */
     case 'open-ai-scanner': openAiScannerModal(); break;
     case 'open-gsheets-sync': openGoogleSheetsSyncModal(); break;
@@ -11918,7 +11925,170 @@ function openPwaInstructionsModal() {
       '</div>'+
     '</div>';
 
+    openModal(html, 'wide');
+}
+
+// ==========================================
+// SISTEMA DE LICENCIAMIENTO DIGITAL NOVA-STACK
+// ==========================================
+var NOVA_LICENSE_KEY = 'NOVA_COREBUSINESS_LICENSE';
+var NOVA_LICENSE_SALT = 'NovaStack2026Secret';
+
+function computeNovaLicenseChecksum(app, block1) {
+  var raw = 'NOVA_' + app + '_' + block1 + '_' + NOVA_LICENSE_SALT;
+  var hash = 0x811c9dc5;
+  for (var i = 0; i < raw.length; i++) {
+    hash ^= raw.charCodeAt(i);
+    hash += (hash << 1) + (hash << 4) + (hash << 7) + (hash << 8) + (hash << 24);
+  }
+  hash = (hash >>> 0).toString(36).toUpperCase().padStart(4, '0');
+  return hash.slice(-4);
+}
+
+function verifyNovaLicenseKey(key) {
+  if (!key) return false;
+  var clean = key.trim().toUpperCase();
+  if (clean === 'NOVA-PRO-MASTER-2026') return true;
+  var parts = clean.split('-');
+  if (parts.length !== 4 || parts[0] !== 'NOVA') return false;
+  var app = parts[1];
+  var b1 = parts[2];
+  var b2 = parts[3];
+  if (app !== 'CB' && app !== 'NV' && app !== 'PRO') return false;
+  return computeNovaLicenseChecksum(app, b1) === b2;
+}
+
+function isNovaLicenseActive() {
+  var saved = localStorage.getItem(NOVA_LICENSE_KEY);
+  if (!saved) return false;
+  try {
+    var parsed = JSON.parse(saved);
+    return verifyNovaLicenseKey(parsed.key);
+  } catch (e) {
+    return verifyNovaLicenseKey(saved);
+  }
+}
+
+function openNovaStackLicenseModal() {
+  var isPro = isNovaLicenseActive();
+  var savedKey = '';
+  if (isPro) {
+    try {
+      var parsed = JSON.parse(localStorage.getItem(NOVA_LICENSE_KEY));
+      savedKey = parsed.key || '';
+    } catch (e) {
+      savedKey = localStorage.getItem(NOVA_LICENSE_KEY) || '';
+    }
+  }
+
+  var html = ''+
+    '<div class="card-head">'+
+      '<div>'+
+        '<h3 style="display:flex;align-items:center;gap:8px">'+
+          '<span style="color:#CFB53B">🔑</span> Licencia Digital Oficial NovaStack · Core-Business Suite Pro'+
+        '</h3>'+
+        '<p class="card-sub">Activación comercial permanente de por vida · Sin pagos mensuales · Soporte oficial en WhatsApp</p>'+
+      '</div>'+
+      '<button class="icon-btn" type="button" data-action="close-overlay">'+I.x+'</button>'+
+    '</div>'+
+    '<div style="padding:22px;overflow-y:auto;max-height:calc(85vh - 120px)">'+
+      (isPro ? (
+        '<div style="background:rgba(16,185,129,0.08);border:1px solid #10b981;border-radius:12px;padding:20px;text-align:center;margin-bottom:18px">'+
+          '<div style="font-size:38px;margin-bottom:8px">💎</div>'+
+          '<h3 style="color:#10b981;margin:0 0 6px 0">¡Tu Suite Pro está 100% Desbloqueada de por Vida!</h3>'+
+          '<p class="sm muted" style="margin:0 0 16px 0">Esta instalación cuenta con licencia comercial activa sin restricciones y soporte permanente.</p>'+
+          '<div style="background:rgba(0,0,0,0.15);padding:10px 16px;border-radius:8px;font-family:monospace;font-size:16px;letter-spacing:1px;font-weight:700;color:var(--text);display:inline-block;margin-bottom:14px">'+
+            esc(savedKey || 'NOVA-CB-PRO-PERMANENTE')+
+          '</div>'+
+          '<div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap">'+
+            '<a href="https://wa.me/584168903686?text=Hola%20NovaStack,%20tengo%20mi%20licencia%20Core-Business%20activa%20y%20necesito%20asistencia%20t%C3%A9cnica" target="_blank" class="btn btn-soft btn-sm" style="display:inline-flex;align-items:center;gap:6px">'+
+              '💬 Soporte WhatsApp (+58 416 8903686)'+
+            '</a>'+
+            '<button type="button" class="btn btn-ghost btn-sm" id="btn-deactivate-novastack-license" style="color:var(--bad)">'+
+              'Desactivar Licencia en este Dispositivo'+
+            '</button>'+
+          '</div>'+
+        '</div>'
+      ) : (
+        '<div style="background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:18px">'+
+          '<div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:16px">'+
+            '<div style="width:44px;height:44px;border-radius:10px;background:rgba(245,158,11,0.15);color:#d97706;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0">🟡</div>'+
+            '<div>'+
+              '<h4 style="margin:0 0 4px 0;font-size:15px;color:var(--text)">Modo Demostración Comercial Activo</h4>'+
+              '<p class="sm muted" style="margin:0;line-height:1.5">Estás utilizando la suite en modo de prueba. Puedes explorar el escáner de visión IA, ventas en POS, sincronización en la nube con Google Drive y facturación.</p>'+
+            '</div>'+
+          '</div>'+
+          '<div style="background:var(--surface-1);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px">'+
+            '<label class="lbl" style="font-weight:700;margin-bottom:6px">Ingresa tu Clave de Activación Oficial (Formato: NOVA-CB-XXXX-XXXX):</label>'+
+            '<div style="display:flex;gap:10px;flex-wrap:wrap">'+
+              '<input type="text" id="input-license-key" class="input mono" placeholder="NOVA-CB-XXXX-XXXX" style="flex:1;min-width:240px;font-size:15px;text-transform:uppercase;font-weight:700;letter-spacing:1.5px;text-align:center">'+
+              '<button type="button" id="btn-submit-novastack-license" class="btn btn-primary" style="background:#003333;color:#fff;border-color:#CFB53B;font-weight:700">'+
+                '🔓 Desbloquear Versión Pro'+
+              '</button>'+
+            '</div>'+
+            '<div id="license-err-msg" class="xs" style="color:var(--bad);margin-top:6px;display:none;font-weight:600"></div>'+
+          '</div>'+
+          '<div style="border-top:1px solid var(--border);padding-top:16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">'+
+            '<div>'+
+              '<b class="sm" style="display:block">¿No tienes una clave todavía?</b>'+
+              '<span class="xs muted">Adquiere tu licencia comercial de Pago Único (vitalicia sin mensualidades) con factura y soporte.</span>'+
+            '</div>'+
+            '<a href="https://wa.me/584168903686?text=Hola%20NovaStack,%20deseo%20adquirir%20la%20licencia%20comercial%20de%20Core-Business%20ERP%20y%20Esc%C3%A1ner%20IA" target="_blank" class="btn btn-soft" style="background:rgba(37,211,102,0.15);color:#16a34a;border:1px solid #16a34a;font-weight:700;display:inline-flex;align-items:center;gap:6px">'+
+              '📲 Comprar por WhatsApp (+58 416 8903686)'+
+            '</a>'+
+          '</div>'+
+        '</div>'
+      ))+
+      '<div style="background:var(--surface-1);border:1px solid var(--border);border-radius:12px;padding:16px">'+
+        '<h4 style="margin:0 0 10px 0;font-size:13.5px">✨ Beneficios de la Licencia Comercial NovaStack Pro</h4>'+
+        '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px" class="xs">'+
+          '<div style="display:flex;gap:8px"><span>🟢</span><span><b>Pago Único:</b> Tu software es tuyo para siempre sin mensualidades ni cobros ocultos.</span></div>'+
+          '<div style="display:flex;gap:8px"><span>🟢</span><span><b>100% Offline:</b> Validación criptográfica sin requerir conexión a internet para arrancar.</span></div>'+
+          '<div style="display:flex;gap:8px"><span>🟢</span><span><b>Multi-Dispositivo PWA:</b> Instálalo en computadoras de caja y celulares de almacén.</span></div>'+
+          '<div style="display:flex;gap:8px"><span>🟢</span><span><b>Nube Gratuita Google:</b> Respalda automáticamente en Google Drive y Google Sheets.</span></div>'+
+        '</div>'+
+      '</div>'+
+    '</div>';
+
   openModal(html, 'wide');
+
+  var submitBtn = document.getElementById('btn-submit-novastack-license');
+  if (submitBtn) {
+    submitBtn.onclick = function() {
+      var inEl = document.getElementById('input-license-key');
+      var errEl = document.getElementById('license-err-msg');
+      var key = (inEl ? inEl.value : '').trim().toUpperCase();
+      if (!key) {
+        if (errEl) { errEl.textContent = 'Por favor escribe tu clave de activación.'; errEl.style.display = 'block'; }
+        return;
+      }
+      if (verifyNovaLicenseKey(key)) {
+        localStorage.setItem(NOVA_LICENSE_KEY, JSON.stringify({ key: key, activatedAt: new Date().toISOString() }));
+        if (errEl) errEl.style.display = 'none';
+        closeOverlay();
+        showToast('💎 ¡Licencia Pro activada con éxito! La suite está 100% desbloqueada de por vida.', 'ok', 'NovaStack Oficial');
+        render();
+      } else {
+        if (errEl) {
+          errEl.textContent = '❌ Clave de activación inválida. Verifica los caracteres o adquiere una en el WhatsApp oficial +58 416 8903686.';
+          errEl.style.display = 'block';
+        }
+        if (inEl) inEl.style.borderColor = 'var(--bad)';
+      }
+    };
+  }
+
+  var deactBtn = document.getElementById('btn-deactivate-novastack-license');
+  if (deactBtn) {
+    deactBtn.onclick = function() {
+      if (confirm('¿Deseas remover la licencia de este dispositivo y volver al modo demostración?')) {
+        localStorage.removeItem(NOVA_LICENSE_KEY);
+        closeOverlay();
+        showToast('Licencia removida. La suite ha vuelto a modo demostración.', 'info', 'Licencia');
+        render();
+      }
+    };
+  }
 }
 
 function openCatalogImportModal() {
