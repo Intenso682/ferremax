@@ -42,13 +42,20 @@
 ════════════════════════════════════════════════════════════════════════════
 -->
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>FerreMax · Plataforma modular de ventas y administración — Core-Business Suite</title>
-<meta name="description" content="FerreMax: tienda online rápida con panel de administración modular. Inventario, punto de venta, facturación electrónica, CRM y reportes en una sola plataforma.">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>FerreJade, C.A. · Todo a la mano, como en casa</title>
+<meta name="description" content="FerreJade, C.A.: Tienda online, Punto de Venta (POS) e Inventario Multi-Depósito con Escáner IA Móvil y Facturación SENIAT.">
 <meta property="og:type" content="website">
-<meta property="og:title" content="FerreMax — Core-Business Suite">
-<meta property="og:description" content="Storefront First: tu tienda online es la página principal. El panel de control es el cuarto de máquinas.">
-<meta name="theme-color" content="#0f766e">
+<meta property="og:title" content="FerreJade, C.A. — Todo a la mano, como en casa">
+<meta property="og:description" content="Todo a la mano, como en casa. Sistema integral de gestión comercial y escáner móvil inteligente con IA.">
+<meta name="theme-color" content="#003333">
+<link rel="manifest" href="manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="FerreJade">
+<link rel="apple-touch-icon" href="uploads/branding/ferrejade_isotipo.svg">
+<link rel="icon" type="image/svg+xml" href="uploads/branding/ferrejade_isotipo.svg">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.18/400.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.18/500.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.18/600.css">
@@ -1797,6 +1804,7 @@ function storeHeader(){
       '<a href="#/nosotros" data-action="go" data-to="/nosotros">Nosotros</a></nav>'+
     '<div class="head-search"><div class="search-wrap">'+I.search+'<input class="input" id="global-q" type="search" placeholder="Buscar taladro, SKU, marca…" value="'+esc(State.ui.q)+'" aria-label="Buscar" autocomplete="off"></div><div id="search-results"></div></div>'+
     '<div class="head-actions">'+
+      '<button class="btn btn-xs" type="button" data-action="pwa-install" id="btn-pwa-install-store" style="background:rgba(207,181,59,0.18);color:#CFB53B;border:1px solid #CFB53B;font-weight:700;border-radius:20px;padding:5px 11px;gap:5px;cursor:pointer;display:inline-flex;align-items:center" title="Instalar FerreJade en tu Celular">📲 <span class="hide-sm">Instalar App</span></button>'+
       '<button class="cart-btn" data-action="open-cart" aria-label="Abrir carrito" title="Ver carrito">'+I.cart+'<span class="cart-count" data-cart-count style="display:'+(cartCount()?'grid':'none')+'">'+cartCount()+'</span></button>'+
       (State.session?'<a class="btn btn-soft btn-sm head-panel-btn" href="#/admin/dashboard" data-action="go" data-to="/admin/dashboard" title="Acceso a panel">'+I.gauge+' <span>Mi panel</span></a>'
                     :'<a class="btn btn-primary btn-sm head-panel-btn" href="#/login" data-action="go" data-to="/login" title="Acceso administrativo">'+I.lock+' <span>Panel admin</span></a>')+
@@ -2346,6 +2354,7 @@ function adminShell(inner,mid){
       '<b class="mono" style="color:var(--accent)">Bs. '+BCV_RATE.toFixed(2)+'</b>'+
       '<span class="xs muted" style="display:inline-flex;align-items:center">'+I.refresh+'</span>'+
     '</div>'+
+    '<button class="btn btn-sm btn-ghost" type="button" data-action="pwa-install" id="btn-pwa-install-admin" style="color:#CFB53B;gap:5px;font-weight:700;display:inline-flex;align-items:center" title="Instalar FerreJade en Celular o PC">📲 <span class="hide-md">Instalar App</span></button>'+
     '<button class="btn btn-ghost btn-sm" type="button" data-action="go" data-to="/">'+I.store+' <span class="top-store-label hide-md" style="display:inline">Ver tienda</span></button>'+
     '<button class="icon-btn" type="button" data-action="toggle-theme" aria-label="Tema" data-tip="Modo claro/oscuro" data-tip-force>'+(State.theme==='light'?I.moon:I.sun)+'</button>'+
     '<button class="icon-btn" type="button" data-action="open-notifs" aria-label="Notificaciones">'+I.bell+'<span class="bdg"></span></button>'+
@@ -7564,6 +7573,8 @@ function handleAction(a,el,e){
     case 'corte-caja': openCashClose(); break;
     case 'close-shift': closeOverlay(); Bus.emit('ventas.corte','Caja 02 · arqueo sin diferencias',{module:'ventas'});
       showToast('Turno cerrado. Corte impreso y enviado al contador.','ok','Caja'); break;
+    /* pwa & app movil */
+    case 'pwa-install': promptPwaInstall(); break;
     /* inventario */
     case 'open-ai-scanner': openAiScannerModal(); break;
     case 'open-gsheets-sync': openGoogleSheetsSyncModal(); break;
@@ -11418,26 +11429,39 @@ function initAiScannerLogic() {
     if (snapBtn) snapBtn.style.display = 'none';
 
     try {
-      var resp = await fetch(API_URL + '/ai/scan-product', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + (AUTH_TOKEN || '')
-        },
-        body: JSON.stringify({ imageBase64: base64Data, mimeType: mime || 'image/jpeg' })
-      });
+      var data = null;
 
-      if (!resp.ok) {
-        var errBody = await resp.json().catch(function(){ return {}; });
-        if (resp.status === 422 || errBody.error === 'GEMINI_NOT_CONFIGURED') {
-          throw new Error('Debes configurar la API Key de Google Gemini (cuenta ferrejadepzo@gmail.com) en Ajustes -> Inteligencia Artificial.');
+      // 1. Intentar escaneo vía backend si está conectado
+      if (API_ONLINE) {
+        try {
+          var resp = await fetch(API_URL + '/ai/scan-product', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ' + (AUTH_TOKEN || '')
+            },
+            body: JSON.stringify({ imageBase64: base64Data, mimeType: mime || 'image/jpeg' })
+          });
+          if (resp && resp.ok) {
+            data = await resp.json();
+          }
+        } catch(netErr) {
+          console.warn('Backend local no responde, cambiando a modo directo PWA...');
         }
-        throw new Error(errBody.message || 'Error del servidor al escanear con Gemini (' + resp.status + ')');
       }
 
-      var data = await resp.json();
-      if (!data.success || !data.product) {
-        throw new Error('No se detectaron datos válidos.');
+      // 2. Modo Directo PWA (100% independiente sin requerir servidor):
+      if (!data || !data.success) {
+        var directKey = localStorage.getItem('ferrejade_gemini_key') || localStorage.getItem('cfg_gemini_key') || (STORE_CONFIG && STORE_CONFIG.geminiApiKey) || '';
+        if (!directKey) {
+          openGeminiKeyModal('Para escanear directamente desde el navegador en modo sin servidor, ingresa tu clave gratuita de Google Gemini.');
+          throw new Error('Configura tu clave de Gemini para el modo autónomo PWA.');
+        }
+        data = await scanDirectClientGemini(base64Data, mime || 'image/jpeg', directKey);
+      }
+
+      if (!data || !data.success || !data.product) {
+        throw new Error('No se detectaron datos válidos en el empaque o etiqueta.');
       }
 
       var p = data.product;
@@ -11725,6 +11749,176 @@ function openGoogleSheetsSyncModal() {
       }
     };
   }
+}
+
+async function scanDirectClientGemini(base64Data, mime, apiKey) {
+  var cleanBase64 = base64Data;
+  var detectedMime = mime || 'image/jpeg';
+  if (cleanBase64.indexOf(';base64,') !== -1) {
+    var parts = cleanBase64.split(';base64,');
+    cleanBase64 = parts[1];
+    var mimeMatch = parts[0].match(/data:(image\/[a-zA-Z0-9.+-]+)/);
+    if (mimeMatch) detectedMime = mimeMatch[1];
+  }
+
+  var candidateModels = ['gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-3.8-flash', 'gemini-flash-lite-latest'];
+  var promptText = 'Analiza la imagen de este producto o caja ferretera y responde ÚNICAMENTE con un JSON con los campos: {"name","brand","model","category","barcode","costUsd","priceUsd","suggestedSku","unit","location","warranty","specs","description","confidence"}';
+  var systemInstruction = 'Eres el escáner inteligente de FerreJade (ferretería industrial). Categorías: Herramientas Manuales, Herramientas Eléctricas, Plomería y Grifería, Electricidad e Iluminación, Pinturas y Adhesivos, Tornillería y Fijación, Construcción, Cerrajería, Seguridad Industrial. Responde estrictamente un JSON válido.';
+
+  var lastErr = null;
+  for (var m = 0; m < candidateModels.length; m++) {
+    var model = candidateModels[m];
+    try {
+      var endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent?key=' + apiKey;
+      var reqBody = {
+        contents: [{
+          role: 'user',
+          parts: [
+            { text: promptText },
+            { inlineData: { mimeType: detectedMime, data: cleanBase64 } }
+          ]
+        }],
+        generationConfig: {
+          temperature: 0.2,
+          responseMimeType: 'application/json'
+        },
+        systemInstruction: {
+          parts: [{ text: systemInstruction }]
+        }
+      };
+
+      var res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(reqBody)
+      });
+
+      if (!res.ok) {
+        lastErr = new Error('HTTP ' + res.status);
+        continue;
+      }
+
+      var resJson = await res.json();
+      var candidate = resJson.candidates && resJson.candidates[0];
+      var rawTxt = candidate && candidate.content && candidate.content.parts && candidate.content.parts[0] && candidate.content.parts[0].text;
+      if (!rawTxt) continue;
+
+      var parsed = JSON.parse(rawTxt);
+      var cost = parseFloat(parsed.costUsd || 0);
+      var price = parseFloat(parsed.priceUsd || (cost > 0 ? (cost * 1.35).toFixed(2) : 0));
+      var brandName = parsed.brand || 'Genérico';
+      var sku = (parsed.suggestedSku || ('FJ-' + brandName.slice(0,3).toUpperCase() + '-' + Math.floor(Math.random()*900+100))).toUpperCase();
+
+      return {
+        success: true,
+        product: {
+          name: parsed.name || 'Producto Ferretero',
+          brand: brandName,
+          category: parsed.category || 'Herramientas Manuales',
+          barcode: parsed.barcode || '',
+          sku: sku,
+          costUsd: cost,
+          priceUsd: price,
+          stock: 1,
+          unit: parsed.unit || 'UND',
+          location: parsed.location || 'Pasillo General',
+          warranty: parsed.warranty || 'N/A',
+          specs: parsed.specs || '',
+          description: parsed.description || parsed.specs || '',
+          modelUsed: model + ' (Modo Directo PWA)'
+        }
+      };
+    } catch (e) {
+      lastErr = e;
+    }
+  }
+
+  throw lastErr || new Error('No se pudo conectar directamente con los modelos de visión de Google Gemini.');
+}
+
+var deferredInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', function(e) {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  var b1 = document.getElementById('btn-pwa-install-app'); if (b1) b1.style.display = 'inline-flex';
+  var b2 = document.getElementById('btn-pwa-install-store'); if (b2) b2.style.display = 'inline-flex';
+  var b3 = document.getElementById('btn-pwa-install-admin'); if (b3) b3.style.display = 'inline-flex';
+});
+
+window.addEventListener('appinstalled', function() {
+  deferredInstallPrompt = null;
+  showToast('¡FerreJade instalada con éxito en tu dispositivo!', 'ok', 'App Móvil PWA');
+});
+
+function promptPwaInstall() {
+  if (deferredInstallPrompt) {
+    deferredInstallPrompt.prompt();
+    deferredInstallPrompt.userChoice.then(function(choice) {
+      if (choice.outcome === 'accepted') {
+        showToast('Instalando FerreJade en tu pantalla de inicio...', 'info', 'Instalación');
+      }
+      deferredInstallPrompt = null;
+    });
+  } else {
+    openPwaInstructionsModal();
+  }
+}
+
+function openPwaInstructionsModal() {
+  var html = ''+
+    '<div class="card-head">'+
+      '<div>'+
+        '<h3 style="display:flex;align-items:center;gap:8px">'+
+          '<span style="color:#CFB53B">📲</span> Instalar FerreJade como App Móvil Independiente'+
+        '</h3>'+
+        '<p class="card-sub">Sin pasar por Google Play ni App Store · Abre a pantalla completa con acceso directo desde tu celular o computadora</p>'+
+      '</div>'+
+      '<button class="icon-btn" type="button" data-action="close-overlay">'+I.x+'</button>'+
+    '</div>'+
+    '<div style="padding:22px;overflow-y:auto;max-height:calc(85vh - 120px)">'+
+      '<div style="text-align:center;padding:12px 0 20px 0">'+
+        '<img src="uploads/branding/ferrejade_isotipo.svg" alt="FerreJade" style="width:72px;height:72px;margin-bottom:12px;filter:drop-shadow(0 4px 10px rgba(0,0,0,0.15))">'+
+        '<h4 style="margin:0 0 4px 0;font-size:18px;color:#003333">FerreJade, C.A.</h4>'+
+        '<span class="xs muted">Tecnología PWA (Progressive Web App) · Modo Autónomo</span>'+
+      '</div>'+
+
+      '<div class="grid grid-form-2col" style="grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px">'+
+        '<div style="background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:16px">'+
+          '<h5 style="margin:0 0 10px 0;font-size:14px;display:flex;align-items:center;gap:6px">'+
+            '<span>🤖</span> En Android (Chrome / Brave / Edge)'+
+          '</h5>'+
+          '<ol class="sm" style="line-height:1.6;margin:0;padding-left:18px">'+
+            '<li>Abre este enlace en tu navegador <b>Google Chrome</b>.</li>'+
+            '<li>Toca el menú de <b>tres puntos verticales (⋮)</b> arriba a la derecha.</li>'+
+            '<li>Selecciona <b>"Instalar aplicación"</b> o <b>"Agregar a la pantalla principal"</b>.</li>'+
+            '<li>¡Listo! Aparecerá el icono oficial de FerreJade en el menú de aplicaciones de tu teléfono.</li>'+
+          '</ol>'+
+        '</div>'+
+
+        '<div style="background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:16px">'+
+          '<h5 style="margin:0 0 10px 0;font-size:14px;display:flex;align-items:center;gap:6px">'+
+            '<span>🍎</span> En iPhone / iPad (Safari)'+
+          '</h5>'+
+          '<ol class="sm" style="line-height:1.6;margin:0;padding-left:18px">'+
+            '<li>Abre este enlace en el navegador <b>Safari</b>.</li>'+
+            '<li>Toca el botón central de <b>Compartir</b> (el cuadrado con la flecha hacia arriba 📤).</li>'+
+            '<li>Baja y pulsa en <b>"Agregar al inicio"</b> (+).</li>'+
+            '<li>Confirma el nombre <b>FerreJade</b> y pulsa <i>Agregar</i>.</li>'+
+          '</ol>'+
+        '</div>'+
+      '</div>'+
+
+      '<div style="background:#e6f4ea;border:1px solid #0F9D58;border-radius:12px;padding:14px 16px;color:#003333">'+
+        '<b class="sm" style="display:block;margin-bottom:6px">⚡ Ventajas de la App Instalada:</b>'+
+        '<ul class="xs" style="margin:0;padding-left:18px;line-height:1.6">'+
+          '<li><b>Pantalla completa nativa:</b> Sin barra de direcciones ni pestañas de navegador.</li>'+
+          '<li><b>Escáner de cámara instantáneo:</b> Abre directamente la cámara física para catalogar cajas y códigos de barras.</li>'+
+          '<li><b>Cero dependencia de terminal:</b> Funciona directamente en tu teléfono sin requerir comandos de consola ni mantener la PC encendida.</li>'+
+        '</ul>'+
+      '</div>'+
+    '</div>';
+
+  openModal(html, 'wide');
 }
 
 function openCatalogImportModal() {
@@ -14704,6 +14898,15 @@ document.addEventListener('change', function(e){
 
 render();
 syncFromBackend();
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('sw.js').then(function(reg) {
+      console.log('FerreJade PWA Service Worker activo:', reg.scope);
+    }).catch(function(err) {
+      console.log('FerreJade PWA SW nota:', err);
+    });
+  });
+}
 setTimeout(function(){ Bus.emit('cache.redis.warm','1,240 productos en caché · TTL 60s',{module:'core'}); },1800);
 setTimeout(function(){ Bus.emit('inventario.alerta','Stock sincronizado con API PostgreSQL/SQLite',{module:'inventario'}); },4000);
 </script>

@@ -1,0 +1,26 @@
+{
+  "name": "FerreJade, C.A. - Sistema Comercial & Escáner IA",
+  "short_name": "FerreJade",
+  "description": "Sistema Comercial, Facturación, Inventario Multi-Depósito y Escáner IA Móvil para FerreJade, C.A.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#003333",
+  "theme_color": "#003333",
+  "lang": "es",
+  "icons": [
+    {
+      "src": "uploads/branding/ferrejade_isotipo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "uploads/branding/ferrejade_logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
