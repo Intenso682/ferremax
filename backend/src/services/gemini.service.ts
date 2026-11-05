@@ -160,6 +160,10 @@ export class GeminiService {
     const candidateModels = Array.from(new Set([
       primaryModel,
       'gemini-3.8-flash',
+      'gemini-3.6-flash',
+      'gemini-3.5-flash',
+      'gemini-flash-lite-latest',
+      'gemini-3-flash-preview',
       'gemini-2.5-flash',
       'gemini-2.0-flash',
       'gemini-1.5-flash',
@@ -198,11 +202,20 @@ export class GeminiService {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(requestBody),
+          signal: AbortSignal.timeout(15000),
         });
 
-        if (response.status === 404) {
-          // El modelo específico no está disponible en este endpoint; probar siguiente modelo
-          lastError = new Error(`El modelo "${model}" no fue encontrado (404) en la API de Google.`);
+        if (response.status === 404 || response.status === 429 || response.status >= 500) {
+          const errText = await response.text();
+          let errorMsg = `Error HTTP ${response.status}`;
+          try {
+            const errJson = JSON.parse(errText);
+            errorMsg = errJson.error?.message || errorMsg;
+          } catch {
+            errorMsg = errText || errorMsg;
+          }
+          console.warn(`[GeminiService] Modelo "${model}" no disponible temporalmente (${response.status}: ${errorMsg}). Probando siguiente modelo de respaldo...`);
+          lastError = new Error(`Gemini API (${model} - HTTP ${response.status}): ${errorMsg}`);
           continue;
         }
 
@@ -232,7 +245,11 @@ export class GeminiService {
         };
       } catch (err: any) {
         lastError = err;
-        if (!err.message?.includes('404')) {
+        if (err.name === 'AbortError' || err.name === 'TimeoutError' || err.message?.includes('fetch failed') || err.message?.includes('timeout') || err.message?.includes('ECONNRESET')) {
+          console.warn(`[GeminiService] Error de red o timeout en "${model}": ${err.message}. Probando siguiente modelo...`);
+          continue;
+        }
+        if (!err.message?.includes('Gemini API (')) {
           throw err;
         }
       }
@@ -273,6 +290,10 @@ export class GeminiService {
     const candidateModels = Array.from(new Set([
       primaryModel,
       'gemini-3.8-flash',
+      'gemini-3.6-flash',
+      'gemini-3.5-flash',
+      'gemini-flash-lite-latest',
+      'gemini-3-flash-preview',
       'gemini-2.5-flash',
       'gemini-2.0-flash',
       'gemini-1.5-flash',
@@ -320,10 +341,20 @@ export class GeminiService {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(requestBody),
+          signal: AbortSignal.timeout(15000),
         });
 
-        if (response.status === 404) {
-          lastError = new Error(`El modelo "${model}" no fue encontrado (404) en la API de Google.`);
+        if (response.status === 404 || response.status === 429 || response.status >= 500) {
+          const errText = await response.text();
+          let errorMsg = `Error HTTP ${response.status}`;
+          try {
+            const errJson = JSON.parse(errText);
+            errorMsg = errJson.error?.message || errorMsg;
+          } catch {
+            errorMsg = errText || errorMsg;
+          }
+          console.warn(`[GeminiService Vision] Modelo "${model}" no disponible temporalmente (${response.status}: ${errorMsg}). Probando siguiente modelo de visión...`);
+          lastError = new Error(`Gemini Vision API (${model} - HTTP ${response.status}): ${errorMsg}`);
           continue;
         }
 
@@ -353,7 +384,11 @@ export class GeminiService {
         };
       } catch (err: any) {
         lastError = err;
-        if (!err.message?.includes('404')) {
+        if (err.name === 'AbortError' || err.name === 'TimeoutError' || err.message?.includes('fetch failed') || err.message?.includes('timeout') || err.message?.includes('ECONNRESET')) {
+          console.warn(`[GeminiService Vision] Error de red o timeout en "${model}": ${err.message}. Probando siguiente modelo...`);
+          continue;
+        }
+        if (!err.message?.includes('Gemini Vision API (')) {
           throw err;
         }
       }

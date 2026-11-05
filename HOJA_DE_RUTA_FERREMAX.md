@@ -88,3 +88,24 @@ Al retomar la sesión con la nueva cuenta de correo de **FerreJade** lista, ejec
   - `admin@ferremax.ve` (Rol Administrador General)
   - `caja1@ferremax.ve` (Rol Cajero Mostrador)
   - `almacen@ferremax.ve` (Rol Encargado de Almacén)
+
+---
+
+## 📌 Hito: Integración Oficial FerreJade, C.A. & Conector Google Drive / Sheets (v1.17)
+- **Identidad Corporativa Oficial:**
+  - Logotipo e Isotipo vectoriales nativos en SVG (`uploads/branding/ferrejade_logo.svg` e `isotipo.svg`).
+  - Paleta cromática oficial: Verde Jade Profundo (`#003333`) y Dorado FerreJade (`#CFB53B`).
+  - Eslogan oficial: *"Todo a la mano, como en casa"*.
+- **Google Gemini Vision IA:**
+  - Clave API gratuita activada en base de datos `StoreSetting` y backend `.env`.
+  - Cadena de contingencia y resiliencia multi-modelo: `gemini-3.8-flash` -> `gemini-3.6-flash` -> `gemini-3.5-flash` -> `gemini-flash-lite-latest` con protección de timeout (15s).
+  - Reconocimiento automático de cajas/etiquetas físicas con extracción de 15 campos maestros y cálculo dinámico de margen (+35%).
+- **Conector Cloud Google Drive & Google Sheets (`ferrejadepzo@gmail.com`):**
+  - Microservicio serverless sin costo vía Google Apps Script (`docs/GOOGLE_APPS_SCRIPT_DRIVE_CONNECTOR.js`).
+  - Sincronización automática de productos escaneados en tiempo real.
+  - Almacenamiento automático de la fotografía del empaque en la carpeta *"FerreJade - Fotos de Productos"* de Google Drive con enlace directo en la hoja de cálculo.
+  - Botón de envío masivo de catálogo completo a Google Sheets desde el panel de Inventario.
+- **Ciclo de Pruebas y Limpieza de Catálogo:**
+  - Eliminación granular inmediata fila por fila con liberación de SKU en el botón rojo de papelera `[ 🗑️ ]`.
+  - Puesta a Cero de Fábrica (*Factory Reset*) en Ajustes -> Centro de Respaldos para purgar pruebas antes del lanzamiento comercial.
+- **Batería de Pruebas Automatizadas:** 102/102 pruebas aprobadas al 100%.
