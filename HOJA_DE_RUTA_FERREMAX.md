@@ -1,13 +1,42 @@
 # 🗺️ Hoja de Ruta Maestra · Proyecto FerreMax / FerreJade
 
-**Fecha de actualización:** 4 de Noviembre de 2026 (Corte Mediodía)  
+**Fecha de actualización:** 4 de Noviembre de 2026 (Sesión Nocturna)  
 **Estado general:** 🟢 **En Producción / Nube (Render.com) + Repositorio GitHub con CI/CD activo**  
-**Versión del núcleo:** Core-Business Suite v1.19  
-**Cuenta Corporativa en Preparación:** Gmail oficial de **FerreJade** (Google AI Studio, Drive y Sheets)
+**Versión del núcleo:** Core-Business Suite v1.20 (Edición Oficial FerreJade)  
+**Cuenta Corporativa Oficial:** `ferrejadepzo@gmail.com` (Google AI Studio, Drive y Sheets)
 
 ---
 
 ## 1. Hitos Completados Hasta Hoy
+
+### 🎨 Identidad Oficial FerreJade 100% Integrada en Vectores SVG (4 de Noviembre - Noche)
+- **Vectores Oficiales Extraídos:** Creado el archivo maestro [`ferrejade_logo.svg`](file:///c:/Users/abc/Downloads/FerreMax%20Proyecto/uploads/branding/ferrejade_logo.svg) e isotipo [`ferrejade_isotipo.svg`](file:///c:/Users/abc/Downloads/FerreMax%20Proyecto/uploads/branding/ferrejade_isotipo.svg) a partir de los trazos matemáticos Bezier originales.
+- **Paleta Corporativa Oficial:**
+  - **Verde Jade Profundo:** `#003333`
+  - **Oro Mostaza / Dorado FerreJade:** `#CFB53B`
+- **Branding en Todo el Sistema:** Aplicado en el encabezado de la tienda, barra lateral administrativa (con isotipo FJ), notas de entrega, recibos y pie de página con el eslogan *"Todo a la mano, como en casa"*.
+
+### 📸 Escáner Móvil Inteligente con IA (Gemini 3.8 Flash Vision)
+- **Motor Multimodal en Backend:** Creado el endpoint `POST /api/ai/scan-product` en Node/Express con soporte para imágenes Base64 de alta resolución, modelo `gemini-3.8-flash` y fallback adaptativo.
+- **Interfaz Móvil con Cámara Real:**
+  - Acceso directo mediante el botón **[ 📸 Escáner IA Móvil ]** en el módulo de Inventario y modal de productos.
+  - Visor en vivo con cámara (`facingMode: 'environment'`), retícula de enfoque y haz láser de escaneo animado.
+  - Botón de captura instantánea y selector nativo de fotos para galería o móviles con permisos restringidos.
+  - **Ficha Automatizada de 15 Columnas:** Rellena automáticamente Nombre, Marca, Modelo, Categoría, Código de Barras (EAN/UPC), SKU sugerido, Stock, Unidad, Ubicación, Garantía y Descripción comercial.
+  - **Calculadora Dinámica de Margen:** Al tipear el costo de compra en USD, calcula automáticamente el precio de venta sugerido (+35% de margen).
+  - **Modo Catalogación Continua:** Botón **[ 📸 Escanear Siguiente Producto ]** para ingresar decenas de cajas en ráfaga.
+
+---
+
+## 2. Estado de la Hoja de Ruta
+
+| Prioridad | Módulo / Tarea | Estado | Descripción y Objetivo |
+| :---: | :--- | :---: | :--- |
+| **Paso 1** 🔥 | **API Key de Google AI Studio** | ⏳ Clave por ingresar | Generar la clave gratuita en `aistudio.google.com/app/apikey` con `ferrejadepzo@gmail.com` e ingresarla en Ajustes. |
+| **Paso 2** 🔥 | **Implementar Escáner Móvil Gemini** | ✅ **100% Operativo** | Cámara en vivo, visión artificial con Gemini 3.8 Flash y guardado en 1 clic en catálogo. |
+| **Paso 3** ⚡ | **Carga Masiva de Inventario (Excel / CSV)** | ✅ **100% Operativo** | Botón de importación masiva y plantilla oficial descargable en el módulo de Inventario. |
+| **Paso 4** ⚡ | **Flujo Interdepartamental de Despacho** | ⏳ Siguiente paso | Circuito operativo: Venta en Mostrador ➔ Cobro en Caja ➔ Validación en Almacén / Despacho. |
+| **Paso 5** 🎨 | **Carga de Identidad FerreJade** | ✅ **100% Operativo** | SVG vectorial del logotipo, isotipo, colores `#003333` y `#CFB53B`, RIF y datos corporativos. |
 
 ### 🚀 Despliegue Cloud & DevOps (100% Operativo)
 - **Control de Versiones:** Repositorio remoto conectado en `https://github.com/Intenso682/ferremax` (rama `main`).
