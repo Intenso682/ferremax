@@ -1,0 +1,1492 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#003333">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Escáner de Productos con IA · FerreJade</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📸</text></svg>">
+  <style>
+    :root {
+      --primary: #003333;
+      --primary-dark: #002222;
+      --primary-light: #004d4d;
+      --accent: #CFB53B;
+      --accent-hover: #dfca65;
+      --accent-soft: rgba(207, 181, 59, 0.15);
+      --bg: #071313;
+      --card-bg: #0c2020;
+      --card-border: rgba(207, 181, 59, 0.25);
+      --text: #f0fdf4;
+      --text-muted: #94a3b8;
+      --success: #10b981;
+      --danger: #ef4444;
+      --info: #38bdf8;
+      --radius: 16px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    
+    body {
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding-bottom: 40px;
+    }
+
+    /* BARRA SUPERIOR */
+    header {
+      background: var(--primary);
+      border-bottom: 2px solid var(--accent);
+      padding: 12px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }
+
+    .brand-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: #fff;
+    }
+
+    .brand-badge {
+      background: var(--accent);
+      color: var(--primary);
+      font-size: 20px;
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+    }
+
+    .brand-text h1 {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      color: #fff;
+    }
+
+    .brand-text p {
+      font-size: 11px;
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .pill-btn {
+      background: rgba(207, 181, 59, 0.15);
+      border: 1px solid var(--accent);
+      color: #fff;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .pill-btn:hover {
+      background: var(--accent);
+      color: var(--primary);
+      transform: translateY(-1px);
+    }
+
+    /* CONTENEDOR PRINCIPAL */
+    main {
+      width: 100%;
+      max-width: 650px;
+      margin: 0 auto;
+      padding: 16px;
+      flex: 1;
+    }
+
+    /* LOCK SCREEN (PROTECCIÓN POR CLAVE) */
+    #lockscreen {
+      position: fixed;
+      inset: 0;
+      background: rgba(7, 19, 19, 0.96);
+      backdrop-filter: blur(12px);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .lock-card {
+      background: var(--card-bg);
+      border: 2px solid var(--accent);
+      border-radius: 20px;
+      padding: 28px 24px;
+      max-width: 420px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 15px 40px rgba(0,0,0,0.8);
+      animation: fadeIn 0.3s ease;
+    }
+
+    .lock-icon {
+      font-size: 42px;
+      margin-bottom: 12px;
+      display: inline-block;
+      background: rgba(207,181,59,0.15);
+      width: 74px;
+      height: 74px;
+      line-height: 74px;
+      border-radius: 50%;
+      border: 1.5px solid var(--accent);
+    }
+
+    .lock-card h2 {
+      font-size: 20px;
+      color: #fff;
+      margin-bottom: 6px;
+    }
+
+    .lock-card p {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .lock-input {
+      width: 100%;
+      background: #051414;
+      border: 1.5px solid var(--accent);
+      border-radius: 12px;
+      padding: 14px;
+      font-size: 16px;
+      color: #fff;
+      text-align: center;
+      font-family: monospace;
+      letter-spacing: 2px;
+      margin-bottom: 16px;
+      outline: none;
+    }
+
+    .lock-input:focus {
+      box-shadow: 0 0 15px rgba(207,181,59,0.4);
+    }
+
+    /* CARD CONTENEDOR */
+    .app-card {
+      background: var(--card-bg);
+      border: 1.5px solid var(--card-border);
+      border-radius: var(--radius);
+      padding: 18px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+      margin-bottom: 20px;
+    }
+
+    /* CÁMARA Y VISOR */
+    .camera-frame {
+      position: relative;
+      width: 100%;
+      height: 340px;
+      background: #000;
+      border-radius: 14px;
+      overflow: hidden;
+      border: 2px solid var(--accent);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    }
+
+    #cam-video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    #cam-preview {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: #000;
+      display: none;
+    }
+
+    /* RETÍCULA HOLOGRÁFICA */
+    .reticle {
+      position: absolute;
+      inset: 16px;
+      pointer-events: none;
+      border: 1.5px dashed rgba(207, 181, 59, 0.4);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 10px;
+    }
+
+    .reticle-corner-tl { position: absolute; top: 0; left: 0; width: 20px; height: 20px; border-top: 3px solid var(--accent); border-left: 3px solid var(--accent); }
+    .reticle-corner-tr { position: absolute; top: 0; right: 0; width: 20px; height: 20px; border-top: 3px solid var(--accent); border-right: 3px solid var(--accent); }
+    .reticle-corner-bl { position: absolute; bottom: 0; left: 0; width: 20px; height: 20px; border-bottom: 3px solid var(--accent); border-left: 3px solid var(--accent); }
+    .reticle-corner-br { position: absolute; bottom: 0; right: 0; width: 20px; height: 20px; border-bottom: 3px solid var(--accent); border-right: 3px solid var(--accent); }
+
+    .laser-line {
+      position: absolute;
+      width: 94%;
+      left: 3%;
+      height: 2.5px;
+      background: linear-gradient(90deg, transparent, var(--accent), #ffffff, var(--accent), transparent);
+      box-shadow: 0 0 12px var(--accent);
+      animation: laserSweep 2.2s ease-in-out infinite alternate;
+    }
+
+    @keyframes laserSweep {
+      0% { top: 8%; opacity: 0.3; }
+      50% { opacity: 1; }
+      100% { top: 88%; opacity: 0.3; }
+    }
+
+    /* OVERLAY DE PROCESAMIENTO IA */
+    .ai-loading-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 34, 34, 0.94);
+      backdrop-filter: blur(6px);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      padding: 20px;
+      text-align: center;
+      z-index: 20;
+    }
+
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 4px solid rgba(207, 181, 59, 0.2);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* CONTROLES DE CÁMARA (FLIP, TORCH) */
+    .cam-hud-actions {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      display: flex;
+      gap: 8px;
+      z-index: 10;
+    }
+
+    .hud-btn {
+      background: rgba(0, 0, 0, 0.65);
+      border: 1px solid var(--accent);
+      color: #fff;
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      cursor: pointer;
+      backdrop-filter: blur(4px);
+      transition: background 0.2s;
+    }
+
+    .hud-btn:hover {
+      background: var(--accent);
+      color: var(--primary);
+    }
+
+    /* BOTONES DE DISPARO */
+    .shoot-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 12px 18px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s;
+      text-decoration: none;
+    }
+
+    .btn-main {
+      background: linear-gradient(135deg, #CFB53B, #bfa028);
+      color: #002222;
+      flex: 2;
+      min-width: 180px;
+      box-shadow: 0 4px 15px rgba(207,181,59,0.3);
+      font-size: 15px;
+    }
+
+    .btn-main:hover {
+      background: linear-gradient(135deg, #dfca65, #CFB53B);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(207,181,59,0.45);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      flex: 1;
+      min-width: 130px;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.15);
+      border-color: var(--accent);
+    }
+
+    .btn-success {
+      background: #10b981;
+      color: #fff;
+    }
+    .btn-success:hover { background: #059669; }
+
+    /* FORMULARIO DE DETECCIÓN Y EDICIÓN */
+    #product-result-card {
+      display: none;
+      animation: slideUp 0.3s ease;
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .full-width {
+      grid-column: 1 / -1;
+    }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .field-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .field-input, .field-select, .field-textarea {
+      background: #051414;
+      border: 1px solid rgba(207,181,59,0.3);
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: #fff;
+      font-size: 14px;
+      outline: none;
+      transition: border 0.2s;
+    }
+
+    .field-input:focus, .field-select:focus, .field-textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 8px rgba(207,181,59,0.25);
+    }
+
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .price-highlight-box {
+      background: rgba(207, 181, 59, 0.1);
+      border: 1.5px solid var(--accent);
+      border-radius: 10px;
+      padding: 10px;
+    }
+
+    .price-bcv-tag {
+      font-size: 11px;
+      color: var(--info);
+      margin-top: 4px;
+      font-weight: 600;
+    }
+
+    /* HISTORIAL DE ESCANEO */
+    .history-card {
+      margin-top: 24px;
+    }
+
+    .history-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(207,181,59,0.2);
+    }
+
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 280px;
+      overflow-y: auto;
+    }
+
+    .history-item {
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(207,181,59,0.15);
+      border-radius: 10px;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .history-thumb {
+      width: 48px;
+      height: 48px;
+      border-radius: 6px;
+      object-fit: cover;
+      background: #000;
+      border: 1px solid rgba(207,181,59,0.3);
+      flex-shrink: 0;
+    }
+
+    .history-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .history-title {
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: #fff;
+    }
+
+    .history-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .history-price {
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .history-price-usd {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .history-price-ves {
+      font-size: 10px;
+      color: var(--info);
+    }
+
+    /* MODAL DE CONFIGURACIÓN */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(5px);
+      z-index: 500;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .modal-box {
+      background: var(--card-bg);
+      border: 1.5px solid var(--accent);
+      border-radius: 18px;
+      padding: 22px;
+      max-width: 480px;
+      width: 100%;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #002222;
+      border: 1.5px solid var(--accent);
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 30px;
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.7);
+      z-index: 2000;
+      display: none;
+      animation: fadeIn 0.2s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- PANTALLA DE ACCESO POR CLAVE FIJA -->
+  <div id="lockscreen">
+    <div class="lock-card">
+      <div class="lock-icon">🔒</div>
+      <h2>Acceso FerreJade</h2>
+      <p>Escáner Inteligente con Inteligencia Artificial. Ingrese su clave autorizada para activar la cámara:</p>
+      <input type="password" id="auth-key-input" class="lock-input" placeholder="INGRESE CLAVE..." autofocus>
+      <button type="button" class="btn btn-main" style="width:100%" onclick="checkAuthKey()">
+        🔓 Desbloquear e Iniciar
+      </button>
+      <p style="font-size:11px;color:#64748b;margin-top:16px;margin-bottom:0">
+        Clave predeterminada: <b>FERREJADE2026</b>
+      </p>
+    </div>
+  </div>
+
+  <!-- ENCABEZADO -->
+  <header>
+    <a href="javascript:void(0)" class="brand-box">
+      <div class="brand-badge">📸</div>
+      <div class="brand-text">
+        <h1>FERREJADE · ESCÁNER IA</h1>
+        <p>Vision Multimodal · Gemini 3.8 Flash</p>
+      </div>
+    </a>
+    <div class="header-actions">
+      <a href="https://docs.google.com/spreadsheets/d/1L2CzvbImLReOJvGh8V6-6vv_8DfQ3NTEw6e3sL0KWW0/edit" target="_blank" class="pill-btn" title="Ver Hoja en Google Drive">
+        📊 <span>Google Sheets</span>
+      </a>
+      <button class="pill-btn" onclick="openConfigModal()" title="Configuración">
+        ⚙️
+      </button>
+      <button class="pill-btn" onclick="lockApp()" title="Bloquear">
+        🔒
+      </button>
+    </div>
+  </header>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <main>
+
+    <!-- BARRA DE INFORMACIÓN RÁPIDA (BCV Y ESTADO) -->
+    <div style="display:flex;justify-content:space-between;align-items:center;background:rgba(0,34,34,0.7);border:1px solid rgba(207,181,59,0.25);border-radius:12px;padding:8px 14px;margin-bottom:14px;font-size:12px">
+      <div style="display:flex;align-items:center;gap:6px">
+        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--success)"></span>
+        <span>Tasa BCV: <b id="lbl-bcv" style="color:var(--accent)">893.22 Bs./$</b></span>
+      </div>
+      <div>
+        <span>Nube: <b style="color:var(--info)">ferrejadepzo@gmail.com</b></span>
+      </div>
+    </div>
+
+    <!-- TARJETA DE CÁMARA Y ESCANEO -->
+    <div class="app-card">
+      <div class="camera-frame">
+        <video id="cam-video" autoplay playsinline muted></video>
+        <canvas id="cam-canvas" style="display:none"></canvas>
+        <img id="cam-preview" alt="Foto capturada">
+
+        <!-- Retícula holográfica tipo HUD -->
+        <div class="reticle" id="cam-reticle">
+          <div class="reticle-corner-tl"></div>
+          <div class="reticle-corner-tr"></div>
+          <div class="laser-line"></div>
+          <div class="reticle-corner-bl"></div>
+          <div class="reticle-corner-br"></div>
+        </div>
+
+        <!-- Botones flotantes sobre la cámara -->
+        <div class="cam-hud-actions">
+          <button type="button" class="hud-btn" onclick="toggleFlashlight()" id="btn-torch" title="Encender Linterna">💡</button>
+          <button type="button" class="hud-btn" onclick="switchCamera()" title="Cambiar Cámara">🔄</button>
+        </div>
+
+        <!-- Pantalla de carga IA -->
+        <div class="ai-loading-overlay" id="ai-loading">
+          <div class="spinner"></div>
+          <b style="font-size:15px;color:#fff">Gemini Flash Vision procesando imagen...</b>
+          <span style="font-size:12px;color:var(--accent)">Extrayendo marca, especificaciones, código de barras y medidas</span>
+        </div>
+      </div>
+
+      <!-- BOTONERA DE ACCIÓN -->
+      <div class="shoot-actions">
+        <button type="button" class="btn btn-main" id="btn-snap" onclick="captureAndScan()">
+          📸 <span>CAPTURAR Y ESCANEAR CON IA</span>
+        </button>
+        <button type="button" class="btn btn-secondary" onclick="triggerFileInput()">
+          📁 Subir Foto
+        </button>
+        <button type="button" class="btn btn-secondary" id="btn-retake" onclick="resetCameraView()" style="display:none">
+          🔄 Repetir
+        </button>
+        <input type="file" id="native-file-input" accept="image/*" capture="environment" style="display:none" onchange="handleFileSelected(event)">
+      </div>
+    </div>
+
+    <!-- TARJETA DE DETECCIÓN Y EDICIÓN RÁPIDA (15 CAMPOS) -->
+    <div class="app-card" id="product-result-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;border-bottom:1px solid rgba(207,181,59,0.25);padding-bottom:8px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:18px">✨</span>
+          <b style="font-size:15px;color:#fff">Producto Identificado por IA</b>
+        </div>
+        <span class="pill-btn" style="background:#10b981;border-color:#10b981;font-size:11px;padding:3px 8px" id="lbl-confidence">
+          Confianza 96%
+        </span>
+      </div>
+
+      <form id="product-form" onsubmit="saveProductToCatalog(event)">
+        <div class="form-grid">
+          
+          <div class="field-group full-width">
+            <label class="field-label">Nombre Comercial del Producto *</label>
+            <input type="text" class="field-input" id="p-name" required placeholder="Ej: Taladro Percutor 1/2 pulgada 650W">
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">Marca</label>
+            <input type="text" class="field-input" id="p-brand" placeholder="Ej: Truper, DeWalt, Bosch">
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">Modelo / Ref.</label>
+            <input type="text" class="field-input" id="p-model" placeholder="Ej: DWD024-B3">
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">Categoría</label>
+            <select class="field-select" id="p-category">
+              <option value="Herramientas Manuales">Herramientas Manuales</option>
+              <option value="Herramientas Eléctricas">Herramientas Eléctricas</option>
+              <option value="Plomería y Grifería">Plomería y Grifería</option>
+              <option value="Electricidad e Iluminación">Electricidad e Iluminación</option>
+              <option value="Pinturas y Acabados">Pinturas y Acabados</option>
+              <option value="Tornillería y Fijación">Tornillería y Fijación</option>
+              <option value="Construcción">Construcción</option>
+              <option value="Cerrajería">Cerrajería</option>
+              <option value="Seguridad Industrial">Seguridad Industrial</option>
+              <option value="Misceláneos">Misceláneos</option>
+            </select>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">SKU Sugerido *</label>
+            <input type="text" class="field-input mono" id="p-sku" required placeholder="FJ-XXX-000">
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">Código de Barras</label>
+            <input type="text" class="field-input mono" id="p-barcode" placeholder="EAN / UPC">
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">Stock Inicial</label>
+            <input type="number" class="field-input mono" id="p-stock" value="1" min="0">
+          </div>
+
+          <!-- BLOQUE DE COSTO Y PRECIO CON MARGEN -->
+          <div class="field-group price-highlight-box">
+            <label class="field-label" style="color:var(--text)">Costo USD ($) *</label>
+            <input type="number" step="0.01" class="field-input mono" id="p-cost" placeholder="0.00" oninput="calculateMargin()">
+            <span style="font-size:10px;color:var(--text-muted);margin-top:3px">Precio base de compra</span>
+          </div>
+
+          <div class="field-group price-highlight-box" style="border-color:var(--accent)">
+            <label class="field-label">Precio Venta USD ($) *</label>
+            <input type="number" step="0.01" class="field-input mono" id="p-price" placeholder="0.00" required oninput="updateMarginLabel()">
+            <div class="price-bcv-tag" id="p-price-bcv">Bs. 0.00 VES</div>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">Unidad de Medida</label>
+            <select class="field-select" id="p-unit">
+              <option value="UND">UND (Unidad)</option>
+              <option value="PZA">PZA (Pieza)</option>
+              <option value="JGO">JGO (Juego / Set)</option>
+              <option value="METRO">METRO</option>
+              <option value="KG">KG (Kilogramo)</option>
+              <option value="LITRO">LITRO</option>
+              <option value="SACO">SACO</option>
+              <option value="CAJA">CAJA</option>
+              <option value="ROLLO">ROLLO</option>
+              <option value="PAR">PAR</option>
+            </select>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label">Ubicación en Almacén</label>
+            <input type="text" class="field-input" id="p-location" value="Pasillo General">
+          </div>
+
+          <div class="field-group full-width">
+            <label class="field-label">Especificaciones Técnicas</label>
+            <input type="text" class="field-input" id="p-specs" placeholder="Medidas, voltaje, potencia, RPM, material">
+          </div>
+
+          <div class="field-group full-width">
+            <label class="field-label">Descripción Comercial</label>
+            <textarea class="field-textarea" id="p-desc" rows="2" placeholder="Resumen para la venta o ficha técnica"></textarea>
+          </div>
+
+        </div>
+
+        <div style="display:flex;gap:10px;margin-top:16px;flex-direction:column">
+          <button type="submit" class="btn btn-main" style="width:100%;font-size:16px">
+            💾 GUARDAR EN CATÁLOGO FERREJADE
+          </button>
+          <button type="button" class="btn btn-secondary" onclick="resetCameraView()">
+            📸 Escanear Otro Producto
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- HISTORIAL DE PRODUCTOS ESCANEADOS -->
+    <div class="app-card history-card">
+      <div class="history-head">
+        <b style="font-size:14px;color:#fff;display:flex;align-items:center;gap:6px">
+          📦 Productos Escaneados en Sesión (<span id="count-history">0</span>)
+        </b>
+        <div style="display:flex;gap:6px">
+          <button type="button" class="pill-btn" onclick="downloadCatalogCSV()" title="Descargar como Excel / CSV">
+            📥 Exportar CSV
+          </button>
+          <a href="https://docs.google.com/spreadsheets/d/1L2CzvbImLReOJvGh8V6-6vv_8DfQ3NTEw6e3sL0KWW0/edit" target="_blank" class="pill-btn" style="background:#0F9D58;border-color:#0F9D58;color:#fff">
+            📊 Google Drive ↗
+          </a>
+        </div>
+      </div>
+      
+      <div class="history-list" id="history-container">
+        <div style="text-align:center;padding:24px;color:var(--text-muted);font-size:13px">
+          Aún no has escaneado ningún producto en esta sesión.<br>
+          Enfoca un empaque o etiqueta y presiona <b>Capturar</b>.
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- MODAL DE CONFIGURACIÓN -->
+  <div class="modal-overlay" id="config-modal">
+    <div class="modal-box">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <b style="color:#fff;font-size:16px">⚙️ Configuración del Escáner</b>
+        <button class="pill-btn" onclick="closeConfigModal()">✕</button>
+      </div>
+      
+      <div class="field-group" style="margin-bottom:12px">
+        <label class="field-label">API Key de Google Gemini</label>
+        <input type="password" id="cfg-gemini-key" class="field-input mono" placeholder="AIzaSy...">
+        <span style="font-size:11px;color:var(--text-muted);margin-top:4px">
+          Obtén tu clave gratis en <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--accent)">Google AI Studio ↗</a>.
+        </span>
+      </div>
+
+      <div class="field-group" style="margin-bottom:12px">
+        <label class="field-label">Tasa Oficial Dólar BCV (Bs./$)</label>
+        <input type="number" step="0.01" id="cfg-bcv-rate" class="field-input mono" value="893.22">
+      </div>
+
+      <div class="field-group" style="margin-bottom:16px">
+        <label class="field-label">Webhook de Google Sheets (Opcional)</label>
+        <input type="url" id="cfg-gsheets-webhook" class="field-input mono" placeholder="https://script.google.com/macros/s/...">
+        <span style="font-size:11px;color:var(--text-muted);margin-top:4px">
+          Envía cada producto guardado en tiempo real a tu Google Drive.
+        </span>
+      </div>
+
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button type="button" class="btn btn-secondary" onclick="closeConfigModal()">Cancelar</button>
+        <button type="button" class="btn btn-main" onclick="saveConfiguration()">Guardar Ajustes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST DE NOTIFICACIONES -->
+  <div class="toast" id="toast-msg"></div>
+
+  <script>
+    /* ══════════════════════════════════════════════════════════════════════════
+       CONSTANTES Y ESTADO GLOBAL
+       ══════════════════════════════════════════════════════════════════════════ */
+    const MASTER_KEYS = ['FERREJADE2026', 'FERREJADE', '1234'];
+    let bcvRate = 893.22;
+    let cameraStream = null;
+    let currentFacingMode = 'environment';
+    let torchActive = false;
+    let capturedPhotoBase64 = null;
+    let scannedCatalog = [];
+
+    // API Key obtenida de localStorage o configurada por el usuario
+    function getActiveGeminiKey() {
+      return localStorage.getItem('ferrejade_gemini_key') || 
+             localStorage.getItem('cfg_gemini_key') || 
+             localStorage.getItem('gemini_api_key') || 
+             '';
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       SISTEMA DE AUTENTICACIÓN POR CLAVE FIJA
+       ══════════════════════════════════════════════════════════════════════════ */
+    function checkAuthOnLoad() {
+      // 1. Revisar si viene la clave por URL (?clave=FERREJADE2026 o ?key=...)
+      const urlParams = new URLSearchParams(window.location.search);
+      const queryKey = urlParams.get('clave') || urlParams.get('key');
+      if (queryKey && MASTER_KEYS.includes(queryKey.toUpperCase())) {
+        localStorage.setItem('ferrejade_scanner_auth', '1');
+      }
+
+      // 2. Revisar si ya fue autorizada en esta sesión/navegador
+      const isAuth = localStorage.getItem('ferrejade_scanner_auth') === '1';
+      if (isAuth) {
+        document.getElementById('lockscreen').style.display = 'none';
+        initApp();
+      } else {
+        document.getElementById('lockscreen').style.display = 'flex';
+        document.getElementById('auth-key-input').focus();
+      }
+    }
+
+    function checkAuthKey() {
+      const input = document.getElementById('auth-key-input').value.trim().toUpperCase();
+      if (MASTER_KEYS.includes(input)) {
+        localStorage.setItem('ferrejade_scanner_auth', '1');
+        document.getElementById('lockscreen').style.display = 'none';
+        showToast('¡Bienvenido a FerreJade Escáner IA!', 'ok');
+        initApp();
+      } else {
+        showToast('Clave incorrecta. Intente nuevamente.', 'err');
+        document.getElementById('auth-key-input').value = '';
+        document.getElementById('auth-key-input').focus();
+      }
+    }
+
+    document.getElementById('auth-key-input').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') checkAuthKey();
+    });
+
+    function lockApp() {
+      localStorage.removeItem('ferrejade_scanner_auth');
+      stopCamera();
+      document.getElementById('lockscreen').style.display = 'flex';
+      document.getElementById('auth-key-input').value = '';
+      document.getElementById('auth-key-input').focus();
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       INICIALIZACIÓN DE LA APLICACIÓN
+       ══════════════════════════════════════════════════════════════════════════ */
+    function initApp() {
+      fetchBcvRate();
+      loadSavedCatalog();
+      startCamera(currentFacingMode);
+      initSoundBeep();
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       CONTROL DE CÁMARA (WEBRTC)
+       ══════════════════════════════════════════════════════════════════════════ */
+    async function startCamera(facingMode) {
+      stopCamera();
+      const video = document.getElementById('cam-video');
+      const constraints = {
+        video: {
+          facingMode: { ideal: facingMode },
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        },
+        audio: false
+      };
+
+      try {
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+          cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
+          video.srcObject = cameraStream;
+          await video.play();
+        } else {
+          showToast('Cámara no compatible con este navegador. Use "Subir Foto".', 'info');
+        }
+      } catch (err) {
+        console.warn('Error al iniciar cámara:', err);
+        showToast('Acceso a la cámara restringido. Puedes subir fotos con el botón "📁 Subir Foto".', 'info');
+      }
+    }
+
+    function stopCamera() {
+      if (cameraStream) {
+        try {
+          cameraStream.getTracks().forEach(t => t.stop());
+        } catch(e) {}
+        cameraStream = null;
+      }
+    }
+
+    function switchCamera() {
+      currentFacingMode = (currentFacingMode === 'environment') ? 'user' : 'environment';
+      startCamera(currentFacingMode);
+    }
+
+    async function toggleFlashlight() {
+      if (!cameraStream) return;
+      const track = cameraStream.getVideoTracks()[0];
+      if (!track) return;
+
+      const capabilities = track.getCapabilities ? track.getCapabilities() : {};
+      if (capabilities.torch) {
+        torchActive = !torchActive;
+        try {
+          await track.applyConstraints({ advanced: [{ torch: torchActive }] });
+          document.getElementById('btn-torch').style.background = torchActive ? 'var(--accent)' : 'rgba(0,0,0,0.65)';
+        } catch(e) {
+          console.warn('Error toggle torch:', e);
+        }
+      } else {
+        showToast('Tu dispositivo no soporta linterna desde el navegador', 'info');
+      }
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       DISPARO Y CAPTURA DE FOTOGRAFÍA
+       ══════════════════════════════════════════════════════════════════════════ */
+    function captureAndScan() {
+      const video = document.getElementById('cam-video');
+      const canvas = document.getElementById('cam-canvas');
+      const preview = document.getElementById('cam-preview');
+
+      if (!video || !video.videoWidth) {
+        // Fallback: Si no hay stream de video, abrir selector nativo de fotos
+        triggerFileInput();
+        return;
+      }
+
+      playBeep();
+      if (navigator.vibrate) navigator.vibrate(50);
+
+      // Dibujar imagen en canvas
+      canvas.width = Math.min(1280, video.videoWidth);
+      canvas.height = Math.round(canvas.width * (video.videoHeight / video.videoWidth));
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      const base64 = canvas.toDataURL('image/jpeg', 0.88);
+      capturedPhotoBase64 = base64;
+
+      // Congelar vista
+      preview.src = base64;
+      preview.style.display = 'block';
+      video.style.display = 'none';
+      document.getElementById('cam-reticle').style.display = 'none';
+      document.getElementById('btn-snap').style.display = 'none';
+      document.getElementById('btn-retake').style.display = 'inline-flex';
+
+      // Enviar a procesar con Gemini Vision
+      processImageWithGemini(base64, 'image/jpeg');
+    }
+
+    function triggerFileInput() {
+      document.getElementById('native-file-input').click();
+    }
+
+    function handleFileSelected(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const base64 = e.target.result;
+        capturedPhotoBase64 = base64;
+
+        const preview = document.getElementById('cam-preview');
+        const video = document.getElementById('cam-video');
+        preview.src = base64;
+        preview.style.display = 'block';
+        video.style.display = 'none';
+        document.getElementById('cam-reticle').style.display = 'none';
+        document.getElementById('btn-snap').style.display = 'none';
+        document.getElementById('btn-retake').style.display = 'inline-flex';
+
+        processImageWithGemini(base64, file.type || 'image/jpeg');
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function resetCameraView() {
+      document.getElementById('cam-preview').style.display = 'none';
+      document.getElementById('cam-video').style.display = 'block';
+      document.getElementById('cam-reticle').style.display = 'flex';
+      document.getElementById('btn-snap').style.display = 'inline-flex';
+      document.getElementById('btn-retake').style.display = 'none';
+      document.getElementById('product-result-card').style.display = 'none';
+      capturedPhotoBase64 = null;
+      if (!cameraStream) startCamera(currentFacingMode);
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       MOTOR GEMINI VISION (MULTIMODEL FALLBACK)
+       ══════════════════════════════════════════════════════════════════════════ */
+    async function processImageWithGemini(base64Data, mime) {
+      const loading = document.getElementById('ai-loading');
+      loading.style.display = 'flex';
+
+      try {
+        let cleanBase64 = base64Data;
+        let detectedMime = mime || 'image/jpeg';
+        if (cleanBase64.indexOf(';base64,') !== -1) {
+          const parts = cleanBase64.split(';base64,');
+          cleanBase64 = parts[1];
+          const mMatch = parts[0].match(/data:(image\/[a-zA-Z0-9.+-]+)/);
+          if (mMatch) detectedMime = mMatch[1];
+        }
+
+        const apiKey = getActiveGeminiKey();
+        if (!apiKey) {
+          openConfigModal();
+          throw new Error('Por favor ingresa tu API Key gratuita de Google Gemini para comenzar a escanear.');
+        }
+
+        const candidateModels = [
+          'gemini-3.6-flash',
+          'gemini-3.5-flash',
+          'gemini-3.8-flash',
+          'gemini-flash-lite-latest',
+          'gemini-2.5-flash'
+        ];
+
+        const promptText = `Eres el escáner visual inteligente de FerreJade (ferretería industrial y materiales).
+Analiza esta imagen y extrae con alta precisión los datos del producto o empaque en un JSON estricto con los siguientes campos:
+{
+  "name": "Nombre comercial completo y profesional del producto",
+  "brand": "Marca (Ej: Truper, DeWalt, Stanley, Bosch, etc.)",
+  "model": "Modelo o número de parte si aparece",
+  "category": "Una de: Herramientas Manuales, Herramientas Eléctricas, Plomería y Grifería, Electricidad e Iluminación, Pinturas y Acabados, Tornillería y Fijación, Construcción, Cerrajería, Seguridad Industrial, Misceláneos",
+  "barcode": "Código de barras numérico si es legible (EAN-13, UPC)",
+  "costUsd": 0.00,
+  "priceUsd": 0.00,
+  "suggestedSku": "SKU único tipo FJ-MARCA-XXX",
+  "unit": "UND, PZA, JGO, METRO, KG, LITRO, SACO, CAJA, ROLLO o PAR",
+  "location": "Pasillo General",
+  "specs": "Especificaciones técnicas (medidas, voltaje, potencia, calibre)",
+  "description": "Descripción comercial clara y atractiva",
+  "confidence": 95
+}`;
+
+        let parsedData = null;
+        let lastError = null;
+
+        for (let i = 0; i < candidateModels.length; i++) {
+          const model = candidateModels[i];
+          try {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+            const response = await fetch(url, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                contents: [{
+                  role: 'user',
+                  parts: [
+                    { text: promptText },
+                    { inlineData: { mimeType: detectedMime, data: cleanBase64 } }
+                  ]
+                }],
+                generationConfig: {
+                  temperature: 0.1,
+                  responseMimeType: 'application/json'
+                }
+              })
+            });
+
+            if (!response.ok) {
+              lastError = new Error(`Error HTTP ${response.status} en modelo ${model}`);
+              continue;
+            }
+
+            const resJson = await response.json();
+            const textContent = resJson.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (!textContent) continue;
+
+            parsedData = JSON.parse(textContent);
+            break;
+          } catch(err) {
+            lastError = err;
+          }
+        }
+
+        if (!parsedData) {
+          throw lastError || new Error('No se pudo interpretar el producto con IA.');
+        }
+
+        // Rellenar formulario
+        populateProductForm(parsedData);
+        showToast('¡Producto catalogado exitosamente con Gemini!', 'ok');
+        playSuccessBeep();
+
+      } catch (err) {
+        console.error('Error Gemini Vision:', err);
+        showToast(err.message || 'Error al procesar la imagen.', 'err');
+      } finally {
+        loading.style.display = 'none';
+      }
+    }
+
+    function populateProductForm(data) {
+      document.getElementById('p-name').value = data.name || 'Producto Ferretero';
+      document.getElementById('p-brand').value = data.brand || 'Genérico';
+      document.getElementById('p-model').value = data.model || '';
+      document.getElementById('p-barcode').value = data.barcode || '';
+      
+      const brandClean = (data.brand || 'GEN').replace(/[^a-zA-Z]/g, '').slice(0, 3).toUpperCase();
+      const randomNum = Math.floor(100 + Math.random() * 900);
+      document.getElementById('p-sku').value = data.suggestedSku || `FJ-${brandClean}-${randomNum}`;
+
+      const catSelect = document.getElementById('p-category');
+      if (data.category) {
+        for (let opt of catSelect.options) {
+          if (opt.value.toLowerCase().includes(data.category.toLowerCase()) || data.category.toLowerCase().includes(opt.value.toLowerCase())) {
+            catSelect.value = opt.value;
+            break;
+          }
+        }
+      }
+
+      const costVal = parseFloat(data.costUsd) || 0;
+      let priceVal = parseFloat(data.priceUsd) || 0;
+      if (costVal > 0 && priceVal <= 0) {
+        priceVal = (costVal * 1.35).toFixed(2);
+      }
+
+      document.getElementById('p-cost').value = costVal > 0 ? costVal : '';
+      document.getElementById('p-price').value = priceVal > 0 ? priceVal : '';
+      
+      if (data.unit) document.getElementById('p-unit').value = data.unit;
+      if (data.location) document.getElementById('p-location').value = data.location;
+      document.getElementById('p-specs').value = data.specs || '';
+      document.getElementById('p-desc').value = data.description || data.specs || '';
+
+      const confidence = data.confidence || 95;
+      document.getElementById('lbl-confidence').textContent = `Confianza ${confidence}%`;
+
+      updateMarginLabel();
+
+      const resultCard = document.getElementById('product-result-card');
+      resultCard.style.display = 'block';
+      resultCard.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       CÁLCULOS DE PRECIO, MARGEN Y BOLÍVARES (VES)
+       ══════════════════════════════════════════════════════════════════════════ */
+    function calculateMargin() {
+      const cost = parseFloat(document.getElementById('p-cost').value) || 0;
+      const priceInput = document.getElementById('p-price');
+      if (cost > 0 && (!priceInput.value || parseFloat(priceInput.value) <= cost)) {
+        priceInput.value = (cost * 1.35).toFixed(2);
+      }
+      updateMarginLabel();
+    }
+
+    function updateMarginLabel() {
+      const price = parseFloat(document.getElementById('p-price').value) || 0;
+      const vesTotal = (price * bcvRate).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      document.getElementById('p-price-bcv').textContent = `Bs. ${vesTotal} VES (Tasa BCV)`;
+    }
+
+    async function fetchBcvRate() {
+      try {
+        const resp = await fetch('https://ve.dolarapi.com/v1/dolares/oficial');
+        if (resp.ok) {
+          const json = await resp.json();
+          if (json.promedio) {
+            bcvRate = parseFloat(json.promedio);
+            document.getElementById('lbl-bcv').textContent = `${bcvRate.toFixed(2)} Bs./$`;
+            updateMarginLabel();
+            return;
+          }
+        }
+      } catch(e) {
+        console.log('Usando tasa de respaldo BCV:', bcvRate);
+      }
+      document.getElementById('lbl-bcv').textContent = `${bcvRate.toFixed(2)} Bs./$`;
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       GUARDADO EN CATÁLOGO Y SINCRONIZACIÓN GOOGLE SHEETS
+       ══════════════════════════════════════════════════════════════════════════ */
+    async function saveProductToCatalog(e) {
+      e.preventDefault();
+
+      const price = parseFloat(document.getElementById('p-price').value) || 0;
+      if (price <= 0) {
+        showToast('Ingrese un precio de venta válido mayor a 0', 'err');
+        return;
+      }
+
+      const product = {
+        id: 'PROD-' + Date.now(),
+        sku: document.getElementById('p-sku').value.trim().toUpperCase(),
+        name: document.getElementById('p-name').value.trim(),
+        brand: document.getElementById('p-brand').value.trim() || 'Genérico',
+        model: document.getElementById('p-model').value.trim(),
+        category: document.getElementById('p-category').value,
+        barcode: document.getElementById('p-barcode').value.trim(),
+        cost: parseFloat(document.getElementById('p-cost').value) || 0,
+        price: price,
+        stock: parseInt(document.getElementById('p-stock').value) || 1,
+        unit: document.getElementById('p-unit').value,
+        location: document.getElementById('p-location').value.trim() || 'Pasillo General',
+        specs: document.getElementById('p-specs').value.trim(),
+        description: document.getElementById('p-desc').value.trim(),
+        timestamp: new Date().toISOString(),
+        image: capturedPhotoBase64 || ''
+      };
+
+      // Guardar en array y localStorage
+      scannedCatalog.unshift(product);
+      localStorage.setItem('ferrejade_scanned_catalog', JSON.stringify(scannedCatalog));
+
+      renderHistory();
+      showToast(`¡Producto "${product.name}" guardado exitosamente!`, 'ok');
+
+      // Enviar a webhook de Google Sheets si está configurado
+      const webhookUrl = localStorage.getItem('ferrejade_gsheets_webhook');
+      if (webhookUrl) {
+        syncToGoogleSheetsWebhook(product, webhookUrl);
+      }
+
+      resetCameraView();
+    }
+
+    function syncToGoogleSheetsWebhook(prod, url) {
+      try {
+        fetch(url, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'append_product',
+            rateBcv: bcvRate,
+            product: prod
+          })
+        }).then(() => {
+          showToast('☁️ Sincronizado con Google Sheets en tiempo real', 'ok');
+        }).catch(err => {
+          console.warn('Sync webhook error:', err);
+        });
+      } catch(e) {}
+    }
+
+    function loadSavedCatalog() {
+      const saved = localStorage.getItem('ferrejade_scanned_catalog');
+      if (saved) {
+        try {
+          scannedCatalog = JSON.parse(saved);
+        } catch(e) {
+          scannedCatalog = [];
+        }
+      }
+      renderHistory();
+    }
+
+    function renderHistory() {
+      const container = document.getElementById('history-container');
+      const countEl = document.getElementById('count-history');
+      countEl.textContent = scannedCatalog.length;
+
+      if (!scannedCatalog.length) {
+        container.innerHTML = `
+          <div style="text-align:center;padding:24px;color:var(--text-muted);font-size:13px">
+            Aún no has escaneado ningún producto en esta sesión.<br>
+            Enfoca un empaque o etiqueta y presiona <b>Capturar</b>.
+          </div>`;
+        return;
+      }
+
+      container.innerHTML = scannedCatalog.map((p, idx) => {
+        const ves = (p.price * bcvRate).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const thumb = p.image || 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 50"><rect width="50" height="50" fill="%23003333"/><text x="50%" y="55%" text-anchor="middle" dominant-baseline="middle" font-size="20">📦</text></svg>';
+        return `
+          <div class="history-item">
+            <img src="${thumb}" class="history-thumb" alt="Miniatura">
+            <div class="history-info">
+              <div class="history-title">${p.name}</div>
+              <div class="history-sub">SKU: <b>${p.sku}</b> · Stock: ${p.stock} ${p.unit} · ${p.brand}</div>
+            </div>
+            <div class="history-price">
+              <div class="history-price-usd">$${p.price.toFixed(2)}</div>
+              <div class="history-price-ves">Bs. ${ves}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function downloadCatalogCSV() {
+      if (!scannedCatalog.length) {
+        showToast('No hay productos para exportar aún.', 'info');
+        return;
+      }
+
+      const headers = ['SKU', 'Nombre', 'Marca', 'Modelo', 'Categoría', 'Código de Barras', 'Costo USD', 'Precio USD', 'Precio VES', 'Stock', 'Unidad', 'Ubicación', 'Especificaciones', 'Fecha'];
+      const rows = scannedCatalog.map(p => {
+        const ves = (p.price * bcvRate).toFixed(2);
+        return [
+          `"${p.sku}"`,
+          `"${p.name.replace(/"/g, '""')}"`,
+          `"${p.brand}"`,
+          `"${p.model || ''}"`,
+          `"${p.category}"`,
+          `"${p.barcode || ''}"`,
+          p.cost,
+          p.price,
+          ves,
+          p.stock,
+          `"${p.unit}"`,
+          `"${p.location}"`,
+          `"${(p.specs || '').replace(/"/g, '""')}"`,
+          `"${p.timestamp}"`
+        ].join(',');
+      });
+
+      const csvContent = '\uFEFF' + [headers.join(','), ...rows].join('\r\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `catalogo_ferrejade_escaneado_${new Date().toISOString().slice(0,10)}.csv`;
+      link.click();
+      showToast('Descargando catálogo en formato CSV / Excel...', 'ok');
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       AJUSTES Y CONFIGURACIÓN
+       ══════════════════════════════════════════════════════════════════════════ */
+    function openConfigModal() {
+      document.getElementById('cfg-gemini-key').value = localStorage.getItem('ferrejade_gemini_key') || '';
+      document.getElementById('cfg-bcv-rate').value = bcvRate.toFixed(2);
+      document.getElementById('cfg-gsheets-webhook').value = localStorage.getItem('ferrejade_gsheets_webhook') || '';
+      document.getElementById('config-modal').style.display = 'flex';
+    }
+
+    function closeConfigModal() {
+      document.getElementById('config-modal').style.display = 'none';
+    }
+
+    function saveConfiguration() {
+      const key = document.getElementById('cfg-gemini-key').value.trim();
+      const rate = parseFloat(document.getElementById('cfg-bcv-rate').value) || 893.22;
+      const webhook = document.getElementById('cfg-gsheets-webhook').value.trim();
+
+      if (key) localStorage.setItem('ferrejade_gemini_key', key);
+      if (webhook) localStorage.setItem('ferrejade_gsheets_webhook', webhook);
+      bcvRate = rate;
+      document.getElementById('lbl-bcv').textContent = `${bcvRate.toFixed(2)} Bs./$`;
+      updateMarginLabel();
+      renderHistory();
+
+      closeConfigModal();
+      showToast('Ajustes guardados correctamente', 'ok');
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       SONIDOS Y NOTIFICACIONES
+       ══════════════════════════════════════════════════════════════════════════ */
+    let audioCtx = null;
+    function initSoundBeep() {
+      try {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      } catch(e) {}
+    }
+
+    function playBeep() {
+      if (!audioCtx) return;
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.08);
+      } catch(e) {}
+    }
+
+    function playSuccessBeep() {
+      if (!audioCtx) return;
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.15);
+        gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.15);
+      } catch(e) {}
+    }
+
+    function showToast(text, type = 'info') {
+      const toast = document.getElementById('toast-msg');
+      toast.textContent = text;
+      toast.style.borderColor = (type === 'ok') ? 'var(--success)' : (type === 'err') ? 'var(--danger)' : 'var(--accent)';
+      toast.style.display = 'block';
+      setTimeout(() => { toast.style.display = 'none'; }, 3500);
+    }
+
+    // Inicializar al cargar ventana
+    window.addEventListener('DOMContentLoaded', checkAuthOnLoad);
+  </script>
+</body>
+</html>
