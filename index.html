@@ -2464,7 +2464,7 @@ Views.dashboard=function(){
     '<button class="btn btn-primary" type="button" data-action="admin-nav" data-m="pos">'+I.pos+' Abrir caja</button></div></div>'+
   '<div class="kpi-grid">'+
     kpiMoney('Ventas hoy',m.today,'+12.4%','up','cash','var(--ok)','var(--ok-soft)',[42,55,48,70,66,88,94],'vs. ayer')+
-    kpiMoney('Ventas 30 días',m.sales30,(m.growth>=0?'+':'')+m.growth.toFixed(1)+'%',m.growth>=0?'up':'down','chart','var(--accent)','var(--accent-soft)',[30,44,38,52,60,58,72],'meta '+money(m.salesPrev))+
+    kpiMoney('Ventas 30 días',m.sales30,(m.growth>=0?'+':'')+m.growth.toFixed(1)+'%',m.growth>=0?'up':'down','chart','var(--accent)','var(--accent-soft)',[30,44,38,52,60,58,72],'meta '+moneyUsd(m.salesPrev))+
     kpiMoney('Ticket promedio',m.ticket,'+3.1%','up','receipt','var(--info)','var(--info-soft)',[50,48,55,53,60,62,66],m.orders30+' órdenes')+
     kpiMoney('Valor de inventario',m.stockValue,m.low.length+' alertas','down','box','var(--warn)','var(--warn-soft)',[80,74,78,70,64,66,58],'valuado a costo')+
   '</div>'+
@@ -6427,6 +6427,20 @@ var BRAND_LOGOS = {
   'cemex': "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 50' width='160' height='50'><rect width='160' height='50' rx='8' fill='%231e293b'/><text x='80' y='32' font-family='Arial Black, sans-serif' font-weight='900' font-size='19' fill='%23ef4444' text-anchor='middle' letter-spacing='1'>VENCEMOS</text></svg>",
   'truper': "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 50' width='160' height='50'><rect width='160' height='50' rx='8' fill='%23ea580c'/><text x='80' y='33' font-family='Arial Black, sans-serif' font-weight='900' font-size='22' fill='%23ffffff' text-anchor='middle' letter-spacing='2'>TRUPER</text></svg>"
 };
+function brandBadge(b){
+  var n = (b.brandName || b.title || '').toUpperCase();
+  if(n.indexOf('DEWALT')>=0) return '<div style="background:#feb800;color:#111;font-family:Arial Black,Impact,sans-serif;font-weight:900;font-size:20px;letter-spacing:-0.5px;padding:6px 14px;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,0.12)">DEWALT</div>';
+  if(n.indexOf('STANLEY')>=0) return '<div style="background:#111;padding:3px;border-radius:8px"><div style="background:#ffcc00;color:#111;font-family:Arial Black,sans-serif;font-weight:900;font-size:16px;letter-spacing:1px;padding:4px 12px;border-radius:4px">STANLEY</div></div>';
+  if(n.indexOf('BOSCH')>=0) return '<div style="display:flex;align-items:center;gap:6px;background:#fff;border:1.5px solid #e2e8f0;padding:4px 10px;border-radius:8px"><span style="width:18px;height:18px;border-radius:50%;background:#e11d48;display:grid;place-items:center;color:#fff;font-size:10px;font-weight:900">●</span><span style="font-family:Arial,Helvetica,sans-serif;font-weight:900;font-size:18px;color:#0f172a;letter-spacing:1px">BOSCH</span></div>';
+  if(n.indexOf('TUBRICA')>=0) return '<div style="background:#0284c7;color:#fff;font-family:Arial Black,sans-serif;font-weight:900;font-size:17px;letter-spacing:1.5px;padding:6px 14px;border-radius:8px">TUBRICA</div>';
+  if(n.indexOf('VENCEMOS')>=0 || n.indexOf('CEMEX')>=0) return '<div style="background:#1e293b;color:#ef4444;font-family:Arial Black,sans-serif;font-weight:900;font-size:16px;letter-spacing:1px;padding:6px 14px;border-radius:8px">VENCEMOS</div>';
+  if(n.indexOf('TRUPER')>=0) return '<div style="background:#ea580c;color:#fff;font-family:Arial Black,sans-serif;font-weight:900;font-size:18px;letter-spacing:2px;padding:6px 14px;border-radius:8px">TRUPER</div>';
+  if(b.imageUrl && !b.imageUrl.startsWith('data:')){
+    return '<img src="'+esc(b.imageUrl)+'" alt="'+esc(b.brandName||b.title)+'" style="max-height:40px;max-width:125px;object-fit:contain;">';
+  }
+  return '<b style="font-size:17px;font-family:var(--font-display);color:var(--text)">' + esc(b.brandName || b.title) + '</b>';
+}
+
 function renderBrandsCarouselBanner(){
   if(!MARKETING_STATE || !MARKETING_STATE.banners) return '';
   var brands = MARKETING_STATE.banners.filter(function(b){ return b.slot === 'brands_carousel' && b.active; });
@@ -6435,10 +6449,10 @@ function renderBrandsCarouselBanner(){
     '<div class="sec-head rv" style="margin-bottom:12px"><div><h2 style="font-size:20px">Marcas Aliadas & Fabricantes Oficiales</h2><p class="muted sm" style="margin-top:4px">Garantía directa de fábrica y distribución autorizada nacional</p></div>'+
     '<button class="btn btn-ghost btn-sm" type="button" data-action="go" data-to="/productos">Ver todo '+I.chev+'</button></div>'+
     '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px">'+
-      brands.map(function(b){ var bk=(b.brandName||b.title||'').toLowerCase().trim(), imgUrl=b.imageUrl; for(var k in BRAND_LOGOS){ if(bk.indexOf(k)>=0){ imgUrl=BRAND_LOGOS[k]; break; } }
+      brands.map(function(b){
         return '<div class="card card-pad" style="text-align:center;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border-radius:12px;transition:all .2s ease;padding:16px 12px;background:var(--bg-card);border:1px solid var(--border);" data-action="banner-click" data-id="'+b.id+'" data-link="'+esc(b.linkUrl||'')+'" onmouseover="this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 6px 18px rgba(0,0,0,0.08)\'" onmouseout="this.style.transform=\'none\';this.style.boxShadow=\'none\'">'+
           '<div style="height:46px;display:flex;align-items:center;justify-content:center;width:100%">'+
-            (imgUrl ? '<img src="'+esc(imgUrl)+'" alt="'+esc(b.brandName||b.title)+'" style="max-height:40px;max-width:125px;object-fit:contain;" onerror="this.onerror=null;this.style.display=\'none\';var f=this.nextElementSibling;if(f)f.style.display=\'block\';"><b style="display:none;font-size:17px;font-family:var(--font-display);color:var(--text)">'+esc(b.brandName||b.title)+'</b>' : '<b style="font-size:17px;font-family:var(--font-display);color:var(--text)">'+esc(b.brandName||b.title)+'</b>')+
+            brandBadge(b)+
           '</div>'+
           '<span class="xs" style="font-weight:700;color:var(--accent);letter-spacing:0.3px">'+esc(b.badgeText||'Distribuidor Oficial')+'</span>'+
         '</div>';
@@ -6523,7 +6537,7 @@ function renderMarketingAdsSection(tabsHtml){
             '</td>'+
             '<td data-l="Contenido">'+
               '<div style="display:flex;align-items:center;gap:12px">'+
-                (b.imageUrl ? '<img src="'+esc(b.imageUrl)+'" alt="Preview" style="width:48px;height:38px;object-fit:contain;border-radius:6px;background:var(--bg);border:1px solid var(--border);padding:2px">' : '<div style="width:48px;height:38px;border-radius:6px;background:'+(b.bgGradient||'var(--accent)')+';display:flex;align-items:center;justify-content:center;font-size:16px">'+slInfo.icon+'</div>')+
+                (b.imageUrl && !b.imageUrl.startsWith('data:') ? '<img src="'+esc(b.imageUrl)+'" alt="Preview" style="width:48px;height:38px;object-fit:contain;border-radius:6px;background:var(--bg);border:1px solid var(--border);padding:2px">' : '<div style="width:48px;height:38px;border-radius:6px;background:'+(b.bgGradient||'var(--accent)')+';display:flex;align-items:center;justify-content:center;font-size:16px">'+slInfo.icon+'</div>')+
                 '<div>'+
                   '<b style="font-size:14px;display:block">'+esc(b.title)+'</b>'+
                   (b.subtitle ? '<span class="xs muted" style="display:block;max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(b.subtitle)+'</span>' : '')+
