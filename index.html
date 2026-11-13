@@ -646,15 +646,28 @@ svg[data-chart], .spark svg, .chart-wrap svg, .pos-tile .art svg, .p-art > svg, 
   overflow-x: auto;
   overflow-y: hidden;
   scrollbar-width: none;
+  white-space: nowrap;
 }
 .top::-webkit-scrollbar {
   display: none;
 }
+.top > * {
+  flex-shrink: 0;
+}
 .top-search-btn {
-  min-width: 200px;
-  max-width: 260px;
+  min-width: 130px;
+  max-width: 210px;
   justify-content: flex-start;
   color: var(--muted);
+  white-space: nowrap;
+  flex-shrink: 1;
+}
+.top-rate-pill {
+  display: inline-flex !important;
+  align-items: center !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+  line-height: 1 !important;
 }
 
 /* 3. Clases de Cuadrículas Semánticas Responsivas */
@@ -2381,25 +2394,25 @@ function adminShell(inner,mid){
   '<div class="main"><header class="top">'+
     '<button class="icon-btn mob-only" type="button" data-action="open-mob-side" aria-label="Abrir menú">'+I.menu+'</button>'+
     '<button class="icon-btn hide-md" type="button" data-action="toggle-mini" aria-label="Colapsar menú" data-tip="Colapsar menú lateral" data-tip-force>'+I.grid+'</button>'+
-    '<button class="btn btn-ghost btn-sm top-search-btn hide-md" type="button" data-action="cmdk">'+I.search+
-      '<span style="flex:1;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Buscar módulos, productos…</span><span class="mono xs" style="border:1px solid var(--border);padding:1px 6px;border-radius:6px">Ctrl K</span></button>'+
-    '<div style="flex:1"></div>'+
-    '<div class="row hide-md" data-action="refresh-bcv" style="gap:6px;padding:4px 10px;background:var(--surface);border:1px solid var(--border);border-radius:20px;font-size:12px;cursor:pointer" data-tip="Haz clic para sincronizar tasa oficial con el BCV" data-tip-force title="Sincronizar tasa BCV">'+
-      '<span>🇻🇪</span>'+
-      '<span class="muted xs">BCV:</span>'+
-      '<b class="mono" style="color:var(--accent)">Bs. '+BCV_RATE.toFixed(2)+'</b>'+
-      '<span class="xs muted" style="display:inline-flex;align-items:center">'+I.refresh+'</span>'+
+    '<button class="btn btn-ghost btn-sm top-search-btn hide-md" type="button" data-action="cmdk" style="white-space:nowrap;flex-shrink:1">'+I.search+
+      '<span style="flex:1;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Buscar módulos…</span><span class="mono xs" style="border:1px solid var(--border);padding:1px 6px;border-radius:6px;flex-shrink:0">Ctrl K</span></button>'+
+    '<div style="flex:1;min-width:8px"></div>'+
+    '<div class="row hide-md top-rate-pill" data-action="refresh-bcv" style="gap:6px;padding:5px 12px;background:var(--surface);border:1px solid var(--border);border-radius:20px;font-size:12px;cursor:pointer;white-space:nowrap;flex-shrink:0;align-items:center" data-tip="Haz clic para sincronizar tasa oficial con el BCV" data-tip-force title="Sincronizar tasa BCV">'+
+      '<span style="font-size:14px;line-height:1">🇻🇪</span>'+
+      '<span class="muted xs" style="white-space:nowrap;font-weight:600">BCV:</span>'+
+      '<b class="mono" style="color:var(--accent);white-space:nowrap;font-size:12.5px">Bs. '+BCV_RATE.toFixed(2)+'</b>'+
+      '<span class="xs muted" style="display:inline-flex;align-items:center;flex-shrink:0;margin-left:2px">'+I.refresh+'</span>'+
     '</div>'+
     (isDeviceAuthorized()
-      ? '<span class="badge" style="background:rgba(16,185,129,0.15);color:#10b981;border:1px solid #10b981;font-weight:700;border-radius:20px;padding:4px 10px;font-size:11px;display:inline-flex;align-items:center;gap:4px">🟢 <span class="hide-md">Acceso Autorizado</span></span>'
-      : '<button class="btn btn-sm btn-ghost" type="button" data-action="open-gatekeeper" style="color:#CFB53B;font-weight:700;gap:4px">🔐 <span class="hide-md">Ingresar Clave</span></button>')+
-    '<button class="btn btn-sm btn-ghost" type="button" data-action="pwa-install" id="btn-pwa-install-admin" style="color:#CFB53B;gap:5px;font-weight:700;display:inline-flex;align-items:center" title="Instalar FerreJade en Celular o PC">📲 <span class="hide-md">Instalar App</span></button>'+
-    '<button class="btn btn-ghost btn-sm" type="button" data-action="go" data-to="/">'+I.store+' <span class="top-store-label hide-md" style="display:inline">Ver tienda</span></button>'+
+      ? '<span class="badge" style="background:rgba(16,185,129,0.15);color:#10b981;border:1px solid #10b981;font-weight:700;border-radius:20px;padding:4px 10px;font-size:11px;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;flex-shrink:0">🟢 <span class="hide-md">Autorizado</span></span>'
+      : '<button class="btn btn-sm btn-ghost" type="button" data-action="open-gatekeeper" style="color:#CFB53B;font-weight:700;gap:4px;white-space:nowrap;flex-shrink:0">🔐 <span class="hide-md">Ingresar Clave</span></button>')+
+    '<button class="btn btn-sm btn-ghost hide-md" type="button" data-action="pwa-install" id="btn-pwa-install-admin" style="color:#CFB53B;gap:5px;font-weight:700;display:inline-flex;align-items:center;white-space:nowrap;flex-shrink:0" title="Instalar FerreJade en Celular o PC">📲 Instalar App</button>'+
+    '<button class="btn btn-ghost btn-sm" type="button" data-action="go" data-to="/" style="white-space:nowrap;flex-shrink:0">'+I.store+' <span class="top-store-label hide-md" style="display:inline">Ver tienda</span></button>'+
     '<button class="icon-btn" type="button" data-action="toggle-theme" aria-label="Tema" data-tip="Modo claro/oscuro" data-tip-force>'+(State.theme==='light'?I.moon:I.sun)+'</button>'+
     '<button class="icon-btn" type="button" data-action="open-notifs" aria-label="Notificaciones">'+I.bell+'<span class="bdg"></span></button>'+
-    '<button class="btn btn-sm btn-soft top-help-text hide-md" type="button" data-action="open-ai-chat" style="gap:6px;font-size:12.5px;padding:6px 12px;border-radius:10px;white-space:nowrap" data-tip="Copiloto de Ayuda con Inteligencia Artificial y Manual Operativo" data-tip-force>📖 Ayuda &amp; Copiloto IA</button>'+
-    '<button class="icon-btn" type="button" data-action="open-ai-chat" aria-label="Centro de Ayuda" data-tip="Manual Operativo y Ayuda Paso a Paso" data-tip-force>'+I.help+'</button>'+
-    '<div class="row" style="gap:9px;padding-left:8px;border-left:1px solid var(--border)">'+avatar(s?s.name:'Admin',0)+
+    '<button class="btn btn-sm btn-soft top-help-text hide-md" type="button" data-action="open-ai-chat" style="gap:6px;font-size:12px;padding:6px 12px;border-radius:10px;white-space:nowrap;flex-shrink:0" data-tip="Copiloto de Ayuda con Inteligencia Artificial y Manual Operativo" data-tip-force>📖 Copiloto IA</button>'+
+    '<button class="icon-btn mob-only" type="button" data-action="open-ai-chat" aria-label="Centro de Ayuda" data-tip="Manual Operativo y Ayuda Paso a Paso" data-tip-force>'+I.help+'</button>'+
+    '<div class="row" style="gap:9px;padding-left:8px;border-left:1px solid var(--border);white-space:nowrap;flex-shrink:0">'+avatar(s?s.name:'Admin',0)+
       '<div style="line-height:1.2" class="top-user-info hide-md"><b class="sm" style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px">'+esc(s?s.name:'Invitado')+'</b>'+
       '<span class="badge b-acc" style="font-size:9.5px;padding:2px 7px;font-weight:700;letter-spacing:.02em;white-space:nowrap">'+esc(s?(s.roleDisplayName||ROLE_MAP[s.role]||s.role):'—')+'</span></div>'+
       '<button class="icon-btn" type="button" data-action="logout" aria-label="Cerrar sesión" data-tip="Cerrar sesión y revocar token" data-tip-force>'+I.logout+'</button></div>'+
@@ -15082,7 +15095,7 @@ render();
 syncFromBackend();
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
-    navigator.serviceWorker.register('sw.js?v=1.26').then(function(reg) {
+    navigator.serviceWorker.register('sw.js?v=1.27').then(function(reg) {
       console.log('FerreJade PWA Service Worker activo:', reg.scope);
     }).catch(function(err) {
       console.log('FerreJade PWA SW nota:', err);
