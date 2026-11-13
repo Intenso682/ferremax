@@ -603,10 +603,32 @@ div[style*="border-radius:50%"] > svg {
 }
 
 /* Gráficas SVG y arte de producto mantienen su escalabilidad */
-svg[data-chart], .spark svg, .chart-wrap svg, .pos-tile .art svg, .p-art > svg, .ci-art svg, .hp-cell .art svg, .pd-main svg, .login-art svg {
+svg[data-chart], .spark svg, .chart-wrap svg, .pos-tile .art svg, .p-art > svg, .ci-art svg, .hp-cell .art svg, .pd-main svg {
   width: 100% !important;
   max-width: 100% !important;
   height: auto;
+}
+.feat-list div svg {
+  width: 20px !important;
+  height: 20px !important;
+  max-width: 20px !important;
+  max-height: 20px !important;
+  flex: none !important;
+  flex-shrink: 0 !important;
+  margin-top: 2px !important;
+  color: var(--accent-2) !important;
+}
+.login-art span.row svg {
+  width: 16px !important;
+  height: 16px !important;
+  max-width: 16px !important;
+  max-height: 16px !important;
+  flex-shrink: 0 !important;
+}
+.login-art .brand svg {
+  width: 22px !important;
+  height: 22px !important;
+  max-width: 22px !important;
 }
 .input, input, select, textarea {
   max-width: 100%;
@@ -2144,7 +2166,7 @@ function viewLogin(){
     '<a class="brand" href="#/" data-action="go" data-to="/" style="color:#fff">'+
       (STORE_CONFIG.logoUrl ? '<img src="'+esc(STORE_CONFIG.logoUrl)+'" alt="Logo" style="height:42px;max-width:210px;object-fit:contain;background:rgba(255,255,255,.92);padding:4px 8px;border-radius:9px;margin-right:8px">' : '<span class="brand-mark" style="background:rgba(255,255,255,.18)">'+I.bolt+'</span>')+
       ' <span style="font-size:18px;font-weight:700">'+esc(STORE_CONFIG.storeName)+'</span></a>'+
-    '<h2>El centro de control de '+esc(STORE_CONFIG.storeName)+'.</h2>'+
+    '<h2>El centro de control de '+esc(STORE_CONFIG.storeName.replace(/\.+$/, ''))+'.</h2>'+
     '<p style="opacity:.86;max-width:440px;font-size:16px">'+esc(STORE_CONFIG.storeSlogan||'Acceso protegido mediante Tokens JWT y control de permisos por pantalla según el puesto de trabajo.')+'</p>'+
     '<div class="feat-list">'+[['Cajero: Punto de Venta optimizado sin acceso a finanzas'],['Almacén: Control físico de existencias y pedidos'],['Contabilidad: Libros de ventas, IVA, IGTF y reportes'],['Gerencia y Admin: Supervisión de caja, métricas y ajustes']]
       .map(function(t){return '<div>'+I.check+'<span>'+t+'</span></div>';}).join('')+'</div>'+
