@@ -161,6 +161,17 @@ model AdBanner {
 
 ---
 
+## 6.1 Auditoría Visual y Estabilización de Despliegue en Render (Noviembre 2026)
+- **Tienda Pública (`#/`):**
+  - Cabecera y buscador optimizados (`min-width: 180px` e índices responsivos) eliminando colapso de controles.
+  - Sección Hero con maquetas flotantes reubicadas con posición relativa y márgenes limpios, eliminando colisiones con catálogo.
+  - Sección "Marcas Aliadas": Sustitución de Data-URIs SVG propensas a corrupción por insignias vectoriales nativas estilizadas (`DEWALT`, `STANLEY`, `BOSCH`, `TUBRICA`, `VENCEMOS`, `TRUPER`), garantizando 0 iconos rotos.
+- **Panel Administrativo (`#/admin/dashboard`):**
+  - Tarjetas de KPIs (Ventas hoy, Ventas 30 días, Ticket promedio, Valor inventario) saneadas contra tags HTML literales.
+  - Gráficos de Área y Dona, Alertas de inventario, Bus de eventos Redis Streams y Tabla de pedidos validados en producción con 0 caídas (0 Error Boundaries).
+
+---
+
 ## 7. Instrucciones para Retomar el Proyecto en la Tarde
 
 ### A. Para arrancar el servidor si reiniciaste o cerraste la terminal:
