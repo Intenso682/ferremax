@@ -1312,8 +1312,11 @@ var State={
   loginRole: savedSession ? (savedSession.roleDisplayName || savedSession.role) : 'Administrador', bus:[],
   ui:{sidebar:LS.get('cb-mini',true),help:LS.get('cb-help',true),showDevModules:LS.get('cb-show-dev',false),salesRange:'30d',catFilter:[],priceMax:3500,
       inStock:false,onlyOffers:false,sort:'rel',q:'',posQ:'',posCat:'todos',invQ:'',invCat:'todos',invState:'todos',salesStatus:'todas',
-      billingTab:'cortes',cashHistoryType:'ALL',cashHistoryQ:'',cashHistoryDiffOnly:false,
-      customersTab:'deudores',customerSearchQ:'',customerFilterType:'ALL',purchasesTab:'proveedores',pendingNotesClient:'TODOS'}
+      salesPage:1,salesPerPage:10,salesQ:'',
+      billingTab:'cortes',cashHistoryType:'ALL',cashHistoryQ:'',cashHistoryDiffOnly:false,cortePage:1,cortePerPage:10,compPage:1,compPerPage:10,compSearchQ:'',notesPage:1,notesPerPage:10,notesSearchQ:'',seniatPage:1,seniatPerPage:10,seniatSearchQ:'',
+      customersTab:'deudores',customerSearchQ:'',customerFilterType:'ALL',custPage:1,custPerPage:10,abonosPage:1,abonosPerPage:10,abonosSearchQ:'',
+      purchasesTab:'proveedores',pendingNotesClient:'TODOS',supPage:1,supPerPage:10,suppliersSearchQ:'',billsPage:1,billsPerPage:10,billsSearchQ:'',payablesPage:1,payablesPerPage:10,payablesSearchQ:'',
+      payrollTab:'personal',empPage:1,empPerPage:10,payrollEmpQ:'',periodsPage:1,periodsPerPage:10,passivesPage:1,passivesPerPage:10}
 };
 function hexToRgb(h){ h=String(h).replace('#',''); if(h.length===3) h=h.split('').map(function(x){return x+x;}).join('');
   return {r:parseInt(h.slice(0,2),16)||15,g:parseInt(h.slice(2,4),16)||118,b:parseInt(h.slice(4,6),16)||110}; }
@@ -2982,31 +2985,51 @@ function openNewTransferModal(defaultFromId) {
 }
 
 
-function renderPagination(total, page, perPage, actionName) {
-  var totalPages = Math.max(1, Math.ceil(total / perPage));
-  if (totalPages <= 1) return '';
-  var start = (page - 1) * perPage + 1;
-  var end = Math.min(total, page * perPage);
-  
+function renderPagination(total, page, perPage, actionName, entityName) {
+  entityName = entityName || 'registros';
+  var perP = Number(perPage) || 10;
+  var p = Number(page) || 1;
+  var totalPages = Math.max(1, Math.ceil(total / perP));
+  if (p > totalPages) p = totalPages;
+  if (totalPages <= 1) {
+    if (!total) return '';
+    return '<div class="spread wrap-row" style="padding:10px 18px;border-top:1px solid var(--border);gap:12px;align-items:center;background:var(--surface)">' +
+      '<div class="xs muted">Mostrando <b style="color:var(--text)">' + total + '</b> ' + esc(entityName) + ' (Total)</div>' +
+    '</div>';
+  }
+  var start = (p - 1) * perP + 1;
+  var end = Math.min(total, p * perP);
+
   var pages = [];
-  var p1 = Math.max(1, page - 2);
-  var p2 = Math.min(totalPages, page + 2);
+  var p1 = Math.max(1, p - 2);
+  var p2 = Math.min(totalPages, p + 2);
   for (var i = p1; i <= p2; i++) {
     pages.push(i);
   }
-  
-  return '<div class="spread" style="padding:12px 18px;border-top:1px solid var(--border);flex-wrap:wrap;gap:12px;align-items:center;background:var(--surface)">' +
-    '<div class="xs muted">Mostrando <b style="color:var(--text)">' + start + '–' + end + '</b> de <b style="color:var(--text)">' + total + '</b> productos (Pág. ' + page + ' de ' + totalPages + ')</div>' +
+
+  return '<div class="spread wrap-row" style="padding:12px 18px;border-top:1px solid var(--border);gap:12px;align-items:center;background:var(--surface)">' +
+    '<div class="xs muted">Mostrando <b style="color:var(--text)">' + start + '–' + end + '</b> de <b style="color:var(--text)">' + total + '</b> ' + esc(entityName) + ' (Pág. ' + p + ' de ' + totalPages + ')</div>' +
     '<div class="row" style="gap:5px;align-items:center">' +
-      '<button class="btn btn-xs btn-ghost" type="button" data-action="' + actionName + '" data-p="' + (page - 1) + '" ' + (page <= 1 ? 'disabled style="opacity:.4"' : '') + '>◀ Anterior</button>' +
+      '<button class="btn btn-xs btn-ghost" type="button" data-action="' + actionName + '" data-p="' + (p - 1) + '" ' + (p <= 1 ? 'disabled style="opacity:.4"' : '') + '>◀ Anterior</button>' +
       (p1 > 1 ? '<button class="btn btn-xs btn-ghost" type="button" data-action="' + actionName + '" data-p="1">1</button>' + (p1 > 2 ? '<span class="xs muted">…</span>' : '') : '') +
-      pages.map(function(p) {
-        return '<button class="btn btn-xs ' + (p === page ? 'btn-primary' : 'btn-ghost') + '" type="button" data-action="' + actionName + '" data-p="' + p + '" style="min-width:28px;padding:4px 8px;font-weight:' + (p === page ? '700' : '500') + '">' + p + '</button>';
+      pages.map(function(pg) {
+        return '<button class="btn btn-xs ' + (pg === p ? 'btn-primary' : 'btn-ghost') + '" type="button" data-action="' + actionName + '" data-p="' + pg + '" style="min-width:28px;padding:4px 8px;font-weight:' + (pg === p ? '700' : '500') + '">' + pg + '</button>';
       }).join('') +
       (p2 < totalPages ? (p2 < totalPages - 1 ? '<span class="xs muted">…</span>' : '') + '<button class="btn btn-xs btn-ghost" type="button" data-action="' + actionName + '" data-p="' + totalPages + '">' + totalPages + '</button>' : '') +
-      '<button class="btn btn-xs btn-ghost" type="button" data-action="' + actionName + '" data-p="' + (page + 1) + '" ' + (page >= totalPages ? 'disabled style="opacity:.4"' : '') + '>Siguiente ▶</button>' +
+      '<button class="btn btn-xs btn-ghost" type="button" data-action="' + actionName + '" data-p="' + (p + 1) + '" ' + (p >= totalPages ? 'disabled style="opacity:.4"' : '') + '>Siguiente ▶</button>' +
     '</div>' +
   '</div>';
+}
+
+function renderPerPageSelector(currentPerPage, actionName) {
+  var options = [10, 25, 50];
+  var perP = Number(currentPerPage) || 10;
+  var html = '<div class="row" style="gap:4px;align-items:center"><span class="xs muted">Filas:</span>';
+  options.forEach(function(n) {
+    html += '<button class="btn btn-xs ' + (n === perP ? 'btn-primary' : 'btn-ghost') + '" type="button" data-action="' + actionName + '" data-n="' + n + '" style="padding:2px 7px;font-size:11px">' + n + '</button>';
+  });
+  html += '</div>';
+  return html;
 }
 
 /* ---- Inventario ---- */
@@ -3164,7 +3187,21 @@ Views.inventario=function(){
 /* ---- Ventas ---- */
 Views.ventas=function(){
   var ui=State.ui, m=metrics();
-  var list=DB.orders.filter(function(o){return ui.salesStatus==='todas'||o.status===ui.salesStatus;});
+  var salesStatus = ui.salesStatus || 'todas';
+  var allList=DB.orders.filter(function(o){return salesStatus==='todas'||o.status===salesStatus;});
+  var salesQ=(ui.salesQ||'').toLowerCase().trim();
+  var filteredList=allList.filter(function(o){
+    if(!salesQ) return true;
+    var str=((o.id||'')+' '+(o.customer||'')+' '+(o.customerDoc||'')+' '+(o.cashier||'')+' '+(o.pay||'')).toLowerCase();
+    return str.indexOf(salesQ)>=0;
+  });
+  var salesPage=ui.salesPage||1;
+  var salesPerPage=ui.salesPerPage||10;
+  var totalOrders=filteredList.length;
+  var totalPages=Math.max(1,Math.ceil(totalOrders/salesPerPage));
+  if(salesPage>totalPages) salesPage=totalPages;
+  var pagedList=filteredList.slice((salesPage-1)*salesPerPage, salesPage*salesPerPage);
+
   return '<div class="page-head"><div><h1>Ventas y pedidos</h1><p>'+DB.orders.length+' órdenes en los últimos 30 días · 4 canales</p></div>'+
     '<div class="wrap-row"><button class="btn btn-ghost btn-sm" type="button" data-action="export-csv" data-what="ventas">'+I.dl+' Exportar</button>'+
     '<button class="btn btn-primary btn-sm" type="button" data-action="admin-nav" data-m="pos">'+I.pos+' Nueva venta</button></div></div>'+
@@ -3173,11 +3210,24 @@ Views.ventas=function(){
     kpiNum('Órdenes',m.orders30,'+8.2%','up','cart','var(--info)','var(--info-soft)',[30,42,38,50,58,54,66],'')+
     kpiMoney('Ticket promedio',m.ticket,'+3.1%','up','receipt','var(--accent)','var(--accent-soft)',[50,48,55,53,60,62,66],'')+
     kpiNum('Cancelaciones',2,'-0.4 pts','up','x','var(--danger)','var(--danger-soft)',[8,6,7,4,3,4,2],'')+'</div>'+
-  '<div class="card"><div class="card-head"><div class="wrap-row">'+
+  '<div class="card"><div class="card-head spread" style="flex-wrap:wrap;gap:10px">'+
+    '<div class="wrap-row">'+
       ['todas','pagada','por pagar','preparando','enviada','cancelada'].map(function(s){
-        return '<button class="chip '+(ui.salesStatus===s?'on':'')+'" type="button" data-action="sales-status" data-s="'+s+'">'+(s==='todas'?'Todas':s)+'</button>'; }).join('')+
-    '</div><span class="xs muted">'+list.length+' resultado(s)</span></div>'+
-    '<div class="tbl-scroll">'+ordersTable(list,true)+'</div></div>';
+        var count = s==='todas' ? DB.orders.length : DB.orders.filter(function(x){ return x.status===s; }).length;
+        return '<button class="chip '+(salesStatus===s?'on':'')+'" type="button" data-action="sales-status" data-s="'+s+'">'+(s==='todas'?'Todas':s)+' ('+count+')</button>'; }).join('')+
+    '</div>'+
+    '<div class="wrap-row" style="gap:8px;align-items:center">'+
+      '<div style="position:relative;min-width:220px">'+
+        '<input class="input sm" id="sales-q" placeholder="Buscar orden, cliente, pago…" value="'+esc(ui.salesQ||'')+'" style="padding-left:30px;padding-right:26px">'+
+        '<span style="position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none">'+I.search+'</span>'+
+        (ui.salesQ ? '<button type="button" class="icon-btn" data-action="sales-clear-q" style="position:absolute;right:4px;top:50%;transform:translateY(-50%);width:20px;height:20px;font-size:10px" title="Limpiar">✕</button>' : '')+
+      '</div>'+
+      renderPerPageSelector(salesPerPage, 'sales-per-page')+
+    '</div>'+
+  '</div>'+
+  '<div class="tbl-scroll">'+ordersTable(pagedList,true)+'</div>'+
+  (totalOrders ? renderPagination(totalOrders, salesPage, salesPerPage, 'sales-page', 'órdenes') : '')+
+  '</div>';
 };
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -3501,10 +3551,21 @@ function renderDeliveryNotesSection() {
   var bcv = BCV_RATE || 877.90;
   var notes = getPendingDeliveryNotes();
   var clientsFilter = State.ui.pendingNotesClient || 'TODOS';
+  var notesQ = (State.ui.notesSearchQ || '').toLowerCase().trim();
   var filteredNotes = notes.filter(function(n) {
     if (clientsFilter !== 'TODOS' && n.customerDoc !== clientsFilter) return false;
+    if (notesQ) {
+      var str = (n.orderNumber + ' ' + (n.folio || '') + ' ' + (n.customerName || '') + ' ' + (n.customerDoc || '')).toLowerCase();
+      if (str.indexOf(notesQ) < 0) return false;
+    }
     return true;
   });
+  var notesPage = State.ui.notesPage || 1;
+  var notesPerPage = State.ui.notesPerPage || 10;
+  var totalNotes = filteredNotes.length;
+  var totalPages = Math.max(1, Math.ceil(totalNotes / notesPerPage));
+  if (notesPage > totalPages) notesPage = totalPages;
+  var pagedNotes = filteredNotes.slice((notesPage - 1) * notesPerPage, notesPage * notesPerPage);
 
   var clientMap = {};
   notes.forEach(function(n) {
@@ -3523,13 +3584,19 @@ function renderDeliveryNotesSection() {
         '<h3>📝 Notas de Entrega a Factura Fiscal (1 Clic)</h3>' +
         '<p class="card-sub">Consolida despachos y notas de entrega acumuladas en una Factura Fiscal oficial SENIAT</p>' +
       '</div>' +
-      '<div class="wrap-row" style="gap:8px">' +
+      '<div class="wrap-row" style="gap:8px;align-items:center">' +
+        '<div style="position:relative;min-width:200px">' +
+          '<input class="input sm" id="notes-search-q" placeholder="Buscar folio o cliente…" value="' + esc(State.ui.notesSearchQ || '') + '" style="padding-left:30px;padding-right:26px">' +
+          '<span style="position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none">' + I.search + '</span>' +
+          (State.ui.notesSearchQ ? '<button type="button" class="icon-btn" data-action="notes-clear-q" style="position:absolute;right:4px;top:50%;transform:translateY(-50%);width:20px;height:20px;font-size:10px" title="Limpiar">✕</button>' : '') +
+        '</div>' +
         '<select class="input sm" id="sel-filter-notes-client" style="width:auto" onchange="filterDeliveryNotesByClient(this.value)">' +
           '<option value="TODOS">Todos los clientes (' + notes.length + ' notas)</option>' +
           Object.keys(clientMap).map(function(doc) {
             return '<option value="' + doc + '" ' + (clientsFilter === doc ? 'selected' : '') + '>' + esc(clientMap[doc]) + ' (' + doc + ')</option>';
           }).join('') +
         '</select>' +
+        renderPerPageSelector(notesPerPage, 'notes-per-page') +
         '<button class="btn btn-primary btn-sm" type="button" data-action="consolidate-selected-notes" ' + (selectedCount > 0 ? '' : 'disabled') + '>' +
           I.check + ' Consolidar en Factura SENIAT (' + selectedCount + ')' +
         '</button>' +
@@ -3559,8 +3626,8 @@ function renderDeliveryNotesSection() {
           '</tr>' +
         '</thead>' +
         '<tbody>' +
-          (filteredNotes.length
-            ? filteredNotes.map(function(n) {
+          (pagedNotes.length
+            ? pagedNotes.map(function(n) {
                 var isSel = (FISCAL_STATE.selectedNoteIds || []).indexOf(n.id) >= 0;
                 var totUsd = Number(n.totalUsd || n.total || 0);
                 var totBs = Math.round(totUsd * bcv * 100) / 100;
@@ -3583,12 +3650,25 @@ function renderDeliveryNotesSection() {
         '</tbody>' +
       '</table>' +
     '</div>' +
+    (totalNotes ? renderPagination(totalNotes, notesPage, notesPerPage, 'notes-page', 'notas de entrega') : '') +
   '</div>';
 }
 
 function renderSeniatSalesBookSection() {
   var bcv = BCV_RATE || 877.90;
-  var invoices = getFiscalInvoices();
+  var allInvoices = getFiscalInvoices();
+  var seniatQ = (State.ui.seniatSearchQ || '').toLowerCase().trim();
+  var invoices = allInvoices.filter(function(inv) {
+    if (!seniatQ) return true;
+    var str = ((inv.invoiceNumber || '') + ' ' + (inv.controlNumber || '') + ' ' + (inv.customerName || '') + ' ' + (inv.customerDoc || '')).toLowerCase();
+    return str.indexOf(seniatQ) >= 0;
+  });
+  var seniatPage = State.ui.seniatPage || 1;
+  var seniatPerPage = State.ui.seniatPerPage || 10;
+  var totalSeniat = invoices.length;
+  var totalPages = Math.max(1, Math.ceil(totalSeniat / seniatPerPage));
+  if (seniatPage > totalPages) seniatPage = totalPages;
+  var pagedInvoices = invoices.slice((seniatPage - 1) * seniatPerPage, seniatPage * seniatPerPage);
 
   var totVentasBs = invoices.reduce(function(a, b){ return a + Number(b.totalBs || 0); }, 0);
   var totBaseBs = invoices.reduce(function(a, b){ return a + Number(b.taxableBs || 0); }, 0);
@@ -3612,9 +3692,15 @@ function renderSeniatSalesBookSection() {
         '<h3>📖 Libro Especial de Ventas (Normativa SENIAT)</h3>' +
         '<p class="card-sub">Registro contable legal auditable con alícuotas 16%, IGTF 3%, números de control y comprobantes de retención</p>' +
       '</div>' +
-      '<div class="wrap-row" style="gap:8px">' +
-        '<a class="btn btn-ghost btn-sm" href="' + API_URL + '/fiscal/sales-book/export-csv" target="_blank" download="Libro_Ventas_SENIAT.csv">' + I.dl + ' Descargar CSV SENIAT</a>' +
-        '<button class="btn btn-primary btn-sm" type="button" data-action="open-new-fiscal-invoice">' + I.plus + ' Nueva Factura Fiscal</button>' +
+      '<div class="wrap-row" style="gap:8px;align-items:center">' +
+        '<div style="position:relative;min-width:200px">' +
+          '<input class="input sm" id="seniat-search-q" placeholder="Buscar factura, control o RIF…" value="' + esc(State.ui.seniatSearchQ || '') + '" style="padding-left:30px;padding-right:26px">' +
+          '<span style="position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none">' + I.search + '</span>' +
+          (State.ui.seniatSearchQ ? '<button type="button" class="icon-btn" data-action="seniat-clear-q" style="position:absolute;right:4px;top:50%;transform:translateY(-50%);width:20px;height:20px;font-size:10px" title="Limpiar">✕</button>' : '') +
+        '</div>' +
+        renderPerPageSelector(seniatPerPage, 'seniat-per-page') +
+        '<a class="btn btn-ghost btn-sm" href="' + API_URL + '/fiscal/sales-book/export-csv" target="_blank" download="Libro_Ventas_SENIAT.csv">' + I.dl + ' Descargar CSV</a>' +
+        '<button class="btn btn-primary btn-sm" type="button" data-action="open-new-fiscal-invoice">' + I.plus + ' Nueva Factura</button>' +
       '</div>' +
     '</div>' +
 
@@ -3639,7 +3725,7 @@ function renderSeniatSalesBookSection() {
           '</tr>' +
         '</thead>' +
         '<tbody>' +
-          (invoices.map(function(inv, idx) {
+          (pagedInvoices.map(function(inv, idx) {
             var dateStr = inv.createdAt ? fmtDateTime(inv.createdAt).slice(0, 10) : '18/10/2026';
             return '<tr>' +
               '<td data-l="N° Op" class="mono">' + (idx + 1) + '</td>' +
@@ -3676,6 +3762,7 @@ function renderSeniatSalesBookSection() {
           : '') +
       '</table>' +
     '</div>' +
+    (totalSeniat ? renderPagination(totalSeniat, seniatPage, seniatPerPage, 'seniat-page', 'facturas SENIAT') : '') +
   '</div>';
 }
 
@@ -4640,10 +4727,12 @@ Views.facturacion=function(){
               '<button class="chip ' + (State.ui.cashHistoryType === 'X' && !State.ui.cashHistoryDiffOnly ? 'on' : '') + '" type="button" data-action="filter-corte-type" data-t="X">Solo Cortes X (' + xList.length + ')</button>' +
               '<button class="chip ' + (State.ui.cashHistoryDiffOnly ? 'on' : '') + '" type="button" data-action="filter-corte-diff">⚠️ Con Descuadre (' + diffCount + ')</button>' +
             '</div>' +
-            '<div style="position:relative;min-width:240px">' +
-              '<input class="input sm" id="corte-search-q" placeholder="Buscar folio, cajero o notas…" value="' + esc(State.ui.cashHistoryQ || '') + '" style="padding-left:32px">' +
+            '<div style="position:relative;min-width:220px">' +
+              '<input class="input sm" id="corte-search-q" placeholder="Buscar folio, cajero o notas…" value="' + esc(State.ui.cashHistoryQ || '') + '" style="padding-left:32px;padding-right:26px">' +
               '<span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none">' + I.search + '</span>' +
+              (State.ui.cashHistoryQ ? '<button type="button" class="icon-btn" data-action="corte-clear-q" style="position:absolute;right:4px;top:50%;transform:translateY(-50%);width:20px;height:20px;font-size:10px" title="Limpiar">✕</button>' : '') +
             '</div>' +
+            renderPerPageSelector(State.ui.cortePerPage || 10, 'corte-per-page') +
           '</div>' +
         '</div>' +
         '<div id="cash-close-table-container">' +
@@ -4665,13 +4754,35 @@ Views.facturacion=function(){
         kpiNum('WhatsApp Directo', ordersList.length, 'Comprobante y QR al instante', 'up', 'wa', 'var(--ok)', 'var(--ok-soft)', [80, 78, 76, 74, 72, 70, 68], '') +
       '</div>' +
 
-      '<div class="card">' +
-        '<div class="card-head">' +
+      (function() {
+        var compQ = (State.ui.compSearchQ || '').toLowerCase().trim();
+        var filteredComp = ordersList.filter(function(o) {
+          if (!compQ) return true;
+          var str = ((o.folio || '') + ' ' + (o.customer || '') + ' ' + (o.customerDoc || '') + ' ' + (o.pay || '') + ' ' + (o.id || '')).toLowerCase();
+          return str.indexOf(compQ) >= 0;
+        });
+        var compPage = State.ui.compPage || 1;
+        var compPerPage = State.ui.compPerPage || 10;
+        var totalComp = filteredComp.length;
+        var totalPages = Math.max(1, Math.ceil(totalComp / compPerPage));
+        if (compPage > totalPages) compPage = totalPages;
+        var pagedComp = filteredComp.slice((compPage - 1) * compPerPage, compPage * compPerPage);
+
+        return '<div class="card">' +
+        '<div class="card-head spread" style="flex-wrap:wrap;gap:12px">' +
           '<div>' +
             '<h3>Comprobantes Electrónicos de Entrega</h3>' +
             '<p class="card-sub">Historial de notas de entrega y facturas digitales generadas por el POS</p>' +
           '</div>' +
-          '<span class="badge b-ok"><i class="dot pulse"></i> Sistema Digital Activo</span>' +
+          '<div class="wrap-row" style="gap:8px;align-items:center">' +
+            '<div style="position:relative;min-width:220px">' +
+              '<input class="input sm" id="comp-search-q" placeholder="Buscar folio, cliente o pago…" value="' + esc(State.ui.compSearchQ || '') + '" style="padding-left:30px;padding-right:26px">' +
+              '<span style="position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none">' + I.search + '</span>' +
+              (State.ui.compSearchQ ? '<button type="button" class="icon-btn" data-action="comp-clear-q" style="position:absolute;right:4px;top:50%;transform:translateY(-50%);width:20px;height:20px;font-size:10px" title="Limpiar">✕</button>' : '') +
+            '</div>' +
+            renderPerPageSelector(compPerPage, 'comp-per-page') +
+            '<span class="badge b-ok"><i class="dot pulse"></i> Sistema Digital Activo</span>' +
+          '</div>' +
         '</div>' +
         '<div class="tbl-scroll">' +
           '<table class="tbl">' +
@@ -4688,7 +4799,7 @@ Views.facturacion=function(){
               '</tr>' +
             '</thead>' +
             '<tbody>' +
-              (ordersList.map(function(o) {
+              (pagedComp.map(function(o) {
                 var oBs = Math.round(o.total * bcv * 100) / 100;
                 return '<tr>' +
                   '<td data-l="Folio"><b class="mono">' + esc(o.folio) + '</b><br><span class="xs muted mono">ID ' + esc(o.id) + '</span></td>' +
@@ -4711,7 +4822,9 @@ Views.facturacion=function(){
             '</tbody>' +
           '</table>' +
         '</div>' +
-      '</div>'
+        (totalComp ? renderPagination(totalComp, compPage, compPerPage, 'comp-page', 'comprobantes') : '') +
+      '</div>';
+      })()
     )
   );
 };
@@ -4720,13 +4833,34 @@ Views.facturacion=function(){
    MÓDULO DE COMPRAS & PROVEEDORES / CUENTAS POR PAGAR (PASO 3)
    ══════════════════════════════════════════════════════════════════════════ */
 function renderSuppliersTab(suppliers) {
+  var supQ = (State.ui.suppliersSearchQ || '').toLowerCase().trim();
+  var filteredSuppliers = suppliers.filter(function(s) {
+    if (!supQ) return true;
+    var str = ((s.rif || '') + ' ' + (s.name || '') + ' ' + (s.contactPerson || '') + ' ' + (s.phone || '') + ' ' + (s.address || '')).toLowerCase();
+    return str.indexOf(supQ) >= 0;
+  });
+  var supPage = State.ui.supPage || 1;
+  var supPerPage = State.ui.supPerPage || 10;
+  var totalSup = filteredSuppliers.length;
+  var totalPages = Math.max(1, Math.ceil(totalSup / supPerPage));
+  if (supPage > totalPages) supPage = totalPages;
+  var pagedSuppliers = filteredSuppliers.slice((supPage - 1) * supPerPage, supPage * supPerPage);
+
   return '<div class="card">' +
     '<div class="card-head spread" style="flex-wrap:wrap;gap:10px">' +
       '<div>' +
         '<h3>Directorio Oficial de Proveedores</h3>' +
         '<p class="card-sub">Gestión de fabricantes, distribuidores mayoristas y condiciones de crédito</p>' +
       '</div>' +
-      '<button class="btn btn-primary btn-sm" type="button" data-action="open-new-supplier-modal">' + I.plus + ' Nuevo Proveedor</button>' +
+      '<div class="wrap-row" style="gap:8px;align-items:center">' +
+        '<div style="position:relative;min-width:220px">' +
+          '<input class="input sm" id="suppliers-search-q" placeholder="Buscar proveedor, RIF o rubro…" value="' + esc(State.ui.suppliersSearchQ || '') + '" style="padding-left:30px;padding-right:26px">' +
+          '<span style="position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none">' + I.search + '</span>' +
+          (State.ui.suppliersSearchQ ? '<button type="button" class="icon-btn" data-action="suppliers-clear-q" style="position:absolute;right:4px;top:50%;transform:translateY(-50%);width:20px;height:20px;font-size:10px" title="Limpiar">✕</button>' : '') +
+        '</div>' +
+        renderPerPageSelector(supPerPage, 'suppliers-per-page') +
+        '<button class="btn btn-primary btn-sm" type="button" data-action="open-new-supplier-modal">' + I.plus + ' Nuevo Proveedor</button>' +
+      '</div>' +
     '</div>' +
     '<div class="tbl-scroll">' +
       '<table class="tbl">' +
@@ -4742,7 +4876,7 @@ function renderSuppliersTab(suppliers) {
           '</tr>' +
         '</thead>' +
         '<tbody>' +
-          (suppliers.map(function(s) {
+          (pagedSuppliers.map(function(s) {
             var debt = Number(s.currentDebtUsd || 0);
             return '<tr>' +
               '<td data-l="RIF"><b class="mono sm">' + esc(s.rif) + '</b></td>' +
@@ -4759,18 +4893,40 @@ function renderSuppliersTab(suppliers) {
         '</tbody>' +
       '</table>' +
     '</div>' +
+    (totalSup ? renderPagination(totalSup, supPage, supPerPage, 'suppliers-page', 'proveedores') : '') +
   '</div>';
 }
 
 function renderPurchasesBillsTab(bills) {
   var bcv = BCV_RATE || 877.90;
+  var billsQ = (State.ui.billsSearchQ || '').toLowerCase().trim();
+  var filteredBills = bills.filter(function(b) {
+    if (!billsQ) return true;
+    var str = ((b.billNumber || '') + ' ' + (b.controlNumber || '') + ' ' + (b.supplierName || '') + ' ' + (b.supplierRif || '')).toLowerCase();
+    return str.indexOf(billsQ) >= 0;
+  });
+  var billsPage = State.ui.billsPage || 1;
+  var billsPerPage = State.ui.billsPerPage || 10;
+  var totalBills = filteredBills.length;
+  var totalPages = Math.max(1, Math.ceil(totalBills / billsPerPage));
+  if (billsPage > totalPages) billsPage = totalPages;
+  var pagedBills = filteredBills.slice((billsPage - 1) * billsPerPage, billsPage * billsPerPage);
+
   return '<div class="card">' +
     '<div class="card-head spread" style="flex-wrap:wrap;gap:10px">' +
       '<div>' +
         '<h3>Recepción de Mercancía & Facturas de Compra</h3>' +
         '<p class="card-sub">Entrada de stock mayorista (rollos, cajas, galones), costos de importación y retenciones</p>' +
       '</div>' +
-      '<button class="btn btn-primary btn-sm" type="button" data-action="open-new-purchase-modal">' + I.plus + ' Registrar Factura de Proveedor</button>' +
+      '<div class="wrap-row" style="gap:8px;align-items:center">' +
+        '<div style="position:relative;min-width:220px">' +
+          '<input class="input sm" id="bills-search-q" placeholder="Buscar factura, control o proveedor…" value="' + esc(State.ui.billsSearchQ || '') + '" style="padding-left:30px;padding-right:26px">' +
+          '<span style="position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none">' + I.search + '</span>' +
+          (State.ui.billsSearchQ ? '<button type="button" class="icon-btn" data-action="bills-clear-q" style="position:absolute;right:4px;top:50%;transform:translateY(-50%);width:20px;height:20px;font-size:10px" title="Limpiar">✕</button>' : '') +
+        '</div>' +
+        renderPerPageSelector(billsPerPage, 'bills-per-page') +
+        '<button class="btn btn-primary btn-sm" type="button" data-action="open-new-purchase-modal">' + I.plus + ' Registrar Factura</button>' +
+      '</div>' +
     '</div>' +
     '<div class="tbl-scroll">' +
       '<table class="tbl">' +
@@ -4789,7 +4945,7 @@ function renderPurchasesBillsTab(bills) {
           '</tr>' +
         '</thead>' +
         '<tbody>' +
-          (bills.map(function(b) {
+          (pagedBills.map(function(b) {
             var itemsStr = (b.items || []).map(function(it){ return it.quantity + ' ' + it.purchaseUnit + ' (+' + it.baseQtyAdded + ' base)'; }).join(', ');
             var isPaid = b.status === 'PAID';
             return '<tr>' +
@@ -4808,19 +4964,43 @@ function renderPurchasesBillsTab(bills) {
         '</tbody>' +
       '</table>' +
     '</div>' +
+    (totalBills ? renderPagination(totalBills, billsPage, billsPerPage, 'bills-page', 'facturas de compra') : '') +
   '</div>';
 }
 
 function renderAccountsPayableTab(suppliers, bills) {
   var bcv = BCV_RATE || 877.90;
-  var pendingBills = bills.filter(function(b){ return b.status !== 'PAID'; });
+  var payQ = (State.ui.payablesSearchQ || '').toLowerCase().trim();
+  var pendingBills = bills.filter(function(b){
+    if (b.status === 'PAID') return false;
+    if (payQ) {
+      var str = ((b.supplierName || '') + ' ' + (b.supplierRif || '') + ' ' + (b.billNumber || '')).toLowerCase();
+      if (str.indexOf(payQ) < 0) return false;
+    }
+    return true;
+  });
+  var payPage = State.ui.payablesPage || 1;
+  var payPerPage = State.ui.payablesPerPage || 10;
+  var totalPay = pendingBills.length;
+  var totalPages = Math.max(1, Math.ceil(totalPay / payPerPage));
+  if (payPage > totalPages) payPage = totalPages;
+  var pagedPending = pendingBills.slice((payPage - 1) * payPerPage, payPage * payPerPage);
+
   return '<div class="card">' +
     '<div class="card-head spread" style="flex-wrap:wrap;gap:10px">' +
       '<div>' +
         '<h3>Cuentas por Pagar a Proveedores (Aging & Pagos)</h3>' +
         '<p class="card-sub">Programación de pagos quincenales, abonos bancarios multimoneda y control de mora</p>' +
       '</div>' +
-      '<button class="btn btn-primary btn-sm" type="button" data-action="open-payment-supplier-modal">' + I.cash + ' Registrar Abono a Proveedor</button>' +
+      '<div class="wrap-row" style="gap:8px;align-items:center">' +
+        '<div style="position:relative;min-width:200px">' +
+          '<input class="input sm" id="payables-search-q" placeholder="Buscar proveedor o factura…" value="' + esc(State.ui.payablesSearchQ || '') + '" style="padding-left:30px;padding-right:26px">' +
+          '<span style="position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none">' + I.search + '</span>' +
+          (State.ui.payablesSearchQ ? '<button type="button" class="icon-btn" data-action="payables-clear-q" style="position:absolute;right:4px;top:50%;transform:translateY(-50%);width:20px;height:20px;font-size:10px" title="Limpiar">✕</button>' : '') +
+        '</div>' +
+        renderPerPageSelector(payPerPage, 'payables-per-page') +
+        '<button class="btn btn-primary btn-sm" type="button" data-action="open-payment-supplier-modal">' + I.cash + ' Registrar Abono</button>' +
+      '</div>' +
     '</div>' +
     '<div class="tbl-scroll">' +
       '<table class="tbl">' +
@@ -4837,7 +5017,7 @@ function renderAccountsPayableTab(suppliers, bills) {
           '</tr>' +
         '</thead>' +
         '<tbody>' +
-          (pendingBills.map(function(b) {
+          (pagedPending.map(function(b) {
             var paid = Number(b.paidAmountUsd || 0);
             var balanceUsd = Math.max(0, Number(b.totalUsd || 0) - paid);
             var balanceBs = Math.round(balanceUsd * bcv * 100) / 100;
@@ -4857,6 +5037,7 @@ function renderAccountsPayableTab(suppliers, bills) {
         '</tbody>' +
       '</table>' +
     '</div>' +
+    (totalPay ? renderPagination(totalPay, payPage, payPerPage, 'payables-page', 'cuentas por pagar') : '') +
   '</div>';
 }
 
@@ -5612,10 +5793,29 @@ function renderEmployeesTab(employees) {
     '</div>';
   }
 
+  var empQ = (State.ui.payrollEmpQ || '').toLowerCase().trim();
+  var filteredEmps = employees.filter(function(e) {
+    if (!empQ) return true;
+    var str = ((e.name || '') + ' ' + (e.docNumber || '') + ' ' + (e.roleTitle || '') + ' ' + (e.department || '')).toLowerCase();
+    return str.indexOf(empQ) >= 0;
+  });
+  var empPage = State.ui.empPage || 1;
+  var empPerPage = State.ui.empPerPage || 10;
+  var totalEmps = filteredEmps.length;
+  var totalPages = Math.max(1, Math.ceil(totalEmps / empPerPage));
+  if (empPage > totalPages) empPage = totalPages;
+  var pagedEmps = filteredEmps.slice((empPage - 1) * empPerPage, empPage * empPerPage);
+
   return '<div class="card">' +
-    '<div class="card-head spread">' +
+    '<div class="card-head spread" style="flex-wrap:wrap;gap:10px">' +
       '<div><h3>Ficha de Personal & Condiciones Salariales</h3><p class="card-sub">Control de cargos, salarios de referencia en USD, comisiones POS y cuentas bancarias</p></div>' +
-      '<div class="wrap-row" style="gap:8px">' +
+      '<div class="wrap-row" style="gap:8px;align-items:center">' +
+        '<div style="position:relative;min-width:220px">' +
+          '<input class="input sm" id="payroll-emp-q" placeholder="Buscar trabajador o cargo…" value="' + esc(State.ui.payrollEmpQ || '') + '" style="padding-left:30px;padding-right:26px">' +
+          '<span style="position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none">' + I.search + '</span>' +
+          (State.ui.payrollEmpQ ? '<button type="button" class="icon-btn" data-action="emp-clear-q" style="position:absolute;right:4px;top:50%;transform:translateY(-50%);width:20px;height:20px;font-size:10px" title="Limpiar">✕</button>' : '') +
+        '</div>' +
+        renderPerPageSelector(empPerPage, 'emp-per-page') +
         '<span class="badge b-ok">' + employees.length + ' Activos</span>' +
       '</div>' +
     '</div>' +
@@ -5632,7 +5832,7 @@ function renderEmployeesTab(employees) {
         '<th style="text-align:right">Acciones</th>' +
       '</tr></thead>' +
       '<tbody>' +
-        employees.map(function(emp) {
+        pagedEmps.map(function(emp) {
           var hire = new Date(emp.hireDate);
           var now = new Date();
           var diffMonths = Math.max(0, Math.floor((now.getTime() - hire.getTime()) / (1000 * 60 * 60 * 24 * 30.4375)));
@@ -5690,6 +5890,7 @@ function renderEmployeesTab(employees) {
         }).join('') +
       '</tbody>' +
     '</table></div>' +
+    (totalEmps ? renderPagination(totalEmps, empPage, empPerPage, 'emp-page', 'empleados') : '') +
   '</div>';
 }
 
@@ -5697,15 +5898,24 @@ function renderEmployeesTab(employees) {
 function renderPayrollPeriodsTab(periods, employees) {
   var bcv = BCV_RATE || 877.90;
   var latestPeriod = periods.length ? periods[0] : null;
+  var periodsPage = State.ui.periodsPage || 1;
+  var periodsPerPage = State.ui.periodsPerPage || 10;
+  var totalPeriods = periods.length;
+  var totalPages = Math.max(1, Math.ceil(totalPeriods / periodsPerPage));
+  if (periodsPage > totalPages) periodsPage = totalPages;
+  var pagedPeriods = periods.slice((periodsPage - 1) * periodsPerPage, periodsPage * periodsPerPage);
 
   return '<div class="grid" style="gap:18px">' +
     '<div class="card">' +
-      '<div class="card-head spread">' +
+      '<div class="card-head spread" style="flex-wrap:wrap;gap:10px">' +
         '<div>' +
           '<h3>Períodos de Nómina Quincenal</h3>' +
           '<p class="card-sub">Liquidación quincenal, cálculo de comisiones POS y retenciones de ley (IVSS 4%, FAOV 1%)</p>' +
         '</div>' +
-        '<button class="btn btn-primary btn-sm" type="button" data-action="open-generate-payroll-modal">' + I.plus + ' Generar Nueva Quincena</button>' +
+        '<div class="wrap-row" style="gap:8px;align-items:center">' +
+          renderPerPageSelector(periodsPerPage, 'periods-per-page') +
+          '<button class="btn btn-primary btn-sm" type="button" data-action="open-generate-payroll-modal">' + I.plus + ' Generar Nueva Quincena</button>' +
+        '</div>' +
       '</div>' +
       (!periods.length
         ? '<div style="padding:24px;text-align:center" class="muted">No se han generado períodos de nómina quincenal aún. Haz clic en "Generar Nueva Quincena" para procesar el período actual.</div>'
@@ -5723,7 +5933,7 @@ function renderPayrollPeriodsTab(periods, employees) {
               '<th style="text-align:right">Acciones</th>' +
             '</tr></thead>' +
             '<tbody>' +
-              periods.map(function(per) {
+              pagedPeriods.map(function(per) {
                 var isPaid = per.status === 'PAID';
                 return '<tr>' +
                   '<td><b class="mono" style="color:var(--accent)">' + esc(per.periodNumber) + '</b></td>' +
@@ -5748,7 +5958,8 @@ function renderPayrollPeriodsTab(periods, employees) {
                 '</tr>';
               }).join('') +
             '</tbody>' +
-          '</table></div>') +
+          '</table></div>' +
+          (totalPeriods ? renderPagination(totalPeriods, periodsPage, periodsPerPage, 'periods-page', 'períodos de nómina') : '')) +
     '</div>' +
 
     /* Desglose de Recibos del último período */
@@ -5809,6 +6020,12 @@ function renderPayrollPeriodsTab(periods, employees) {
 /* ── TAB 3: Prestaciones & Pasivos Laborales LOTTT (Art. 142) ── */
 function renderLaborPassivesTab(audits, employees) {
   var bcv = BCV_RATE || 877.90;
+  var passivesPage = State.ui.passivesPage || 1;
+  var passivesPerPage = State.ui.passivesPerPage || 10;
+  var totalAudits = audits.length;
+  var totalPages = Math.max(1, Math.ceil(totalAudits / passivesPerPage));
+  if (passivesPage > totalPages) passivesPage = totalPages;
+  var pagedAudits = audits.slice((passivesPage - 1) * passivesPerPage, passivesPage * passivesPerPage);
 
   return '<div class="grid" style="gap:18px">' +
     /* Banner informativo LOTTT Art. 142 */
@@ -5825,12 +6042,15 @@ function renderLaborPassivesTab(audits, employees) {
     '</div>' +
 
     '<div class="card">' +
-      '<div class="card-head spread">' +
+      '<div class="card-head spread" style="flex-wrap:wrap;gap:10px">' +
         '<div>' +
           '<h3>Auditorías y Liquidaciones de Prestaciones Sociales</h3>' +
           '<p class="card-sub">Cálculo al centavo de Salario Integral, Alícuotas de Utilidades, Vacaciones y Elección Legal</p>' +
         '</div>' +
-        '<button class="btn btn-primary btn-sm" type="button" data-action="open-calc-passive-modal">' + I.plus + ' Nueva Auditoría LOTTT</button>' +
+        '<div class="wrap-row" style="gap:8px;align-items:center">' +
+          renderPerPageSelector(passivesPerPage, 'passives-per-page') +
+          '<button class="btn btn-primary btn-sm" type="button" data-action="open-calc-passive-modal">' + I.plus + ' Nueva Auditoría LOTTT</button>' +
+        '</div>' +
       '</div>' +
       (!audits.length
         ? '<div style="padding:24px;text-align:center" class="muted">No hay cálculos de prestaciones sociales generados aún. Haz clic en "Nueva Auditoría LOTTT" para auditar el pasivo laboral de cualquier trabajador.</div>'
@@ -5848,7 +6068,7 @@ function renderLaborPassivesTab(audits, employees) {
               '<th>Total Pasivo Acumulado</th>' +
             '</tr></thead>' +
             '<tbody>' +
-              audits.map(function(aud) {
+              pagedAudits.map(function(aud) {
                 var empName = aud.employee ? (aud.employee.firstName + ' ' + aud.employee.lastName) : 'Empleado';
                 var empDoc = aud.employee ? aud.employee.docNumber : '';
                 var isRetro = aud.chosenMethod === 'RETROACTIVO';
@@ -5886,7 +6106,8 @@ function renderLaborPassivesTab(audits, employees) {
                 '</tr>';
               }).join('') +
             '</tbody>' +
-          '</table></div>') +
+          '</table></div>' +
+          (totalAudits ? renderPagination(totalAudits, passivesPage, passivesPerPage, 'passives-page', 'auditorías LOTTT') : '')) +
     '</div>' +
   '</div>';
 }
@@ -6448,14 +6669,18 @@ Views.clientes=function(){
     ? '<div id="abonos-table-container">' + renderAbonosTable(abonosList) + '</div>'
     : (
       '<div class="card" style="margin-bottom:20px">' +
-        '<div class="card-head" style="flex-wrap:wrap;gap:12px">' +
+        '<div class="card-head spread" style="flex-wrap:wrap;gap:12px">' +
           '<div>' +
             '<h3>' + (currentTab === 'deudores' ? 'Cartera de Clientes con Saldo Deudor' : 'Todos los Clientes Registrados') + '</h3>' +
             '<p class="card-sub">' + (currentTab === 'deudores' ? 'Consulta deudas pendientes, cupo de crédito disponible y registra abonos inmediatos' : 'Expediente comercial, cupos de financiamiento y datos de contacto') + '</p>' +
           '</div>' +
-          '<div style="position:relative;min-width:260px">' +
-            '<input class="input sm" id="customer-search-q" placeholder="Buscar por nombre, C.I./RIF o teléfono…" value="' + esc(State.ui.customerSearchQ || '') + '" style="padding-left:32px">' +
-            '<span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none">' + I.search + '</span>' +
+          '<div class="wrap-row" style="gap:8px;align-items:center">' +
+            '<div style="position:relative;min-width:240px">' +
+              '<input class="input sm" id="customer-search-q" placeholder="Buscar por nombre, C.I./RIF o teléfono…" value="' + esc(State.ui.customerSearchQ || '') + '" style="padding-left:32px;padding-right:26px">' +
+              '<span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none">' + I.search + '</span>' +
+              (State.ui.customerSearchQ ? '<button type="button" class="icon-btn" data-action="customer-clear-q" style="position:absolute;right:4px;top:50%;transform:translateY(-50%);width:20px;height:20px;font-size:10px" title="Limpiar">✕</button>' : '') +
+            '</div>' +
+            renderPerPageSelector(State.ui.custPerPage || 10, 'customer-per-page') +
           '</div>' +
         '</div>' +
         '<div id="customers-cards-container">' +
@@ -7559,8 +7784,29 @@ function afterStoreRender(){
 function rerenderKeep(){
   var y=scrollY, id=document.activeElement?document.activeElement.id:null, pos=0;
   try{ pos=document.activeElement.selectionStart||0; }catch(e){}
+
+  var r = parsePath();
+  if (r.parts[0] === 'admin' && State.session) {
+    var mid = r.parts[1] || State.module || 'dashboard';
+    var page = $('#page');
+    if (page && Views[mid]) {
+      try {
+        page.innerHTML = canAccess(mid) ? Views[mid]() : viewLocked(mid);
+      } catch(err) {
+        page.innerHTML = viewModuleError(mid, err);
+      }
+      afterAdminRender(mid);
+      window.scrollTo(0, y);
+      if (id) {
+        var el = document.getElementById(id);
+        if (el) { el.focus(); try { el.setSelectionRange(pos, pos); } catch(e){} }
+      }
+      return;
+    }
+  }
+
   render(); window.scrollTo(0,y);
-  if(id){ var el=document.getElementById(id); if(el){ el.focus(); try{ el.setSelectionRange(pos,pos); }catch(e){} } }
+  if(id){ var el2=document.getElementById(id); if(el2){ el2.focus(); try{ el2.setSelectionRange(pos,pos); }catch(e){} } }
 }
 function refreshPosGrid(){
   var root=$('.pos-grid'); if(!root) return;
@@ -7605,7 +7851,23 @@ function afterAdminRender(mid){
   }
   if(mid==='pos'){ var q=$('#pos-q'); if(q) q.addEventListener('input',function(e){ State.ui.posQ=e.target.value; refreshPosGrid(); });
     var pc=$('#pos-client'); if(pc) pc.addEventListener('change',function(e){ if(e.target.value==='nuevo') openCustomerModal(); else { posClient=e.target.value; refreshPos(); } }); }
-  if(mid==='facturacion'){ initFacturacionCajaModule(); }
+  if(mid==='ventas'){
+    var sq=$('#sales-q'); if(sq) sq.addEventListener('input',function(e){ State.ui.salesQ=e.target.value; State.ui.salesPage=1; rerenderKeep(); });
+  }
+  if(mid==='facturacion'){
+    initFacturacionCajaModule();
+    var cq=$('#comp-search-q'); if(cq) cq.addEventListener('input',function(e){ State.ui.compSearchQ=e.target.value; State.ui.compPage=1; rerenderKeep(); });
+    var nq=$('#notes-search-q'); if(nq) nq.addEventListener('input',function(e){ State.ui.notesSearchQ=e.target.value; State.ui.notesPage=1; rerenderKeep(); });
+    var snq=$('#seniat-search-q'); if(snq) snq.addEventListener('input',function(e){ State.ui.seniatSearchQ=e.target.value; State.ui.seniatPage=1; rerenderKeep(); });
+  }
+  if(mid==='compras'){
+    var supq=$('#suppliers-search-q'); if(supq) supq.addEventListener('input',function(e){ State.ui.suppliersSearchQ=e.target.value; State.ui.supPage=1; rerenderKeep(); });
+    var bq=$('#bills-search-q'); if(bq) bq.addEventListener('input',function(e){ State.ui.billsSearchQ=e.target.value; State.ui.billsPage=1; rerenderKeep(); });
+    var pyq=$('#payables-search-q'); if(pyq) pyq.addEventListener('input',function(e){ State.ui.payablesSearchQ=e.target.value; State.ui.payablesPage=1; rerenderKeep(); });
+  }
+  if(mid==='nomina'){
+    var eq=$('#payroll-emp-q'); if(eq) eq.addEventListener('input',function(e){ State.ui.payrollEmpQ=e.target.value; State.ui.empPage=1; rerenderKeep(); });
+  }
   if(mid==='clientes'){ initClientesModule(); }
   if(mid==='ajustes'){ initBrandingCard(); initGeminiSettingsCard(); initBackupCard(); }
   window.scrollTo(0,0);
@@ -7821,7 +8083,10 @@ function handleAction(a,el,e){
       render(); showToast('Orden de compra generada: +'+(p3.min*2)+' unidades de '+p3.name+'.','ok','Reabasto'); break;
     case 'import': openCatalogImportModal(); break;
     /* ventas / facturas */
-    case 'sales-status': State.ui.salesStatus=D.s; render(); break;
+    case 'sales-status': State.ui.salesStatus=D.s; State.ui.salesPage=1; render(); break;
+    case 'sales-page': State.ui.salesPage=Math.max(1,+D.p); render(); break;
+    case 'sales-per-page': State.ui.salesPerPage=+D.n; State.ui.salesPage=1; render(); break;
+    case 'sales-clear-q': State.ui.salesQ=''; State.ui.salesPage=1; render(); break;
     case 'sales-range': State.ui.salesRange=D.r; render(); break;
     case 'open-order': if(e) e.stopPropagation(); openOrderDrawer(D.folio); break;
     case 'mark-paid': var om=DB.orders.filter(function(o){return o.folio===D.folio;})[0];
@@ -7857,12 +8122,36 @@ function handleAction(a,el,e){
     /* Facturación & Auditoría de Caja (Cortes X y Z) */
     case 'switch-billing-tab':
       State.ui.billingTab = D.tab;
+      State.ui.cortePage = 1; State.ui.compPage = 1; State.ui.notesPage = 1; State.ui.seniatPage = 1;
       render();
       break;
+    case 'corte-page': State.ui.cortePage=Math.max(1,+D.p); render(); break;
+    case 'corte-per-page': State.ui.cortePerPage=+D.n; State.ui.cortePage=1; render(); break;
+    case 'corte-clear-q': State.ui.cashHistoryQ=''; State.ui.cortePage=1; render(); break;
+    case 'comp-page': State.ui.compPage=Math.max(1,+D.p); render(); break;
+    case 'comp-per-page': State.ui.compPerPage=+D.n; State.ui.compPage=1; render(); break;
+    case 'comp-clear-q': State.ui.compSearchQ=''; State.ui.compPage=1; render(); break;
+    case 'notes-page': State.ui.notesPage=Math.max(1,+D.p); render(); break;
+    case 'notes-per-page': State.ui.notesPerPage=+D.n; State.ui.notesPage=1; render(); break;
+    case 'notes-clear-q': State.ui.notesSearchQ=''; State.ui.notesPage=1; render(); break;
+    case 'seniat-page': State.ui.seniatPage=Math.max(1,+D.p); render(); break;
+    case 'seniat-per-page': State.ui.seniatPerPage=+D.n; State.ui.seniatPage=1; render(); break;
+    case 'seniat-clear-q': State.ui.seniatSearchQ=''; State.ui.seniatPage=1; render(); break;
+
     case 'switch-purchases-tab':
       State.ui.purchasesTab = D.tab;
+      State.ui.supPage = 1; State.ui.billsPage = 1; State.ui.payablesPage = 1;
       render();
       break;
+    case 'suppliers-page': State.ui.supPage=Math.max(1,+D.p); render(); break;
+    case 'suppliers-per-page': State.ui.supPerPage=+D.n; State.ui.supPage=1; render(); break;
+    case 'suppliers-clear-q': State.ui.suppliersSearchQ=''; State.ui.supPage=1; render(); break;
+    case 'bills-page': State.ui.billsPage=Math.max(1,+D.p); render(); break;
+    case 'bills-per-page': State.ui.billsPerPage=+D.n; State.ui.billsPage=1; render(); break;
+    case 'bills-clear-q': State.ui.billsSearchQ=''; State.ui.billsPage=1; render(); break;
+    case 'payables-page': State.ui.payablesPage=Math.max(1,+D.p); render(); break;
+    case 'payables-per-page': State.ui.payablesPerPage=+D.n; State.ui.payablesPage=1; render(); break;
+    case 'payables-clear-q': State.ui.payablesSearchQ=''; State.ui.payablesPage=1; render(); break;
     case 'consolidate-selected-notes':
       openConsolidateNotesModal(FISCAL_STATE.selectedNoteIds);
       break;
@@ -7890,8 +8179,16 @@ function handleAction(a,el,e){
     /* Personal & Nómina LOTTT (Paso 5) */
     case 'switch-payroll-tab':
       State.ui.payrollTab = D.tab;
+      State.ui.empPage = 1; State.ui.periodsPage = 1; State.ui.passivesPage = 1;
       render();
       break;
+    case 'emp-page': State.ui.empPage=Math.max(1,+D.p); render(); break;
+    case 'emp-per-page': State.ui.empPerPage=+D.n; State.ui.empPage=1; render(); break;
+    case 'emp-clear-q': State.ui.payrollEmpQ=''; State.ui.empPage=1; render(); break;
+    case 'periods-page': State.ui.periodsPage=Math.max(1,+D.p); render(); break;
+    case 'periods-per-page': State.ui.periodsPerPage=+D.n; State.ui.periodsPage=1; render(); break;
+    case 'passives-page': State.ui.passivesPage=Math.max(1,+D.p); render(); break;
+    case 'passives-per-page': State.ui.passivesPerPage=+D.n; State.ui.passivesPage=1; render(); break;
     case 'refresh-payroll':
       loadPayrollData().then(function() {
         render();
@@ -8076,8 +8373,15 @@ function handleAction(a,el,e){
     /* CRM, Clientes & Cuentas por Cobrar */
     case 'switch-customers-tab':
       State.ui.customersTab = D.tab;
+      State.ui.custPage = 1; State.ui.abonosPage = 1;
       render();
       break;
+    case 'customer-page': State.ui.custPage=Math.max(1,+D.p); render(); break;
+    case 'customer-per-page': State.ui.custPerPage=+D.n; State.ui.custPage=1; render(); break;
+    case 'customer-clear-q': State.ui.customerSearchQ=''; State.ui.custPage=1; render(); break;
+    case 'abonos-page': State.ui.abonosPage=Math.max(1,+D.p); render(); break;
+    case 'abonos-per-page': State.ui.abonosPerPage=+D.n; State.ui.abonosPage=1; render(); break;
+    case 'abonos-clear-q': State.ui.abonosSearchQ=''; State.ui.abonosPage=1; render(); break;
     case 'refresh-customers':
       loadCustomersFromAPI().then(function() {
         render();
@@ -9748,6 +10052,13 @@ function renderCashCloseTableRows() {
     '</div>';
   }
 
+  var cortePage = State.ui.cortePage || 1;
+  var cortePerPage = State.ui.cortePerPage || 10;
+  var totalCortes = list.length;
+  var totalPages = Math.max(1, Math.ceil(totalCortes / cortePerPage));
+  if (cortePage > totalPages) cortePage = totalPages;
+  var pagedList = list.slice((cortePage - 1) * cortePerPage, cortePage * cortePerPage);
+
   return '<div class="tbl-scroll">' +
     '<table class="tbl">' +
       '<thead>' +
@@ -9762,7 +10073,7 @@ function renderCashCloseTableRows() {
         '</tr>' +
       '</thead>' +
       '<tbody>' +
-        list.map(function(c) {
+        pagedList.map(function(c) {
           var isZ = c.type === 'Z';
           var typeBadge = isZ
             ? '<span class="badge b-ok" style="font-weight:700">🔒 CORTE Z (CIERRE)</span>'
@@ -9822,7 +10133,8 @@ function renderCashCloseTableRows() {
         }).join('') +
       '</tbody>' +
     '</table>' +
-  '</div>';
+  '</div>' +
+  (totalCortes ? renderPagination(totalCortes, cortePage, cortePerPage, 'corte-page', 'cortes de caja') : '');
 }
 
 async function loadCashCloseHistory(silent) {
@@ -12912,6 +13224,13 @@ function renderCustomersCards(list, currentTab) {
     '</div>';
   }
 
+  var custPage = State.ui.custPage || 1;
+  var custPerPage = State.ui.custPerPage || 10;
+  var totalCust = list.length;
+  var totalPages = Math.max(1, Math.ceil(totalCust / custPerPage));
+  if (custPage > totalPages) custPage = totalPages;
+  var pagedList = list.slice((custPage - 1) * custPerPage, custPage * custPerPage);
+
   var html = '<div class="tbl-scroll"><table class="tbl"><thead><tr>' +
     '<th>Cliente / Documento</th>' +
     '<th>Línea de Crédito</th>' +
@@ -12922,7 +13241,7 @@ function renderCustomersCards(list, currentTab) {
     '<th style="text-align:right">Acciones</th>' +
     '</tr></thead><tbody>';
 
-  html += list.map(function(c) {
+  html += pagedList.map(function(c) {
     var debt = Number(c.currentDebt !== undefined ? c.currentDebt : c.currentDebtUsd) || 0;
     var limit = Number(c.creditLimit !== undefined ? c.creditLimit : c.creditLimitUsd) || 0;
     var avail = Math.max(0, limit - debt);
@@ -12990,7 +13309,8 @@ function renderCustomersCards(list, currentTab) {
     '</tr>';
   }).join('');
 
-  html += '</tbody></table></div>';
+  html += '</tbody></table></div>' +
+    (totalCust ? renderPagination(totalCust, custPage, custPerPage, 'customer-page', 'clientes') : '');
   return html;
 }
 
@@ -13011,13 +13331,32 @@ function renderAbonosTable(list) {
     '</div>';
   }
 
+  var abonosQ = (State.ui.abonosSearchQ || '').toLowerCase().trim();
+  var filteredAbonos = list.filter(function(a) {
+    if (!abonosQ) return true;
+    var str = ((a.receiptNumber || '') + ' ' + (a.folio || '') + ' ' + (a.customerName || '') + ' ' + (a.customerDoc || '') + ' ' + (a.paymentMethod || '') + ' ' + (a.paymentReference || '')).toLowerCase();
+    return str.indexOf(abonosQ) >= 0;
+  });
+  var abonosPage = State.ui.abonosPage || 1;
+  var abonosPerPage = State.ui.abonosPerPage || 10;
+  var totalAbonos = filteredAbonos.length;
+  var totalPages = Math.max(1, Math.ceil(totalAbonos / abonosPerPage));
+  if (abonosPage > totalPages) abonosPage = totalPages;
+  var pagedAbonos = filteredAbonos.slice((abonosPage - 1) * abonosPerPage, abonosPage * abonosPerPage);
+
   var html = '<div class="card" style="margin-bottom:20px">' +
-    '<div class="card-head" style="flex-wrap:wrap;gap:12px">' +
+    '<div class="card-head spread" style="flex-wrap:wrap;gap:12px">' +
       '<div>' +
         '<h3>Historial de Abonos Recibidos (' + list.length + ')</h3>' +
         '<p class="card-sub">Comprobantes digitales con respaldo multimoneda ($ y Bs.) y descarga en PNG</p>' +
       '</div>' +
-      '<div class="wrap-row" style="gap:8px">' +
+      '<div class="wrap-row" style="gap:8px;align-items:center">' +
+        '<div style="position:relative;min-width:220px">' +
+          '<input class="input sm" id="abonos-search-q" placeholder="Buscar recibo, cliente o ref…" value="' + esc(State.ui.abonosSearchQ || '') + '" style="padding-left:30px;padding-right:26px">' +
+          '<span style="position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none">' + I.search + '</span>' +
+          (State.ui.abonosSearchQ ? '<button type="button" class="icon-btn" data-action="abonos-clear-q" style="position:absolute;right:4px;top:50%;transform:translateY(-50%);width:20px;height:20px;font-size:10px" title="Limpiar">✕</button>' : '') +
+        '</div>' +
+        renderPerPageSelector(abonosPerPage, 'abonos-per-page') +
         '<button class="btn btn-sm btn-primary" type="button" data-action="quick-abono">' + I.plus + ' Registrar Abono</button>' +
       '</div>' +
     '</div>' +
@@ -13033,7 +13372,7 @@ function renderAbonosTable(list) {
       '<th style="text-align:right">Comprobante</th>' +
     '</tr></thead><tbody>';
 
-  html += list.map(function(a) {
+  html += pagedAbonos.map(function(a) {
     var folio = a.receiptNumber || a.folio || ('ABO-' + (a.id ? a.id.slice(0, 6) : '0000'));
     var prevDebt = Number(a.previousDebtUsd || 0);
     var remDebt = Number(a.remainingDebtUsd || 0);
@@ -13070,7 +13409,9 @@ function renderAbonosTable(list) {
     '</tr>';
   }).join('');
 
-  html += '</tbody></table></div></div>';
+  html += '</tbody></table></div>' +
+    (totalAbonos ? renderPagination(totalAbonos, abonosPage, abonosPerPage, 'abonos-page', 'abonos recibidos') : '') +
+  '</div>';
   return html;
 }
 
@@ -15247,7 +15588,7 @@ render();
 syncFromBackend();
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
-    navigator.serviceWorker.register('sw.js?v=1.28').then(function(reg) {
+    navigator.serviceWorker.register('sw.js?v=1.30').then(function(reg) {
       console.log('FerreJade PWA Service Worker activo:', reg.scope);
     }).catch(function(err) {
       console.log('FerreJade PWA SW nota:', err);

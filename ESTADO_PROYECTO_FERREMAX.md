@@ -1,10 +1,17 @@
 # 🛠️ FerreMax · Estado del Proyecto y Memoria Técnica de Desarrollo
 **Fecha de corte:** 13 de Noviembre de 2026  
-**Versión de la plataforma:** Core-Business Suite v1.19 / v1.25 (FerreJade ERP)  
+**Versión de la plataforma:** Core-Business Suite v1.30 (FerreJade ERP)  
 **URL de Producción / Demo Activa en la Nube:**  
 👉 **[https://ferremax-473o.onrender.com/#/](https://ferremax-473o.onrender.com/#/)**  
 *(Alojado en Render Cloud · Conectado al repositorio GitHub `@Intenso682/ferremax`)*  
 **Propósito de este documento:** Servir como guía, bitácora de estado y contexto maestro para continuar el desarrollo sin pérdida de hilo técnico ni funcional.
+
+- **Paginación Inteligente Universal y Búsqueda en Vivo (v1.30 - NUEVO):**
+  - Implementación de listas compactas de 10 elementos por defecto en todas las tablas del panel administrativo (`Ventas`, `Facturación & Cortes`, `Compras & Proveedores`, `Clientes & CRM`, `Nómina & LOTTT`).
+  - Selector dinámico de elementos por página: `10 | 25 | 50` filas configurables en tiempo real.
+  - Buscador reactivo instantáneo (`input` event con `rerenderKeep()`) en la cabecera de cada tabla con botón de limpieza rápida (`✕`).
+  - Paginador visual inferior con indicador de rango ("Mostrando X-Y de Z"), salto directo a números de página y botones "Anterior" / "Siguiente".
+  - Sidebar colapsado por defecto en la zona administrativa para maximizar la visualización de datos sin recortes en la barra superior de tipo de cambio y acciones.
 
 ---
 
