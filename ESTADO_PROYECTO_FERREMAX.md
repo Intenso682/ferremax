@@ -1,7 +1,10 @@
 # 🛠️ FerreMax · Estado del Proyecto y Memoria Técnica de Desarrollo
-**Fecha de corte:** 23 de Octubre de 2026 (Corte de Mediodía)  
-**Versión de la plataforma:** Core-Business Suite v1.19 (Motor Dinámico de Publicidad & Banners Comerciales + Cajas de Texto Reactivas Verde Agua + Acceso Móvil Wi-Fi + 102 Pruebas Automatizadas)  
-**Propósito de este documento:** Servir como guía y contexto maestro para continuar el desarrollo sin pérdida de hilo técnico ni funcional.
+**Fecha de corte:** 13 de Noviembre de 2026  
+**Versión de la plataforma:** Core-Business Suite v1.19 / v1.25 (FerreJade ERP)  
+**URL de Producción / Demo Activa en la Nube:**  
+👉 **[https://ferremax-473o.onrender.com/#/](https://ferremax-473o.onrender.com/#/)**  
+*(Alojado en Render Cloud · Conectado al repositorio GitHub `@Intenso682/ferremax`)*  
+**Propósito de este documento:** Servir como guía, bitácora de estado y contexto maestro para continuar el desarrollo sin pérdida de hilo técnico ni funcional.
 
 ---
 

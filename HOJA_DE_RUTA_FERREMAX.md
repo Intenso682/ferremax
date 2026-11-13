@@ -1,7 +1,10 @@
 # 🗺️ Hoja de Ruta Maestra · Proyecto FerreMax / FerreJade
 
-**Fecha de actualización:** 5 de Noviembre de 2026 (Sesión de Madrugada)  
-**Estado general:** 🟢 **100% Operativo · Escáner IA Autónomo (`escaner_de_productos.html`) + Hoja Oficial Google Sheets en Drive Conectada + Repositorio GitHub Actualizado**  
+**Fecha de actualización:** 13 de Noviembre de 2026  
+**Estado general:** 🟢 **100% Operativo · En Producción en la Nube + Escáner IA Autónomo + Hoja Oficial Google Sheets + Repositorio GitHub Actualizado**  
+**URL de Producción / Demo Activa en la Nube:**  
+👉 **[https://ferremax-473o.onrender.com/#/](https://ferremax-473o.onrender.com/#/)**  
+*(Alojado en Render Cloud · Servicio `ferremax-473o`)*  
 **Versión del núcleo:** Core-Business Suite v1.25 (Edición Oficial FerreJade)  
 **Cuenta Corporativa Oficial:** `ferrejadepzo@gmail.com` (Google AI Studio, Drive y Sheets)  
 **Clave Maestra de Acceso:** `FERREJADE2026` (también admite `1234`)
