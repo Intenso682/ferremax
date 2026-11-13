@@ -7,7 +7,6 @@ backend/dist/
 .gitignore
 backups/
 data/
-uploads/
 *.log
 .env
 backend/.env

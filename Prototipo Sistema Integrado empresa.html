@@ -188,7 +188,7 @@ label.lbl{display:block;font-size:12.5px;font-weight:600;color:var(--muted);marg
 .nav-links{display:flex;gap:4px;margin-left:8px}
 .nav-links a{padding:8px 13px;border-radius:10px;font-size:14.5px;font-weight:500;color:var(--muted);transition:.2s}
 .nav-links a:hover,.nav-links a.on{color:var(--text);background:var(--surface-2)}
-.head-search{flex:1;max-width:400px;margin-left:auto}
+.head-search{flex:1;min-width:180px;max-width:400px;margin-left:auto}
 .head-actions{display:flex;align-items:center;gap:10px;flex-shrink:0}
 .head-panel-btn{white-space:nowrap!important;flex-shrink:0!important;display:inline-flex!important;align-items:center!important;gap:6px!important;padding:8px 14px!important;font-size:13.5px!important;font-weight:600!important;border-radius:9px!important}
 .cart-btn{position:relative;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:var(--surface-2);border:1px solid var(--border);transition:.2s}
@@ -690,7 +690,8 @@ svg[data-chart], .spark svg, .chart-wrap svg, .pos-tile .art svg, .p-art > svg, 
    ══════════════════════════════════════════════════════════════════════════ */
 
 /* A. Laptops comunes (1366x768, 1280x800, 1080p con 125%/150% de escala) <= 1260px */
-@media (max-width: 1260px) {
+@media (max-width: 1366px) {
+  .card, .grid > * { min-width: 0; }
   /* Todas las divisiones forzadas en el panel administrativo se apilan a 1 sola columna
      para dar 100% de ancho a cada tarjeta y evitar que se desborden a la derecha */
   .grid-split-admin,
@@ -728,9 +729,11 @@ svg[data-chart], .spark svg, .chart-wrap svg, .pos-tile .art svg, .p-art > svg, 
 
 /* B. Laptops pequeñas y Tablets grandes <= 1100px */
 @media (max-width: 1100px) {
+  .nav-links { display: none !important; }
+  .head-search { min-width: 160px !important; }
   .hero-in { grid-template-columns: 1fr; gap: 38px; }
-  .hero-art { min-height: auto; max-width: 520px; margin: 0 auto; width: 100%; }
-  .float-card.f1 { left: -8px; } .float-card.f2 { right: -8px; }
+  .hero-art { min-height: auto; max-width: 520px; margin: 0 auto 36px !important; width: 100%; position: relative; }
+  .float-card.f1 { left: 4px; top: 12px; } .float-card.f2 { right: 4px; bottom: -12px; }
   .pd { grid-template-columns: 1fr; gap: 26px; } .pd-gal { position: static; }
   .banner { grid-template-columns: 1fr; padding: 32px; }
   
@@ -769,6 +772,7 @@ svg[data-chart], .spark svg, .chart-wrap svg, .pos-tile .art svg, .p-art > svg, 
   .cat-layout { grid-template-columns: 1fr; }
   .filters { position: static; }
   .nav-links { display: none; }
+  .hide-sm { display: none !important; }
   .login-wrap { grid-template-columns: 1fr; }
   .login-art { display: none; }
   .foot-in { grid-template-columns: 1fr 1fr; }
@@ -805,6 +809,8 @@ svg[data-chart], .spark svg, .chart-wrap svg, .pos-tile .art svg, .p-art > svg, 
   .topbar-theme-btn svg { width: 13.5px !important; height: 13.5px !important; }
   .head-in { height: 56px !important; gap: 6px !important; padding: 0 10px !important; }
   .head-search { display: none !important; }
+  .float-card { display: none !important; }
+  .hide-sm { display: none !important; }
   .brand { font-size: 15.5px !important; gap: 6px !important; min-width: 0 !important; max-width: calc(100% - 150px) !important; flex-shrink: 1 !important; }
   .brand-line { gap: 6px !important; max-width: 100% !important; }
   .brand-title { font-size: 15.5px !important; overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important; }
@@ -1023,7 +1029,7 @@ function luhn(d){ var s=0,alt=false; for(var i=d.length-1;i>=0;i--){ var n=+d[i]
 function pImg(p, style){
   if(!p) return '<span class="avatar">📦</span>';
   var src = (p.images && p.images.length) ? p.images[0] : (p.imageUrl || null);
-  if(src) return '<img src="'+src+'" style="'+(style||'width:100%;height:100%;object-fit:cover;border-radius:inherit;')+'" alt="'+esc(p.name)+'" loading="lazy">';
+  if(src) return '<img src="'+src+'" style="'+(style||'width:100%;height:100%;object-fit:cover;border-radius:inherit;')+'" alt="'+esc(p.name)+'" loading="lazy" onerror="this.onerror=null;this.parentElement.innerHTML=ART[\''+(p.art||'drill')+'\']||\'<span class=\\\'avatar\\\'>📦</span>\';">';
   return ART[p.art] || '<span class="avatar">📦</span>';
 }
 
@@ -1160,7 +1166,7 @@ var PRODUCTS=[
   desc:'Mordaza de acero templado que agarra tubo húmedo sin patinar. Incluye fittings de cobre de regalo en esta promoción.',
   specs:[['Longitud','14" (350 mm)'],['Material','Acero al carbono'],['Mordaza','Ajustable'],['Uso','Plomería y gas'],['Garantía','10 años']]}
 ];
-function byId(id){ for(var i=0;i<DB.products.length;i++) if(DB.products[i].id===id) return DB.products[i]; return null; }
+function byId(id){ if(!id||!DB||!DB.products) return null; for(var i=0;i<DB.products.length;i++){ var p=DB.products[i]; if(p.id===id||p.sku===id||p.slug===id) return p; } return null; }
 function bySlug(s){ for(var i=0;i<DB.products.length;i++) if(DB.products[i].slug===s) return DB.products[i]; return null; }
 
 var CUSTOMERS=[
@@ -1415,7 +1421,7 @@ function areaChart(id,labels,values,h){
 }
 function sparkline(values,color){
   var W=120,H=34,max=Math.max.apply(null,values),min=Math.min.apply(null,values);
-  var pts=values.map(function(v,i){ return {x:i*(W/(values.length-1)),y:H-((v-min)/((max-min)||1))*(H-6)-3}; });
+  var pts=values.map(function(v,i){ return {x:i*(W/(values.length>1?(values.length-1):1)),y:H-((v-min)/((max-min)||1))*(H-6)-3}; });
   return '<svg viewBox="0 0 '+W+' '+H+'"><path d="'+smooth(pts)+'" fill="none" stroke="'+color+'" stroke-width="2" stroke-linecap="round" class="draw"/>'+
     '<circle cx="'+pts[pts.length-1].x+'" cy="'+pts[pts.length-1].y+'" r="2.6" fill="'+color+'"/></svg>';
 }
@@ -1427,6 +1433,7 @@ function donut(data,size){
     '<text x="50%" y="63%" text-anchor="middle" font-size="16" font-weight="700" fill="var(--text)" font-family="var(--font-display)">'+money(total)+'</text></svg>';
 }
 function hbars(data){
+  if(!data || !data.length) return '<div class="empty" style="padding:22px 10px">'+I.check+'<p class="muted sm">Sin registros de ventas aún</p></div>';
   var max=Math.max.apply(null,data.map(function(d){return d.v;}))||1;
   return '<div style="display:flex;flex-direction:column;gap:13px">'+data.map(function(d,i){
     return '<div><div class="spread" style="margin-bottom:6px"><span class="sm">'+esc(d.l)+'</span><b class="mono sm">'+(d.fmt||money(d.v))+'</b></div>'+
@@ -1773,7 +1780,7 @@ function renderBrandName(showSlogan){
 
 function renderBrandHeader(customStyle, showSlogan, isLight){
   if(STORE_CONFIG.logoUrl){
-    return '<span class="brand-line"><img src="'+esc(STORE_CONFIG.logoUrl)+'" alt="'+esc(STORE_CONFIG.storeName)+'" style="'+(customStyle||'height:36px;max-width:200px;object-fit:contain;vertical-align:middle;display:inline-block;')+'" onerror="this.onerror=null;this.parentElement.innerHTML=renderBrandName('+showSlogan+');"></span>';
+    return '<span class="brand-line"><img src="'+esc(STORE_CONFIG.logoUrl)+'" alt="'+esc(STORE_CONFIG.storeName)+'" style="'+(customStyle||'height:36px;max-width:200px;object-fit:contain;vertical-align:middle;display:inline-block;')+'" onerror="this.onerror=null;this.parentElement.innerHTML=\'<span class=\\\'brand-mark\\\'>\'+I.bolt+\'</span><span class=\\\'brand-title\\\'>\'+renderBrandName('+showSlogan+')+\'</span>\';"></span>';
   }
   var logo = renderBrandLogo(customStyle, isLight);
   var name = renderBrandName(showSlogan);
@@ -1807,10 +1814,10 @@ function storeHeader(){
       (isDeviceAuthorized()
         ? '<span class="badge" style="background:rgba(16,185,129,0.15);color:#10b981;border:1px solid #10b981;font-weight:700;border-radius:20px;padding:4px 10px;font-size:11px;display:inline-flex;align-items:center;gap:4px">🟢 <span class="hide-sm">Autorizado</span></span>'
         : '<button class="btn btn-xs" type="button" data-action="open-gatekeeper" style="background:#003333;color:#CFB53B;border:1px solid #CFB53B;font-weight:700;border-radius:20px;padding:5px 11px;cursor:pointer;display:inline-flex;align-items:center;gap:4px">🔐 <span class="hide-sm">Ingresar Clave</span></button>')+
-      '<button class="btn btn-xs" type="button" data-action="pwa-install" id="btn-pwa-install-store" style="background:rgba(207,181,59,0.18);color:#CFB53B;border:1px solid #CFB53B;font-weight:700;border-radius:20px;padding:5px 11px;gap:5px;cursor:pointer;display:inline-flex;align-items:center" title="Instalar FerreJade en tu Celular">📲 <span class="hide-sm">Instalar App</span></button>'+
+      '<button class="btn btn-xs hide-md" type="button" data-action="pwa-install" id="btn-pwa-install-store" style="background:rgba(207,181,59,0.18);color:#CFB53B;border:1px solid #CFB53B;font-weight:700;border-radius:20px;padding:5px 11px;gap:5px;cursor:pointer;display:inline-flex;align-items:center" title="Instalar FerreJade en tu Celular">📲 <span class="hide-sm">Instalar App</span></button>'+
       '<button class="cart-btn" data-action="open-cart" aria-label="Abrir carrito" title="Ver carrito">'+I.cart+'<span class="cart-count" data-cart-count style="display:'+(cartCount()?'grid':'none')+'">'+cartCount()+'</span></button>'+
-      (State.session?'<a class="btn btn-soft btn-sm head-panel-btn" href="#/admin/dashboard" data-action="go" data-to="/admin/dashboard" title="Acceso a panel">'+I.gauge+' <span>Mi panel</span></a>'
-                    :'<a class="btn btn-primary btn-sm head-panel-btn" href="#/login" data-action="go" data-to="/login" title="Acceso administrativo">'+I.lock+' <span>Panel admin</span></a>')+
+      (State.session?'<a class="btn btn-soft btn-sm head-panel-btn" href="#/admin/dashboard" data-action="go" data-to="/admin/dashboard" title="Acceso a panel">'+I.gauge+' <span class="hide-sm">Mi panel</span></a>'
+                    :'<a class="btn btn-primary btn-sm head-panel-btn" href="#/login" data-action="go" data-to="/login" title="Acceso administrativo">'+I.lock+' <span class="hide-sm">Panel admin</span></a>')+
     '</div></div></header>';
 }
 function storeFooter(){
@@ -2380,16 +2387,16 @@ function refreshBadges(){
 function metrics(){
   var now=new Date();
   function age(d){ return (now-new Date(d))/864e5; }
-  var today=DB.orders.filter(function(o){return age(o.date)<1&&o.status!=='cancelada';});
-  var last30=DB.orders.filter(function(o){return age(o.date)<=30&&o.status!=='cancelada';});
+  var ords=Array.isArray(DB.orders)?DB.orders:[]; var prods=Array.isArray(DB.products)?DB.products:[]; var invs=Array.isArray(DB.invoices)?DB.invoices:[]; var today=ords.filter(function(o){return age(o.date)<1&&o.status!=='cancelada';});
+  var last30=ords.filter(function(o){return age(o.date)<=30&&o.status!=='cancelada';});
   var sum=function(a){return a.reduce(function(x,y){return x+y.total;},0);};
-  var sales30=sum(last30)||1, prev=sum(DB.orders.filter(function(o){return age(o.date)>30;}))||1;
+  var sales30=sum(last30)||1, prev=sum(ords.filter(function(o){return age(o.date)>30;}))||1;
   return {today:sum(today),todayN:today.length,sales30:sales30,salesPrev:prev,growth:((sales30-prev)/prev)*100,
     ticket:last30.length?sales30/last30.length:0,orders30:last30.length,
-    low:DB.products.filter(function(p){return p.stock>0&&p.stock<=p.min;}),
-    out:DB.products.filter(function(p){return p.stock===0;}),
-    stockValue:DB.products.reduce(function(a,p){return a+p.cost*p.stock;},0),
-    pend:DB.invoices.filter(function(i){return i.status!=='timbrada';})};
+    low:prods.filter(function(p){return p.stock>0&&p.stock<=p.min;}),
+    out:prods.filter(function(p){return p.stock===0;}),
+    stockValue:prods.reduce(function(a,p){return a+(Number(p.cost)||0)*(Number(p.stock)||0);},0),
+    pend:invs.filter(function(i){return i.status!=='timbrada';})};
 }
 function salesSeries(range){
   var r=seeded(range==='7d'?11:(range==='30d'?22:33)), out=[], lab=[], i, n, d;
@@ -2408,9 +2415,9 @@ function categorySales(){
 }
 function topProducts(n){
   var map={};
-  DB.orders.forEach(function(o){ o.items.forEach(function(i){ map[i.id]=(map[i.id]||0)+i.price*i.qty; }); });
-  return Object.keys(map).map(function(id){ return {id:id,v:map[id],p:byId(id)}; })
-    .filter(function(x){return x.p;}).sort(function(a,b){return b.v-a.v;}).slice(0,n||5);
+  (DB.orders||[]).forEach(function(o){ (o.items||[]).forEach(function(i){ var k=i.id||i.sku||i.name; map[k]=(map[k]||0)+i.price*i.qty; }); });
+  var res=Object.keys(map).map(function(k){ var p=byId(k); if(!p&&DB.products&&DB.products.length){ p=DB.products.filter(function(x){return x.name===k||x.sku===k;})[0]; } return {id:k,v:map[k],p:p}; })
+    .filter(function(x){return x.p;}).sort(function(a,b){return b.v-a.v;}).slice(0,n||5); if(!res.length&&DB.products&&DB.products.length){ res=DB.products.slice(0,n||5).map(function(p,idx){ return {id:p.id,v:Math.round(p.price*(24-idx*3)),p:p}; }); } return res;
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -2431,6 +2438,7 @@ function kpiNum(label,val,delta,dir,ic,color,soft,spark,suf,note){
   return kpi({label:label,raw:num(val)+(suf||''),count:val,dec:(String(val).indexOf('.')>0?2:0),delta:delta,dir:dir,icon:ic,color:color,soft:soft,spark:spark,suf:suf||'',note:note});
 }
 function ordersTable(list,full){
+  if(!list||!list.length) return '<div class="empty" style="padding:28px 12px">'+I.cart+'<b style="display:block;margin-top:6px;font-size:14px">Sin pedidos registrados</b><p class="muted sm">Los nuevos pedidos de tienda o mostrador aparecerán aquí.</p></div>';
   var STC={'pagada':'b-ok','por pagar':'b-warn','enviada':'b-info','preparando':'b-vio','cancelada':'b-bad'};
   return '<table class="tbl"><thead><tr><th>Folio</th><th>Cliente</th>'+(full?'<th>Canal</th>':'')+'<th>Fecha</th><th>Artículos</th><th>Total</th><th>Estado</th><th></th></tr></thead><tbody>'+
     list.map(function(o,i){
@@ -2490,11 +2498,11 @@ Views.dashboard=function(){
 };
 
 /* ---- POS ---- */
-var posCart=[]; var posPay='Efectivo USD'; var posClient=DB.customers[0].id;
+var posCart=[]; var posPay='Efectivo USD'; var posClient=(DB.customers && DB.customers[0]) ? DB.customers[0].id : '';
 function posTotals(){
   var sub=posCart.reduce(function(a,b){
     var p=byId(b.id);
-    if(!p) return a;
+    if(!p) return a + ((b.price || 0) * (b.qty || 1));
     var isPurchaseUnit = b.unitSold && p.purchaseUnit && b.unitSold === p.purchaseUnit;
     var price = isPurchaseUnit ? (p.price * (p.unitRatio || 1)) : p.price;
     return a + (price * b.qty);
@@ -6281,12 +6289,12 @@ var DEFAULT_LOCAL_BANNERS = [
   { id: 'b-top-1', slot: 'top_bar', title: 'FerreMax Express · Envíos GRATIS a todo el país por compras mayores a $50', subtitle: 'Despacho asegurado en 24-48 horas con guía rastreable', buttonText: 'Aprovechar Ahora', linkUrl: '#/productos', bgGradient: 'linear-gradient(90deg, #1e3a8a, #0284c7)', badgeText: 'PROMOCIÓN VIGENTE', active: true, viewsCount: 1420, clicksCount: 112 },
   { id: 'b-hero-1', slot: 'home_hero', title: 'Mes Oficial DeWalt · Potencia y Rendimiento Industrial', subtitle: 'Línea completa XR Brushless con hasta 25% de descuento directo y 3 años de garantía oficial en Venezuela.', brandName: 'DeWalt', badgeText: 'Patrocinador Oficial', buttonText: 'Explorar Herramientas DeWalt', linkUrl: '#/productos', imageUrl: 'https://images.unsplash.com/photo-1504148455328-c376907d081c?auto=format&fit=crop&w=800&q=80', bgGradient: 'linear-gradient(135deg, #0b0f19 0%, #1a2234 45%, #eab308 140%)', active: true, viewsCount: 3840, clicksCount: 310 },
   { id: 'b-cat-1', slot: 'catalog_middle', title: 'Tuberías y Conexiones Tubrica · Cero Fugas y Máxima Presión', subtitle: 'Distribución autorizada directa de fábrica para obras civiles, edificaciones y plomería pesada.', brandName: 'Tubrica', badgeText: 'Distribuidor Mayorista', buttonText: 'Cotizar Tuberías Tubrica', linkUrl: '#/productos', imageUrl: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=600&q=80', bgGradient: 'linear-gradient(135deg, #0369a1 0%, #0284c7 60%, #06b6d4 100%)', active: true, viewsCount: 2190, clicksCount: 184 },
-  { id: 'b-brand-1', slot: 'brands_carousel', title: 'DeWalt Industrial', brandName: 'DeWalt', badgeText: 'Distribuidor Oficial', linkUrl: '#/productos', imageUrl: 'https://images.unsplash.com/photo-1504148455328-c376907d081c?auto=format&fit=crop&w=300&q=80', active: true, viewsCount: 950, clicksCount: 78 },
-  { id: 'b-brand-2', slot: 'brands_carousel', title: 'Stanley Herramientas', brandName: 'Stanley', badgeText: 'Distribuidor Autorizado', linkUrl: '#/productos', imageUrl: 'https://images.unsplash.com/photo-1572981779307-38b8cabb2407?auto=format&fit=crop&w=300&q=80', active: true, viewsCount: 890, clicksCount: 65 },
-  { id: 'b-brand-3', slot: 'brands_carousel', title: 'Bosch Power Tools', brandName: 'Bosch', badgeText: 'Garantía Oficial 2 Años', linkUrl: '#/productos', imageUrl: 'https://images.unsplash.com/photo-1581092335397-9583fe92d232?auto=format&fit=crop&w=300&q=80', active: true, viewsCount: 920, clicksCount: 81 },
-  { id: 'b-brand-4', slot: 'brands_carousel', title: 'Tubrica Tuberías', brandName: 'Tubrica', badgeText: 'Distribución Mayorista', linkUrl: '#/productos', imageUrl: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=300&q=80', active: true, viewsCount: 740, clicksCount: 52 },
-  { id: 'b-brand-5', slot: 'brands_carousel', title: 'Cementos Vencemos', brandName: 'Vencemos', badgeText: 'Despacho Directo', linkUrl: '#/productos', imageUrl: 'https://images.unsplash.com/photo-1541888946425-d0fbb1861593?auto=format&fit=crop&w=300&q=80', active: true, viewsCount: 680, clicksCount: 44 },
-  { id: 'b-brand-6', slot: 'brands_carousel', title: 'Truper Herramientas', brandName: 'Truper', badgeText: 'Línea Completa', linkUrl: '#/productos', imageUrl: 'https://images.unsplash.com/photo-1530124566582-a618bc2615dc?auto=format&fit=crop&w=300&q=80', active: true, viewsCount: 810, clicksCount: 59 }
+  { id: 'b-brand-1', slot: 'brands_carousel', title: 'DeWalt Industrial', brandName: 'DeWalt', badgeText: 'Distribuidor Oficial', linkUrl: '#/productos', imageUrl: 'data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 160 50\' width=\'160\' height=\'50\'><rect width=\'160\' height=\'50\' rx=\'8\' fill=\'%23feb800\'/><text x=\'80\' y=\'33\' font-family=\'Arial Black, Impact, sans-serif\' font-weight=\'900\' font-size=\'24\' fill=\'%23111111\' text-anchor=\'middle\' letter-spacing=\'-0.5\'>DEWALT</text></svg>', active: true, viewsCount: 950, clicksCount: 78 },
+  { id: 'b-brand-2', slot: 'brands_carousel', title: 'Stanley Herramientas', brandName: 'Stanley', badgeText: 'Distribuidor Autorizado', linkUrl: '#/productos', imageUrl: 'data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 160 50\' width=\'160\' height=\'50\'><rect width=\'160\' height=\'50\' rx=\'8\' fill=\'%23111111\'/><rect x=\'8\' y=\'8\' width=\'144\' height=\'34\' rx=\'4\' fill=\'%23ffcc00\'/><text x=\'80\' y=\'32\' font-family=\'Arial Black, sans-serif\' font-weight=\'900\' font-size=\'20\' fill=\'%23111111\' text-anchor=\'middle\' letter-spacing=\'1\'>STANLEY</text></svg>', active: true, viewsCount: 890, clicksCount: 65 },
+  { id: 'b-brand-3', slot: 'brands_carousel', title: 'Bosch Power Tools', brandName: 'Bosch', badgeText: 'Garantía Oficial 2 Años', linkUrl: '#/productos', imageUrl: 'data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 160 50\' width=\'160\' height=\'50\'><rect width=\'160\' height=\'50\' rx=\'8\' fill=\'%23ffffff\' stroke=\'%23e2e8f0\' stroke-width=\'1.5\'/><circle cx=\'30\' cy=\'25\' r=\'14\' fill=\'%23e11d48\'/><circle cx=\'30\' cy=\'25\' r=\'6\' fill=\'%23ffffff\'/><text x=\'95\' y=\'33\' font-family=\'Arial, Helvetica, sans-serif\' font-weight=\'900\' font-size=\'24\' fill=\'%230f172a\' text-anchor=\'middle\' letter-spacing=\'1\'>BOSCH</text></svg>', active: true, viewsCount: 920, clicksCount: 81 },
+  { id: 'b-brand-4', slot: 'brands_carousel', title: 'Tubrica Tuberías', brandName: 'Tubrica', badgeText: 'Distribución Mayorista', linkUrl: '#/productos', imageUrl: 'data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 160 50\' width=\'160\' height=\'50\'><rect width=\'160\' height=\'50\' rx=\'8\' fill=\'%230284c7\'/><text x=\'80\' y=\'33\' font-family=\'Arial Black, sans-serif\' font-weight=\'900\' font-size=\'21\' fill=\'%23ffffff\' text-anchor=\'middle\' letter-spacing=\'1.5\'>TUBRICA</text></svg>', active: true, viewsCount: 740, clicksCount: 52 },
+  { id: 'b-brand-5', slot: 'brands_carousel', title: 'Cementos Vencemos', brandName: 'Vencemos', badgeText: 'Despacho Directo', linkUrl: '#/productos', imageUrl: 'data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 160 50\' width=\'160\' height=\'50\'><rect width=\'160\' height=\'50\' rx=\'8\' fill=\'%231e293b\'/><text x=\'80\' y=\'32\' font-family=\'Arial Black, sans-serif\' font-weight=\'900\' font-size=\'19\' fill=\'%23ef4444\' text-anchor=\'middle\' letter-spacing=\'1\'>VENCEMOS</text></svg>', active: true, viewsCount: 680, clicksCount: 44 },
+  { id: 'b-brand-6', slot: 'brands_carousel', title: 'Truper Herramientas', brandName: 'Truper', badgeText: 'Línea Completa', linkUrl: '#/productos', imageUrl: 'data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 160 50\' width=\'160\' height=\'50\'><rect width=\'160\' height=\'50\' rx=\'8\' fill=\'%23ea580c\'/><text x=\'80\' y=\'33\' font-family=\'Arial Black, sans-serif\' font-weight=\'900\' font-size=\'22\' fill=\'%23ffffff\' text-anchor=\'middle\' letter-spacing=\'2\'>TRUPER</text></svg>', active: true, viewsCount: 810, clicksCount: 59 }
 ];
 
 var MARKETING_STATE = {
@@ -6421,7 +6429,7 @@ function renderBrandsCarouselBanner(){
       brands.map(function(b){
         return '<div class="card card-pad" style="text-align:center;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border-radius:12px;transition:all .2s ease;padding:16px 12px;background:var(--bg-card);border:1px solid var(--border);" data-action="banner-click" data-id="'+b.id+'" data-link="'+esc(b.linkUrl||'')+'" onmouseover="this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 6px 18px rgba(0,0,0,0.08)\'" onmouseout="this.style.transform=\'none\';this.style.boxShadow=\'none\'">'+
           '<div style="height:46px;display:flex;align-items:center;justify-content:center;width:100%">'+
-            (b.imageUrl ? '<img src="'+esc(b.imageUrl)+'" alt="'+esc(b.brandName||b.title)+'" style="max-height:40px;max-width:125px;object-fit:contain;">' : '<b style="font-size:17px;font-family:var(--font-display);color:var(--text)">'+esc(b.brandName||b.title)+'</b>')+
+            (b.imageUrl ? '<img src="'+esc(b.imageUrl)+'" alt="'+esc(b.brandName||b.title)+'" style="max-height:40px;max-width:125px;object-fit:contain;" onerror="this.onerror=null;this.style.display=\'none\';var f=this.nextElementSibling;if(f)f.style.display=\'block\';"><b style="display:none;font-size:17px;font-family:var(--font-display);color:var(--text)">'+esc(b.brandName||b.title)+'</b>' : '<b style="font-size:17px;font-family:var(--font-display);color:var(--text)">'+esc(b.brandName||b.title)+'</b>')+
           '</div>'+
           '<span class="xs" style="font-weight:700;color:var(--accent);letter-spacing:0.3px">'+esc(b.badgeText||'Distribuidor Oficial')+'</span>'+
         '</div>';

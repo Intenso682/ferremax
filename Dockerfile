@@ -50,8 +50,11 @@ COPY --from=builder /build/backend/dist ./backend/dist
 COPY --from=builder /build/backend/package*.json ./backend/
 COPY --from=builder /build/backend/prisma ./backend/prisma
 
-# Copiar la aplicación web estática frontend
+# Copiar la aplicación web estática frontend y assets
 COPY *.html ./
+COPY sw.js ./
+COPY manifest.json ./
+COPY uploads ./uploads
 
 # Crear directorios para datos persistentes (volúmenes de Docker)
 RUN mkdir -p /app/data /app/uploads /app/backups
