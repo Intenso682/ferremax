@@ -15082,7 +15082,7 @@ render();
 syncFromBackend();
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
-    navigator.serviceWorker.register('sw.js').then(function(reg) {
+    navigator.serviceWorker.register('sw.js?v=1.26').then(function(reg) {
       console.log('FerreJade PWA Service Worker activo:', reg.scope);
     }).catch(function(err) {
       console.log('FerreJade PWA SW nota:', err);

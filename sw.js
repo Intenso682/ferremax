@@ -3,10 +3,10 @@
  * Habilita instalación en celulares (Android / iOS) y almacenamiento en caché sin conexión.
  */
 
-const CACHE_NAME = 'ferrejade-cache-v1.17';
+const CACHE_NAME = 'ferrejade-cache-v1.26';
 const CORE_ASSETS = [
   './',
-  './Prototipo Sistema Integrado empresa.html',
+  './index.html',
   './manifest.json',
   './uploads/branding/ferrejade_logo.svg',
   './uploads/branding/ferrejade_isotipo.svg',
@@ -14,6 +14,7 @@ const CORE_ASSETS = [
 ];
 
 self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(CORE_ASSETS).catch((err) => {
@@ -21,7 +22,6 @@ self.addEventListener('install', (event) => {
       });
     })
   );
-  self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
@@ -38,7 +38,7 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const url = event.request.url;
 
-  // No interceptar llamadas a APIs dinámicas (Gemini, Backend, BCV, Google Apps Script)
+  // No interceptar llamadas a APIs dinámicas (Backend, BCV, Gemini, etc.)
   if (
     url.includes('/api/') ||
     url.includes('googleapis.com') ||
@@ -48,11 +48,31 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Estrategia Cache First con fallback a red para la interfaz gráfica
+  // Para la navegación HTML (SPA): Estrategia Network-First para reflejar actualizaciones de inmediato
+  if (
+    event.request.mode === 'navigate' ||
+    event.request.destination === 'document' ||
+    url.endsWith('/') ||
+    url.includes('index.html')
+  ) {
+    event.respondWith(
+      fetch(event.request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const resClone = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, resClone));
+          }
+          return networkResponse;
+        })
+        .catch(() => caches.match(event.request).then((cached) => cached || caches.match('./')))
+    );
+    return;
+  }
+
+  // Para recursos estáticos (imágenes, logos, fuentes): Cache First con fallback a red
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       if (cachedResponse) {
-        // En segundo plano busca si hay una versión actualizada
         fetch(event.request).then((networkResponse) => {
           if (networkResponse && networkResponse.status === 200) {
             caches.open(CACHE_NAME).then((cache) => cache.put(event.request, networkResponse));
@@ -62,7 +82,7 @@ self.addEventListener('fetch', (event) => {
       }
       return fetch(event.request);
     }).catch(() => {
-      return caches.match('./Prototipo Sistema Integrado empresa.html');
+      return caches.match('./');
     })
   );
 });
