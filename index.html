@@ -6418,6 +6418,15 @@ function renderHomeHeroBanner(){
   '</div></section>';
 }
 
+var BRAND_LOGOS = {
+  'dewalt': "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 50' width='160' height='50'><rect width='160' height='50' rx='8' fill='%23feb800'/><text x='80' y='33' font-family='Arial Black, Impact, sans-serif' font-weight='900' font-size='24' fill='%23111111' text-anchor='middle' letter-spacing='-0.5'>DEWALT</text></svg>",
+  'stanley': "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 50' width='160' height='50'><rect width='160' height='50' rx='8' fill='%23111111'/><rect x='8' y='8' width='144' height='34' rx='4' fill='%23ffcc00'/><text x='80' y='32' font-family='Arial Black, sans-serif' font-weight='900' font-size='20' fill='%23111111' text-anchor='middle' letter-spacing='1'>STANLEY</text></svg>",
+  'bosch': "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 50' width='160' height='50'><rect width='160' height='50' rx='8' fill='%23ffffff' stroke='%23e2e8f0' stroke-width='1.5'/><circle cx='30' cy='25' r='14' fill='%23e11d48'/><circle cx='30' cy='25' r='6' fill='%23ffffff'/><text x='95' y='33' font-family='Arial, Helvetica, sans-serif' font-weight='900' font-size='24' fill='%230f172a' text-anchor='middle' letter-spacing='1'>BOSCH</text></svg>",
+  'tubrica': "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 50' width='160' height='50'><rect width='160' height='50' rx='8' fill='%230284c7'/><text x='80' y='33' font-family='Arial Black, sans-serif' font-weight='900' font-size='21' fill='%23ffffff' text-anchor='middle' letter-spacing='1.5'>TUBRICA</text></svg>",
+  'vencemos': "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 50' width='160' height='50'><rect width='160' height='50' rx='8' fill='%231e293b'/><text x='80' y='32' font-family='Arial Black, sans-serif' font-weight='900' font-size='19' fill='%23ef4444' text-anchor='middle' letter-spacing='1'>VENCEMOS</text></svg>",
+  'cemex': "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 50' width='160' height='50'><rect width='160' height='50' rx='8' fill='%231e293b'/><text x='80' y='32' font-family='Arial Black, sans-serif' font-weight='900' font-size='19' fill='%23ef4444' text-anchor='middle' letter-spacing='1'>VENCEMOS</text></svg>",
+  'truper': "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 50' width='160' height='50'><rect width='160' height='50' rx='8' fill='%23ea580c'/><text x='80' y='33' font-family='Arial Black, sans-serif' font-weight='900' font-size='22' fill='%23ffffff' text-anchor='middle' letter-spacing='2'>TRUPER</text></svg>"
+};
 function renderBrandsCarouselBanner(){
   if(!MARKETING_STATE || !MARKETING_STATE.banners) return '';
   var brands = MARKETING_STATE.banners.filter(function(b){ return b.slot === 'brands_carousel' && b.active; });
@@ -6426,10 +6435,10 @@ function renderBrandsCarouselBanner(){
     '<div class="sec-head rv" style="margin-bottom:12px"><div><h2 style="font-size:20px">Marcas Aliadas & Fabricantes Oficiales</h2><p class="muted sm" style="margin-top:4px">Garantía directa de fábrica y distribución autorizada nacional</p></div>'+
     '<button class="btn btn-ghost btn-sm" type="button" data-action="go" data-to="/productos">Ver todo '+I.chev+'</button></div>'+
     '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px">'+
-      brands.map(function(b){
+      brands.map(function(b){ var bk=(b.brandName||b.title||'').toLowerCase().trim(), imgUrl=b.imageUrl; for(var k in BRAND_LOGOS){ if(bk.indexOf(k)>=0){ imgUrl=BRAND_LOGOS[k]; break; } }
         return '<div class="card card-pad" style="text-align:center;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border-radius:12px;transition:all .2s ease;padding:16px 12px;background:var(--bg-card);border:1px solid var(--border);" data-action="banner-click" data-id="'+b.id+'" data-link="'+esc(b.linkUrl||'')+'" onmouseover="this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 6px 18px rgba(0,0,0,0.08)\'" onmouseout="this.style.transform=\'none\';this.style.boxShadow=\'none\'">'+
           '<div style="height:46px;display:flex;align-items:center;justify-content:center;width:100%">'+
-            (b.imageUrl ? '<img src="'+esc(b.imageUrl)+'" alt="'+esc(b.brandName||b.title)+'" style="max-height:40px;max-width:125px;object-fit:contain;" onerror="this.onerror=null;this.style.display=\'none\';var f=this.nextElementSibling;if(f)f.style.display=\'block\';"><b style="display:none;font-size:17px;font-family:var(--font-display);color:var(--text)">'+esc(b.brandName||b.title)+'</b>' : '<b style="font-size:17px;font-family:var(--font-display);color:var(--text)">'+esc(b.brandName||b.title)+'</b>')+
+            (imgUrl ? '<img src="'+esc(imgUrl)+'" alt="'+esc(b.brandName||b.title)+'" style="max-height:40px;max-width:125px;object-fit:contain;" onerror="this.onerror=null;this.style.display=\'none\';var f=this.nextElementSibling;if(f)f.style.display=\'block\';"><b style="display:none;font-size:17px;font-family:var(--font-display);color:var(--text)">'+esc(b.brandName||b.title)+'</b>' : '<b style="font-size:17px;font-family:var(--font-display);color:var(--text)">'+esc(b.brandName||b.title)+'</b>')+
           '</div>'+
           '<span class="xs" style="font-weight:700;color:var(--accent);letter-spacing:0.3px">'+esc(b.badgeText||'Distribuidor Oficial')+'</span>'+
         '</div>';

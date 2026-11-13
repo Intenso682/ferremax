@@ -67,7 +67,7 @@ export const SAMPLE_BANNERS: CreateBannerDTO[] = [
     badgeText: 'OFICIAL',
     linkUrl: '#/productos?q=dewalt',
     buttonText: 'Ver Productos',
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/DeWalt_Logo.svg/320px-DeWalt_Logo.svg.png',
+    imageUrl: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 50' width='160' height='50'><rect width='160' height='50' rx='8' fill='%23feb800'/><text x='80' y='33' font-family='Arial Black, Impact, sans-serif' font-weight='900' font-size='24' fill='%23111111' text-anchor='middle' letter-spacing='-0.5'>DEWALT</text></svg>",
     active: true,
     order: 1,
   },
@@ -79,7 +79,7 @@ export const SAMPLE_BANNERS: CreateBannerDTO[] = [
     badgeText: 'OFICIAL',
     linkUrl: '#/productos?q=stanley',
     buttonText: 'Ver Productos',
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/Stanley_Logo.svg/320px-Stanley_Logo.svg.png',
+    imageUrl: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 50' width='160' height='50'><rect width='160' height='50' rx='8' fill='%23111111'/><rect x='8' y='8' width='144' height='34' rx='4' fill='%23ffcc00'/><text x='80' y='32' font-family='Arial Black, sans-serif' font-weight='900' font-size='20' fill='%23111111' text-anchor='middle' letter-spacing='1'>STANLEY</text></svg>",
     active: true,
     order: 2,
   },
@@ -91,7 +91,7 @@ export const SAMPLE_BANNERS: CreateBannerDTO[] = [
     badgeText: 'OFICIAL',
     linkUrl: '#/productos?q=bosch',
     buttonText: 'Ver Productos',
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/Bosch-logo.svg/320px-Bosch-logo.svg.png',
+    imageUrl: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 50' width='160' height='50'><rect width='160' height='50' rx='8' fill='%23ffffff' stroke='%23e2e8f0' stroke-width='1.5'/><circle cx='30' cy='25' r='14' fill='%23e11d48'/><circle cx='30' cy='25' r='6' fill='%23ffffff'/><text x='95' y='33' font-family='Arial, Helvetica, sans-serif' font-weight='900' font-size='24' fill='%230f172a' text-anchor='middle' letter-spacing='1'>BOSCH</text></svg>",
     active: true,
     order: 3,
   },
@@ -103,7 +103,7 @@ export const SAMPLE_BANNERS: CreateBannerDTO[] = [
     badgeText: 'OFICIAL',
     linkUrl: '#/productos?cat=plomeria',
     buttonText: 'Ver Productos',
-    imageUrl: 'https://tubrica.com/wp-content/uploads/2021/04/Logo-Tubrica.png',
+    imageUrl: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 50' width='160' height='50'><rect width='160' height='50' rx='8' fill='%230284c7'/><text x='80' y='33' font-family='Arial Black, sans-serif' font-weight='900' font-size='21' fill='%23ffffff' text-anchor='middle' letter-spacing='1.5'>TUBRICA</text></svg>",
     active: true,
     order: 4,
   },
@@ -115,7 +115,7 @@ export const SAMPLE_BANNERS: CreateBannerDTO[] = [
     badgeText: 'OFICIAL',
     linkUrl: '#/productos?cat=construccion',
     buttonText: 'Ver Productos',
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Cemex_logo.svg/320px-Cemex_logo.svg.png',
+    imageUrl: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 50' width='160' height='50'><rect width='160' height='50' rx='8' fill='%231e293b'/><text x='80' y='32' font-family='Arial Black, sans-serif' font-weight='900' font-size='19' fill='%23ef4444' text-anchor='middle' letter-spacing='1'>VENCEMOS</text></svg>",
     active: true,
     order: 5,
   },
@@ -127,7 +127,7 @@ export const SAMPLE_BANNERS: CreateBannerDTO[] = [
     badgeText: 'OFICIAL',
     linkUrl: '#/productos?q=truper',
     buttonText: 'Ver Productos',
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Logo_Truper.svg/320px-Logo_Truper.svg.png',
+    imageUrl: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 50' width='160' height='50'><rect width='160' height='50' rx='8' fill='%23ea580c'/><text x='80' y='33' font-family='Arial Black, sans-serif' font-weight='900' font-size='22' fill='%23ffffff' text-anchor='middle' letter-spacing='2'>TRUPER</text></svg>",
     active: true,
     order: 6,
   },
@@ -174,9 +174,16 @@ export class MarketingService {
     if (slot) where.slot = slot;
     if (activeOnly) where.active = true;
 
-    return prisma.adBanner.findMany({
+    const banners = await prisma.adBanner.findMany({
       where,
       orderBy: [{ order: 'asc' }, { createdAt: 'desc' }],
+    });
+    return banners.map((b) => {
+      if (b.imageUrl && (b.imageUrl.includes('wikimedia') || b.imageUrl.includes('tubrica') || b.imageUrl.includes('photo-1581092335397') || b.imageUrl.includes('photo-1541888946425'))) {
+        const fallback = SAMPLE_BANNERS.find((s) => s.brandName && b.brandName && s.brandName.toLowerCase() === b.brandName.toLowerCase());
+        if (fallback && fallback.imageUrl) b.imageUrl = fallback.imageUrl;
+      }
+      return b;
     });
   }
 
