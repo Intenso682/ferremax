@@ -1310,7 +1310,7 @@ var State={
   module:'dashboard', cart:[], coupon:null, checkout:{step:1,data:{},pay:'card',lastItems:[]},
   session: savedSession, theme:LS.get('cb-theme','light'), accent:LS.get('cb-accent','#0f766e'),
   loginRole: savedSession ? (savedSession.roleDisplayName || savedSession.role) : 'Administrador', bus:[],
-  ui:{sidebar:LS.get('cb-mini',false),help:LS.get('cb-help',true),showDevModules:LS.get('cb-show-dev',false),salesRange:'30d',catFilter:[],priceMax:3500,
+  ui:{sidebar:LS.get('cb-mini',true),help:LS.get('cb-help',true),showDevModules:LS.get('cb-show-dev',false),salesRange:'30d',catFilter:[],priceMax:3500,
       inStock:false,onlyOffers:false,sort:'rel',q:'',posQ:'',posCat:'todos',invQ:'',invCat:'todos',invState:'todos',salesStatus:'todas',
       billingTab:'cortes',cashHistoryType:'ALL',cashHistoryQ:'',cashHistoryDiffOnly:false,
       customersTab:'deudores',customerSearchQ:'',customerFilterType:'ALL',purchasesTab:'proveedores',pendingNotesClient:'TODOS'}
@@ -2711,6 +2711,62 @@ function renderWarehouseSection() {
         }).join('') +
       '</div>' +
     '</div>' +
+  '</div>' +
+  '<div class="card" style="margin-top:20px">' +
+    '<div class="card-head spread" style="flex-wrap:wrap;gap:12px;padding:14px 18px">' +
+      '<div>' +
+        '<h3 style="font-size:16px">Existencias por Almacén y Tipo de Producto</h3>' +
+        '<p class="card-sub">Consulta rápida y filtrada de mercancía asignada al depósito seleccionado</p>' +
+      '</div>' +
+      '<div class="row" style="gap:8px;flex-wrap:wrap">' +
+        '<button class="btn btn-ghost btn-sm" type="button" data-action="inv-tab" data-tab="catalogo">' + I.box + ' Ver Catálogo Completo</button>' +
+      '</div>' +
+    '</div>' +
+    '<div style="padding:14px 18px;border-bottom:1px solid var(--border);background:var(--surface-2)">' +
+      '<div class="spread" style="flex-wrap:wrap;gap:10px">' +
+        '<div class="wrap-row" style="gap:6px">' +
+          whs.map(function(w){
+            var isSel = (State.ui.whSelected || whs[0].id) === w.id;
+            return '<button class="chip '+(isSel?'on':'')+'" type="button" data-action="wh-select" data-wh="'+esc(w.id)+'">📍 '+esc(w.name)+' ('+(w.totalStock||0)+' ud)</button>';
+          }).join('') +
+        '</div>' +
+        '<div class="search-wrap" style="width:min(260px,100%)">' +
+          I.search + '<input class="input" id="wh-q" placeholder="Filtrar en depósito..." value="'+esc(State.ui.whQ||'')+'">' +
+        '</div>' +
+      '</div>' +
+    '</div>' +
+    (function(){
+      var selWhId = State.ui.whSelected || (whs[0] ? whs[0].id : '');
+      var q = (State.ui.whQ || '').toLowerCase().trim();
+      var pList = DB.products.filter(function(p){
+        if (q && (p.name + ' ' + p.sku).toLowerCase().indexOf(q) < 0) return false;
+        return true;
+      });
+      var whPage = State.ui.whPage || 1;
+      var whPerPage = 10;
+      var whTotal = pList.length;
+      var whPages = Math.max(1, Math.ceil(whTotal / whPerPage));
+      if (whPage > whPages) whPage = whPages;
+      var pagedWhList = pList.slice((whPage - 1) * whPerPage, whPage * whPerPage);
+
+      return '<div class="tbl-scroll"><table class="tbl"><thead><tr><th>Producto</th><th>Categoría</th><th>SKU</th><th>Precio</th><th>Existencia en Depósito</th><th>Estado</th></tr></thead><tbody>' +
+        pagedWhList.map(function(p){
+          var st = p.stock === 0 ? ['b-bad','Agotado'] : (p.stock <= p.min ? ['b-warn','Bajo'] : ['b-ok','Óptimo']);
+          return '<tr>' +
+            '<td data-l="Producto"><div class="row" style="gap:10px">' +
+              '<span style="width:34px;height:34px;border-radius:8px;background:var(--surface-2);border:1px solid var(--border);display:grid;place-items:center;overflow:hidden">' + pImg(p, 'width:100%;height:100%;object-fit:cover;') + '</span>' +
+              '<div><b class="sm">' + esc(p.name) + '</b></div>' +
+            '</div></td>' +
+            '<td data-l="Categoría"><span class="badge b-mut">' + catName(p.cat) + '</span></td>' +
+            '<td data-l="SKU"><span class="mono xs muted">' + p.sku + '</span></td>' +
+            '<td data-l="Precio"><b class="mono sm">' + money(p.price) + '</b></td>' +
+            '<td data-l="Existencia"><b class="mono sm" style="color:var(--accent)">' + p.stock + ' ' + (p.unit || 'UND') + '</b></td>' +
+            '<td data-l="Estado"><span class="badge ' + st[0] + '">' + st[1] + '</span></td>' +
+          '</tr>';
+        }).join('') +
+        '</tbody></table></div>' +
+        (whTotal ? renderPagination(whTotal, whPage, whPerPage, 'wh-page') : '<div class="empty"><p class="muted">Sin productos en este depósito.</p></div>');
+    })() +
   '</div>';
 }
 
@@ -2925,20 +2981,68 @@ function openNewTransferModal(defaultFromId) {
   }
 }
 
+
+function renderPagination(total, page, perPage, actionName) {
+  var totalPages = Math.max(1, Math.ceil(total / perPage));
+  if (totalPages <= 1) return '';
+  var start = (page - 1) * perPage + 1;
+  var end = Math.min(total, page * perPage);
+  
+  var pages = [];
+  var p1 = Math.max(1, page - 2);
+  var p2 = Math.min(totalPages, page + 2);
+  for (var i = p1; i <= p2; i++) {
+    pages.push(i);
+  }
+  
+  return '<div class="spread" style="padding:12px 18px;border-top:1px solid var(--border);flex-wrap:wrap;gap:12px;align-items:center;background:var(--surface)">' +
+    '<div class="xs muted">Mostrando <b style="color:var(--text)">' + start + '–' + end + '</b> de <b style="color:var(--text)">' + total + '</b> productos (Pág. ' + page + ' de ' + totalPages + ')</div>' +
+    '<div class="row" style="gap:5px;align-items:center">' +
+      '<button class="btn btn-xs btn-ghost" type="button" data-action="' + actionName + '" data-p="' + (page - 1) + '" ' + (page <= 1 ? 'disabled style="opacity:.4"' : '') + '>◀ Anterior</button>' +
+      (p1 > 1 ? '<button class="btn btn-xs btn-ghost" type="button" data-action="' + actionName + '" data-p="1">1</button>' + (p1 > 2 ? '<span class="xs muted">…</span>' : '') : '') +
+      pages.map(function(p) {
+        return '<button class="btn btn-xs ' + (p === page ? 'btn-primary' : 'btn-ghost') + '" type="button" data-action="' + actionName + '" data-p="' + p + '" style="min-width:28px;padding:4px 8px;font-weight:' + (p === page ? '700' : '500') + '">' + p + '</button>';
+      }).join('') +
+      (p2 < totalPages ? (p2 < totalPages - 1 ? '<span class="xs muted">…</span>' : '') + '<button class="btn btn-xs btn-ghost" type="button" data-action="' + actionName + '" data-p="' + totalPages + '">' + totalPages + '</button>' : '') +
+      '<button class="btn btn-xs btn-ghost" type="button" data-action="' + actionName + '" data-p="' + (page + 1) + '" ' + (page >= totalPages ? 'disabled style="opacity:.4"' : '') + '>Siguiente ▶</button>' +
+    '</div>' +
+  '</div>';
+}
+
 /* ---- Inventario ---- */
 Views.inventario=function(){
   var ui=State.ui, m=metrics();
   var invTab = ui.invTab || 'catalogo';
-  var list=DB.products.filter(function(p){
-    if(ui.invQ && (p.name+p.sku).toLowerCase().indexOf(ui.invQ.toLowerCase())<0) return false;
-    if(ui.invCat!=='todos'&&p.cat!==ui.invCat) return false;
-    if(ui.invState==='bajo'&&!(p.stock>0&&p.stock<=p.min)) return false;
-    if(ui.invState==='agotado'&&p.stock!==0) return false;
-    if(ui.invState==='ok'&&!(p.stock>p.min)) return false;
-    return true; });
+  var invCat = ui.invCat || 'todos';
+  var invState = ui.invState || 'todos';
+  var invWh = ui.invWh || 'todos';
+  var invPage = ui.invPage || 1;
+  var invPerPage = ui.invPerPage || 10;
 
   var whs = getWarehouseList();
   var trs = getTransfersList();
+
+  // Filtrado de productos
+  var list=DB.products.filter(function(p){
+    if(ui.invQ && (p.name + ' ' + p.sku + ' ' + (p.brand || '') + ' ' + (p.location || '')).toLowerCase().indexOf(ui.invQ.toLowerCase().trim()) < 0) return false;
+    if(invCat !== 'todos' && p.cat !== invCat) return false;
+    if(invState === 'bajo' && !(p.stock > 0 && p.stock <= p.min)) return false;
+    if(invState === 'agotado' && p.stock !== 0) return false;
+    if(invState === 'ok' && !(p.stock > p.min)) return false;
+    if(invWh !== 'todos' && p.warehouseId && p.warehouseId !== invWh) return false;
+    return true;
+  });
+
+  // Conteo dinámico por categoría para los chips
+  var catCounts = {};
+  DB.products.forEach(function(p) { catCounts[p.cat] = (catCounts[p.cat] || 0) + 1; });
+
+  // Paginación limpia
+  var totalItems = list.length;
+  var totalPages = Math.max(1, Math.ceil(totalItems / invPerPage));
+  if (invPage > totalPages) invPage = totalPages;
+  var startIndex = (invPage - 1) * invPerPage;
+  var pagedList = list.slice(startIndex, startIndex + invPerPage);
 
   return '<div class="page-head"><div><h1>Inventario Multi-Depósito</h1><p>'+DB.products.length+' SKU activos · '+whs.length+' depósitos · valor a costo '+money(m.stockValue)+'</p></div>'+
     '<div class="wrap-row">'+
@@ -2967,15 +3071,52 @@ Views.inventario=function(){
         kpiNum('Agotados',m.out.length,'-1','up','x','var(--danger)','var(--danger-soft)',[6,5,5,4,3,2,1],'')+
         kpiNum('Rotación 30 d',2.4,'+0.3×','up','refresh','var(--accent)','var(--accent-soft)',[40,46,44,52,58,60,66],'×','')+
       '</div>'+
-      '<div class="card"><div class="card-head"><div class="row" style="gap:10px;flex-wrap:wrap">'+
-          '<div class="search-wrap" style="width:min(250px,60vw)">'+I.search+'<input class="input" id="inv-q" placeholder="Buscar SKU o nombre…" value="'+esc(ui.invQ)+'"></div>'+
-          '<select class="input" style="width:auto" id="inv-cat"><option value="todos">Todas las categorías</option>'+
-            CATS.map(function(c){return '<option value="'+c.id+'" '+(ui.invCat===c.id?'selected':'')+'>'+c.name+'</option>';}).join('')+'</select>'+
-          '<select class="input" style="width:auto" id="inv-state"><option value="todos">Todo el stock</option>'+
-            [['ok','Saludable'],['bajo','Stock bajo'],['agotado','Agotado']].map(function(o){return '<option value="'+o[0]+'" '+(ui.invState===o[0]?'selected':'')+'>'+o[1]+'</option>';}).join('')+'</select></div>'+
-          '<span class="xs muted">'+list.length+' resultado(s)</span></div>'+
+
+      /* Organización Visual por Tipos de Productos (Chips Interactivos) */
+      '<div class="card card-pad" style="margin-bottom:14px;padding:14px 16px;">'+
+        '<div class="spread" style="margin-bottom:8px;flex-wrap:wrap;gap:8px">'+
+          '<b class="xs" style="text-transform:uppercase;letter-spacing:.08em;color:var(--muted)">Organizar por tipo de producto:</b>'+
+          '<span class="xs muted">Mostrando '+totalItems+' de '+DB.products.length+' productos</span>'+
+        '</div>'+
+        '<div class="wrap-row" style="gap:6px">'+
+          '<button class="chip '+(invCat==='todos'?'on':'')+'" type="button" data-action="inv-cat" data-cat="todos">📦 Todos ('+DB.products.length+')</button>'+
+          CATS.map(function(c){
+            var cnt = catCounts[c.id] || 0;
+            return '<button class="chip '+(invCat===c.id?'on':'')+'" type="button" data-action="inv-cat" data-cat="'+c.id+'" style="'+(invCat===c.id?'':'border-color:color-mix(in srgb,'+c.color+' 30%,var(--border))')+';">'+
+              '<span style="color:'+c.color+'">●</span> '+c.name+' <span class="badge b-mut xs" style="margin-left:4px">'+cnt+'</span></button>';
+          }).join('')+
+        '</div>'+
+      '</div>'+
+
+      '<div class="card">'+
+        '<div class="card-head spread" style="flex-wrap:wrap;gap:12px;padding:14px 18px">'+
+          '<div class="row" style="gap:10px;flex-wrap:wrap;flex:1">'+
+            '<div class="search-wrap" style="width:min(280px,100%);position:relative">'+
+              I.search+
+              '<input class="input" id="inv-q" placeholder="Buscar por SKU, nombre, marca..." value="'+esc(ui.invQ)+'" aria-label="Buscar productos">'+
+              (ui.invQ ? '<button type="button" class="icon-btn" data-action="inv-clear-q" style="position:absolute;right:4px;width:26px;height:26px;font-size:12px" title="Limpiar búsqueda">✕</button>' : '')+
+            '</div>'+
+            '<select class="input" style="width:auto" id="inv-state" aria-label="Filtro de stock">'+
+              '<option value="todos">Todo el stock</option>'+
+              [['ok','✅ Stock Saludable'],['bajo','⚠️ Stock Bajo'],['agotado','❌ Agotados']].map(function(o){
+                return '<option value="'+o[0]+'" '+(invState===o[0]?'selected':'')+'>'+o[1]+'</option>';
+              }).join('')+
+            '</select>'+
+            '<select class="input" style="width:auto" id="inv-wh" aria-label="Filtro por depósito">'+
+              '<option value="todos">🏬 Todos los Depósitos</option>'+
+              whs.map(function(w){ return '<option value="'+esc(w.id)+'" '+(invWh===w.id?'selected':'')+'>'+esc(w.name)+'</option>'; }).join('')+
+            '</select>'+
+          '</div>'+
+          '<div class="row xs" style="gap:6px;align-items:center">'+
+            '<span class="muted">Ver por página:</span>'+
+            [10, 25, 50].map(function(n){
+              return '<button class="chip '+(invPerPage===n?'on':'')+'" type="button" data-action="inv-per-page" data-n="'+n+'" style="padding:3px 9px;font-size:11px">'+n+'</button>';
+            }).join('')+
+          '</div>'+
+        '</div>'+
+
         '<div class="tbl-scroll"><table class="tbl"><thead><tr><th>Producto & Unidades</th><th>Categoría</th><th>Precio Base</th><th>Costo</th><th>Margen</th><th>Existencia Tienda</th><th>Estado</th><th></th></tr></thead><tbody>'+
-          list.map(function(p){
+          pagedList.map(function(p){
             var mar=(p.price-p.cost)/p.price*100;
             var st=p.stock===0?['b-bad','Agotado']:(p.stock<=p.min?['b-warn','Bajo']:['b-ok','Óptimo']);
             var w=clamp(p.stock/(p.min*4)*100,4,100);
@@ -3005,7 +3146,9 @@ Views.inventario=function(){
                 '<button class="btn btn-sm btn-ghost" type="button" data-action="edit-product" data-id="'+p.id+'" aria-label="Editar">'+I.edit+'</button>'+
                 '<button class="btn btn-sm btn-ghost" type="button" data-action="del-product" data-id="'+p.id+'" aria-label="Eliminar" style="color:var(--danger)">'+I.trash+'</button></div></td></tr>';
           }).join('')+'</tbody></table></div>'+
-        (list.length?'':'<div class="empty">'+I.box+'<b>No hay productos con esos filtros</b><p class="sm">Limpia la búsqueda o crea un producto nuevo.</p></div>')+'</div>'+
+        (totalItems ? renderPagination(totalItems, invPage, invPerPage, 'inv-page') : '<div class="empty">'+I.box+'<b>No hay productos con esos filtros</b><p class="sm">Limpia la búsqueda o cambia de categoría.</p></div>')+
+      '</div>'+
+
       '<div class="grid grid-form-2col" style="grid-template-columns:1fr 1fr;margin-top:18px">'+
         '<div class="card card-pad"><h3 style="font-size:16px;margin-bottom:6px">Órdenes de compra sugeridas</h3><p class="card-sub" style="margin-bottom:14px">Calculadas con punto de reorden + lead time del proveedor.</p>'+
           (m.out.concat(m.low).slice(0,4).map(function(p){
@@ -7405,9 +7548,11 @@ function afterStoreRender(){
   var pq=$('#pos-q'); if(pq) pq.addEventListener('input',function(e){ State.ui.posQ=e.target.value; refreshPosGrid(); });
   var pc=$('#pos-client'); if(pc) pc.addEventListener('change',function(e){
     if(e.target.value==='nuevo'){ openCustomerModal(); } else { posClient=e.target.value; refreshPos(); } });
-  var iq=$('#inv-q'); if(iq) iq.addEventListener('input',function(e){ State.ui.invQ=e.target.value; rerenderKeep(); });
-  var ic=$('#inv-cat'); if(ic) ic.addEventListener('change',function(e){ State.ui.invCat=e.target.value; render(); });
-  var ist=$('#inv-state'); if(ist) ist.addEventListener('change',function(e){ State.ui.invState=e.target.value; render(); });
+  var iq=$('#inv-q'); if(iq) iq.addEventListener('input',function(e){ State.ui.invQ=e.target.value; State.ui.invPage=1; rerenderKeep(); });
+  var ic=$('#inv-cat'); if(ic) ic.addEventListener('change',function(e){ State.ui.invCat=e.target.value; State.ui.invPage=1; render(); });
+  var ist=$('#inv-state'); if(ist) ist.addEventListener('change',function(e){ State.ui.invState=e.target.value; State.ui.invPage=1; render(); });
+  var iwh=$('#inv-wh'); if(iwh) iwh.addEventListener('change',function(e){ State.ui.invWh=e.target.value; State.ui.invPage=1; render(); });
+  var wq=$('#wh-q'); if(wq) wq.addEventListener('input',function(e){ State.ui.whQ=e.target.value; State.ui.whPage=1; rerenderKeep(); });
   bindForms();
   if(State.path.indexOf('/productos/')===0) window.scrollTo(0,0);
 }
@@ -7656,6 +7801,13 @@ function handleAction(a,el,e){
     case 'open-ai-scanner': openAiScannerModal(); break;
     case 'open-gsheets-sync': openGoogleSheetsSyncModal(); break;
     case 'inv-tab': State.ui.invTab = D.tab; render(); break;
+    case 'inv-cat': State.ui.invCat = D.cat; State.ui.invPage = 1; render(); break;
+    case 'inv-page': State.ui.invPage = Math.max(1, +D.p); render(); break;
+    case 'inv-per-page': State.ui.invPerPage = +D.n; State.ui.invPage = 1; render(); break;
+    case 'inv-wh': State.ui.invWh = D.wh; State.ui.invPage = 1; render(); break;
+    case 'inv-clear-q': State.ui.invQ = ''; State.ui.invPage = 1; render(); break;
+    case 'wh-page': State.ui.whPage = Math.max(1, +D.p); render(); break;
+    case 'wh-select': State.ui.whSelected = D.wh; State.ui.whPage = 1; render(); break;
     case 'open-warehouse-modal': openNewWarehouseModal(); break;
     case 'open-transfer-modal': openNewTransferModal(D.from); break;
     case 'new-product': openProductModal(null); break;
@@ -15095,7 +15247,7 @@ render();
 syncFromBackend();
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
-    navigator.serviceWorker.register('sw.js?v=1.27').then(function(reg) {
+    navigator.serviceWorker.register('sw.js?v=1.28').then(function(reg) {
       console.log('FerreJade PWA Service Worker activo:', reg.scope);
     }).catch(function(err) {
       console.log('FerreJade PWA SW nota:', err);

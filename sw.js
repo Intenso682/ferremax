@@ -3,7 +3,7 @@
  * Habilita instalación en celulares (Android / iOS) y almacenamiento en caché sin conexión.
  */
 
-const CACHE_NAME = 'ferrejade-cache-v1.27';
+const CACHE_NAME = 'ferrejade-cache-v1.28';
 const CORE_ASSETS = [
   './',
   './index.html',
