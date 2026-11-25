@@ -1,13 +1,36 @@
 # 🗺️ Hoja de Ruta Maestra · Proyecto FerreMax / FerreJade
 
-**Fecha de actualización:** 13 de Noviembre de 2026  
-**Estado general:** 🟢 **100% Operativo · En Producción en la Nube + Escáner IA Autónomo + Hoja Oficial Google Sheets + Repositorio GitHub Actualizado**  
+**Fecha de actualización:** 25 de Noviembre de 2026 (Sesión de Infraestructura VPS Hetzner)  
+**Estado general:** 🟢 **100% Operativo en Render + POS Mostrador Rediseñado (Lector Láser) + Listo para Despliegue Multi-App en Hetzner VPS**  
 **URL de Producción / Demo Activa en la Nube:**  
 👉 **[https://ferremax-473o.onrender.com/#/](https://ferremax-473o.onrender.com/#/)**  
 *(Alojado en Render Cloud · Servicio `ferremax-473o`)*  
-**Versión del núcleo:** Core-Business Suite v1.25 (Edición Oficial FerreJade)  
+**Versión del núcleo:** Core-Business Suite v1.31 (Edición Oficial FerreJade)  
 **Cuenta Corporativa Oficial:** `ferrejadepzo@gmail.com` (Google AI Studio, Drive y Sheets)  
 **Clave Maestra de Acceso:** `FERREJADE2026` (también admite `1234`)
+
+---
+
+## 📌 0. Bitácora Reciente (22 – 25 de Noviembre de 2026)
+
+### 🖥️ 1. Rediseño del Punto de Venta (POS) de Mostrador (22 de Noviembre)
+- **Eliminación de cuadrícula pesada:** Se reemplazó la grilla masiva de productos por una interfaz ergonómica de mostrador de alta velocidad (`#pos-q`, `#pos-counter-view`).
+- **Buscador Predictivo & Lector Láser Plug & Play (HID):**
+  - Foco automático en el buscador al abrir el POS y atajos de teclado (`F2` enfocar buscador, `F4` cobrar, `Enter` agregar al ticket, `Esc` limpiar).
+  - Compatibilidad nativa con cualquier pistola lectora láser USB / Bluetooth / 2.4 GHz: al leer código de barras o SKU exacto, agrega `+1` al ticket, emite pitido de confirmación Web Audio API, limpia la barra y mantiene el foco listo para el siguiente artículo.
+  - Búsqueda predictiva en vivo por nombre, marca, SKU, código de barras o categoría con lista compacta, semáforo de stock y precios duales (**USD** y **Bs. a tasa BCV**).
+  - Pantalla inicial limpia con bloque **⚡ Acceso Rápido · Menudeo y Alta Rotación** y enlace directo al **📸 Escáner IA Móvil**.
+  - Validado y enviado a GitHub (`main`, commit `b804970`).
+
+### ☁️ 2. Preparación de Infraestructura VPS en Hetzner Cloud (25 de Noviembre)
+- **Objetivo Arquitectónico:** Preparar 1 único VPS en Hetzner (Ubuntu 24.04) para alojar **3 aplicaciones web independientes**, cada una con su propio contenedor Docker, su propia base de datos aislada y proxy inverso Caddy con HTTPS/SSL automático.
+  - **App 1 (Inmediata):** FerreMax / FerreJade (ERP + POS + Escáner IA).
+  - **App 2 y App 3:** Espacios/plantillas aisladas listas en el VPS mientras se definen las otras 2 web apps.
+- **Credenciales y Acceso Preparado:**
+  - Cuenta Hetzner registrada (`Client number: K1175896926`, login `jkettin@gmail.com`).
+  - Par de llaves SSH Ed25519 generado localmente en `C:\Users\abc\.ssh\id_ed25519` y `id_ed25519.pub` para conexión automática desde Windows.
+  - Librería `ssh2` instalada en `backend/node_modules/ssh2` para automatizar el aprovisionamiento remoto del VPS.
+- **Estado actual (en espera del usuario):** Pendiente completar la verificación de cuenta en `https://accounts.hetzner.com` (sección *Verification*) para que Hetzner habilite la creación del proyecto **`Proyecto X`** y del primer servidor VPS Ubuntu 24.04.
 
 ---
 
@@ -65,7 +88,8 @@
 | **Hoja Oficial Google Sheets** | 🔥 Alta | ✅ **Conectada** | `FerreJade - Catálogo Maestro` (`1L2CzvbImLReOJvGh8V6-6vv_8DfQ3NTEw6e3sL0KWW0`) |
 | **Identidad Corporativa FerreJade** | 🎨 Media | ✅ **100% Operativo** | Logotipo SVG, paleta Verde Jade (`#003333`) y Dorado (`#CFB53B`) |
 | **Catálogo NovaStack en Odoo** | 🌐 Media | ✅ **100% Operativo** | Botones limpios, enlace directo al escáner y badges legibles |
-| **ERP Completo FerreMax** | 💼 Base | ✅ **100% Operativo** | `index.html` con POS dual, inventario, reportes SENIAT y WhatsApp |
+| **ERP Completo FerreMax** | 💼 Base | ✅ **100% Operativo** | `index.html` con POS de mostrador (lector láser), inventario, SENIAT y WhatsApp |
+| **VPS Multi-App en Hetzner (`Proyecto X`)** | 🔥 Alta | ⏳ **En Verificación** | Cuenta creada (`K1175896926`) + SSH Key lista. Falta verificación en `accounts.hetzner.com` y crear servidor |
 | **Flujo Interdepartamental de Despacho** | ⚡ Siguiente | ⏳ **Próximo Paso** | Venta Mostrador ➔ Cobro en Caja ➔ Validación y Entrega en Almacén |
 | **Pruebas de Catalogación Física** | 📸 Siguiente | ⏳ **Próximo Paso** | Escanear 10-20 productos ferreteros reales para verificar flujo completo |
 
@@ -75,7 +99,12 @@
 
 Al regresar a trabajar en el proyecto, retomaremos exactamente en este orden:
 
-1. **Paso 1: Validación Práctica del Escáner en Físico**
+1. **Paso 1 (Prioridad Inmediata): Completar Verificación y Desplegar en Hetzner VPS**
+   - Terminar verificación en `https://accounts.hetzner.com` -> *Verification*.
+   - En `https://console.hetzner.com`, crear el proyecto **`Proyecto X`** y un servidor **Ubuntu 24.04** pegando la llave SSH pública (`C:\Users\abc\.ssh\id_ed25519.pub`).
+   - Pasar la **IP pública (IPv4)** del VPS para conectarnos vía SSH y configurar Docker + Caddy + estructura aislada para **3 web apps independientes con bases de datos separadas**, desplegando **FerreMax** como App 1.
+
+2. **Paso 2: Validación Práctica del Escáner y POS con Lector Láser**
    - Abrir el escáner desde la PC ejecutando con doble clic [`Abrir Escaner de Productos.bat`](file:///c:/Users/abc/Downloads/FerreMax%20Proyecto/Abrir%20Escaner%20de%20Productos.bat).
    - O abrirlo desde el teléfono celular escaneando cajas de herramientas/materiales con el enlace:
      `https://intenso682.github.io/ferremax/escaner_de_productos.html?clave=FERREJADE2026`.
