@@ -1,15 +1,16 @@
 # 🛠️ FerreMax · Estado del Proyecto y Memoria Técnica de Desarrollo
-**Fecha de corte:** 25 de Noviembre de 2026  
-**Versión de la plataforma:** Core-Business Suite v1.31 (FerreJade ERP)  
-**URL de Producción / Demo Activa en la Nube:**  
-👉 **[https://ferremax-473o.onrender.com/#/](https://ferremax-473o.onrender.com/#/)**  
-*(Alojado en Render Cloud · Conectado al repositorio GitHub `@Intenso682/ferremax`)*  
+**Fecha de corte:** 25 de Noviembre de 2026 (Noche)  
+**Versión de la plataforma:** Core-Business Suite v1.32 (FerreJade ERP)  
+**URL de Producción Principal (Hetzner VPS):**  
+👉 **[http://2.31.188.125](http://2.31.188.125)** *(Servidor `novastack` · `ProyectoX`)*  
+**URL Respaldo Render:** [https://ferremax-473o.onrender.com/#/](https://ferremax-473o.onrender.com/#/)  
 **Propósito de este documento:** Servir como guía, bitácora de estado y contexto maestro para continuar el desarrollo sin pérdida de hilo técnico ni funcional.
 
-- **Migración a VPS Hetzner Multi-App (v1.31 - EN CURSO 25 Nov):**
-  - Cuenta Hetzner registrada (`K1175896926`, `jkettin@gmail.com`). Par SSH Ed25519 generado en `C:\Users\abc\.ssh\id_ed25519` y cliente `ssh2` instalado en `backend/` para aprovisionamiento automático.
-  - Arquitectura planificada: 1 VPS Ubuntu 24.04 bajo proyecto `Proyecto X` con 3 espacios aislados (`/opt/apps/ferremax`, `app2`, `app3`), cada uno con su contenedor y base de datos independiente detrás de Caddy.
-  - **Bloqueo actual:** Esperando que el usuario complete la verificación en `https://accounts.hetzner.com` para crear `Proyecto X` y el servidor VPS, y nos comparta la IP pública.
+- **Despliegue en Producción VPS Hetzner Multi-App (v1.32 - COMPLETADO 25 Nov):**
+  - Servidor `novastack` (`2.31.188.125`, CX23 Ubuntu 24.04, 3.7 GB RAM, 2 GB Swap, UFW activo) aprovisionado con Docker 29.10 + Caddy Proxy.
+  - Estructura aislada para 3 apps independientes en `/opt/novastack/apps/{ferremax,app2,app3}` con redes privadas separadas y respaldos diarios automáticos (3:00 AM via `backup-all.sh`).
+  - **FerreMax (`ferremax_app`)** compilado y verificado en vivo (`http://2.31.188.125`, BD SQLite persistente en `/opt/novastack/apps/ferremax/data/dev.db`).
+  - Llaves y contraseñas privadas guardadas localmente en `CREDENCIALES_VPS_PRIVADO.txt` (ignorado por Git).
 - **Rediseño POS de Mostrador & Lector Láser (v1.31 - COMPLETADO 22 Nov):**
   - Reemplazada la grilla masiva de productos por buscador predictivo instantáneo (`#pos-q`), detección de código de barras / SKU con `Enter` + pitido Web Audio API, atajos `F2`/`F4`/`Esc`, semáforo de stock y precios duales USD/Bs BCV (commit `b804970`).
 - **Paginación Inteligente Universal y Búsqueda en Vivo (v1.30):**

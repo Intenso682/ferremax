@@ -1,13 +1,13 @@
 # 🗺️ Hoja de Ruta Maestra · Proyecto FerreMax / FerreJade
 
-**Fecha de actualización:** 25 de Noviembre de 2026 (Sesión de Infraestructura VPS Hetzner)  
-**Estado general:** 🟢 **100% Operativo en Render + POS Mostrador Rediseñado (Lector Láser) + Listo para Despliegue Multi-App en Hetzner VPS**  
-**URL de Producción / Demo Activa en la Nube:**  
-👉 **[https://ferremax-473o.onrender.com/#/](https://ferremax-473o.onrender.com/#/)**  
-*(Alojado en Render Cloud · Servicio `ferremax-473o`)*  
-**Versión del núcleo:** Core-Business Suite v1.31 (Edición Oficial FerreJade)  
+**Fecha de actualización:** 25 de Noviembre de 2026 (Noche — Despliegue VPS Hetzner Completado)  
+**Estado general:** 🟢 **100% En Producción en VPS Hetzner (`2.31.188.125`) + Arquitectura Multi-App (3 Apps) + POS Mostrador (Lector Láser)**  
+**URL de Producción Principal (VPS Hetzner):**  
+👉 **[http://2.31.188.125](http://2.31.188.125)** *(Servidor `novastack` · Proyecto `ProyectoX`)*  
+**URL Respaldo en la Nube (Render):** [https://ferremax-473o.onrender.com/#/](https://ferremax-473o.onrender.com/#/)  
+**Versión del núcleo:** Core-Business Suite v1.32 (Edición Oficial FerreJade)  
 **Cuenta Corporativa Oficial:** `ferrejadepzo@gmail.com` (Google AI Studio, Drive y Sheets)  
-**Clave Maestra de Acceso:** `FERREJADE2026` (también admite `1234`)
+**Clave Maestra Escáner IA:** `FERREJADE2026` (también admite `1234`)
 
 ---
 
@@ -22,15 +22,15 @@
   - Pantalla inicial limpia con bloque **⚡ Acceso Rápido · Menudeo y Alta Rotación** y enlace directo al **📸 Escáner IA Móvil**.
   - Validado y enviado a GitHub (`main`, commit `b804970`).
 
-### ☁️ 2. Preparación de Infraestructura VPS en Hetzner Cloud (25 de Noviembre)
-- **Objetivo Arquitectónico:** Preparar 1 único VPS en Hetzner (Ubuntu 24.04) para alojar **3 aplicaciones web independientes**, cada una con su propio contenedor Docker, su propia base de datos aislada y proxy inverso Caddy con HTTPS/SSL automático.
-  - **App 1 (Inmediata):** FerreMax / FerreJade (ERP + POS + Escáner IA).
-  - **App 2 y App 3:** Espacios/plantillas aisladas listas en el VPS mientras se definen las otras 2 web apps.
-- **Credenciales y Acceso Preparado:**
-  - Cuenta Hetzner registrada (`Client number: K1175896926`, login `jkettin@gmail.com`).
-  - Par de llaves SSH Ed25519 generado localmente en `C:\Users\abc\.ssh\id_ed25519` y `id_ed25519.pub` para conexión automática desde Windows.
-  - Librería `ssh2` instalada en `backend/node_modules/ssh2` para automatizar el aprovisionamiento remoto del VPS.
-- **Estado actual (en espera del usuario):** Pendiente completar la verificación de cuenta en `https://accounts.hetzner.com` (sección *Verification*) para que Hetzner habilite la creación del proyecto **`Proyecto X`** y del primer servidor VPS Ubuntu 24.04.
+### ☁️ 2. Despliegue en Producción VPS Hetzner Multi-App (25 de Noviembre - Noche)
+- **Servidor Activo:** `novastack` (Hetzner Cloud `CX23`, Nuremberg, 2 vCPU, 3.7 GB RAM, 38 GB SSD, 2 GB Swap, Ubuntu 24.04 LTS).
+- **IP Pública:** `2.31.188.125` · Cortafuegos **UFW** activo (puertos `22`, `80`, `443`).
+- **Arquitectura Aislada para 3 Web Apps (`/opt/novastack/`):**
+  - **Proxy Inverso (`novastack_proxy`):** Caddy 2 Alpine (`/opt/novastack/proxy/Caddyfile`) conectado a red `novastack_proxy`, listo para HTTPS automático al asignar dominios.
+  - **App 1 — FerreMax (`ferremax_app`):** Desplegada en `/opt/novastack/apps/ferremax/` con red aislada `ferremax_internal` y base de datos SQLite persistente en `/opt/novastack/apps/ferremax/data/dev.db`. Verificada en vivo (`http://2.31.188.125/health` -> `200 OK`).
+  - **App 2 y App 3 (Espacios Reservados):** `/opt/novastack/apps/app2/` (puerto interno `5000`) y `/opt/novastack/apps/app3/` (puerto interno `6000`), cada una con su `docker-compose.yml.template` (soporte SQLite o PostgreSQL aislado), `data/` y `backups/`.
+- **Respaldos Automáticos Diarios:** Script `/opt/novastack/scripts/backup-all.sh` ejecutándose por cron todos los días a las **3:00 AM** con retención de 14 días.
+- **Credenciales Privadas:** Resguardadas localmente en [`CREDENCIALES_VPS_PRIVADO.txt`](file:///c:/Users/abc/Downloads/FerreMax%20Proyecto/CREDENCIALES_VPS_PRIVADO.txt) *(excluido de Git por seguridad)*.
 
 ---
 
@@ -89,7 +89,7 @@
 | **Identidad Corporativa FerreJade** | 🎨 Media | ✅ **100% Operativo** | Logotipo SVG, paleta Verde Jade (`#003333`) y Dorado (`#CFB53B`) |
 | **Catálogo NovaStack en Odoo** | 🌐 Media | ✅ **100% Operativo** | Botones limpios, enlace directo al escáner y badges legibles |
 | **ERP Completo FerreMax** | 💼 Base | ✅ **100% Operativo** | `index.html` con POS de mostrador (lector láser), inventario, SENIAT y WhatsApp |
-| **VPS Multi-App en Hetzner (`Proyecto X`)** | 🔥 Alta | ⏳ **En Verificación** | Cuenta creada (`K1175896926`) + SSH Key lista. Falta verificación en `accounts.hetzner.com` y crear servidor |
+| **VPS Multi-App en Hetzner (`ProyectoX`)** | 🔥 Alta | ✅ **100% En Línea** | Servidor `novastack` (`2.31.188.125`), Caddy Proxy + `ferremax_app` + espacios `app2`/`app3` |
 | **Flujo Interdepartamental de Despacho** | ⚡ Siguiente | ⏳ **Próximo Paso** | Venta Mostrador ➔ Cobro en Caja ➔ Validación y Entrega en Almacén |
 | **Pruebas de Catalogación Física** | 📸 Siguiente | ⏳ **Próximo Paso** | Escanear 10-20 productos ferreteros reales para verificar flujo completo |
 
@@ -97,14 +97,13 @@
 
 ## 🎯 3. Hoja de Ruta para Reanudar la Próxima Sesión
 
-Al regresar a trabajar en el proyecto, retomaremos exactamente en este orden:
+Al regresar a trabajar en el proyecto, retomaremos en este orden:
 
-1. **Paso 1 (Prioridad Inmediata): Completar Verificación y Desplegar en Hetzner VPS**
-   - Terminar verificación en `https://accounts.hetzner.com` -> *Verification*.
-   - En `https://console.hetzner.com`, crear el proyecto **`Proyecto X`** y un servidor **Ubuntu 24.04** pegando la llave SSH pública (`C:\Users\abc\.ssh\id_ed25519.pub`).
-   - Pasar la **IP pública (IPv4)** del VPS para conectarnos vía SSH y configurar Docker + Caddy + estructura aislada para **3 web apps independientes con bases de datos separadas**, desplegando **FerreMax** como App 1.
-
-2. **Paso 2: Validación Práctica del Escáner y POS con Lector Láser**
+1. **Paso 1: Desplegar App 2 y App 3 (cuando estén definidas)**
+   - Usar las plantillas ya preparadas en `/opt/novastack/apps/app2/` y `/opt/novastack/apps/app3/` y agregar sus subdominios o puertos en `/opt/novastack/proxy/Caddyfile`.
+2. **Paso 2: Dominio Propio y SSL Automático (cuando se adquiera el dominio)**
+   - Apuntar el registro DNS `A` del dominio hacia `2.31.188.125` y descomentar el bloque en `/opt/novastack/proxy/Caddyfile`.
+3. **Paso 3: Validación Práctica del Escáner y POS con Lector Láser**
    - Abrir el escáner desde la PC ejecutando con doble clic [`Abrir Escaner de Productos.bat`](file:///c:/Users/abc/Downloads/FerreMax%20Proyecto/Abrir%20Escaner%20de%20Productos.bat).
    - O abrirlo desde el teléfono celular escaneando cajas de herramientas/materiales con el enlace:
      `https://intenso682.github.io/ferremax/escaner_de_productos.html?clave=FERREJADE2026`.
